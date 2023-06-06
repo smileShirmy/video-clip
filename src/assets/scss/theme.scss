@@ -1,0 +1,15 @@
+@mixin theme($app-background-color) {
+  --app-background-color: #{$app-background-color};
+}
+
+:root {
+  @include theme(
+    $app-background-color: #fff
+  ) 
+}
+
+.dark:root {
+  @include theme(
+    $app-background-color: #000
+  ) 
+}
