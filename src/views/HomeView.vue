@@ -12,7 +12,7 @@ import AttributeContainer from '@/components/containers/attribute/AttributeConta
   <main class="home-main">
     <ResourceContainer />
     <div class="editor-wrapper">
-      <div class="player-container">
+      <div class="player-workplace">
         <PlayerContainer />
         <AttributeContainer />
       </div>
@@ -24,13 +24,15 @@ import AttributeContainer from '@/components/containers/attribute/AttributeConta
 <style scoped lang="scss">
 .home-main {
   display: flex;
-  background: var(--app-background-color);
+  height: calc(100% - 48px);
 
   .editor-wrapper {
-    flex-shrink: 0;
-    color: black;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 
-    .player-container {
+    .player-workplace {
+      flex: 1;
       display: flex;
       justify-content: flex-start;
     }

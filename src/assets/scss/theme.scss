@@ -1,15 +1,41 @@
-@mixin theme($app-background-color) {
+@mixin theme(
+  $app-background-color,
+  $app-menu-background-color,
+  $app-resource-background-color,
+  $app-header-background-color,
+  $app-player-background-color,
+
+  $app-text-color,
+
+  $app-text-size
+) {
   --app-background-color: #{$app-background-color};
+  --app-menu-background-color: #{$app-menu-background-color};
+  --app-resource-background-color: #{$app-resource-background-color};
+  --app-header-background-color: #{$app-header-background-color};
+  --app-player-background-color: #{$app-player-background-color};
+
+  --app-text-color: #{$app-text-color};
+
+  --app-text-size: #{$app-text-size};
 }
 
 :root {
   @include theme(
-    $app-background-color: #fff
+    $app-background-color: #000,
+    $app-menu-background-color: #151620,
+    $app-resource-background-color: #222331,
+    $app-header-background-color: #070709,
+    $app-player-background-color: #11121A,
+
+    $app-text-color: #aaa,
+
+    $app-text-size: 13px
   ) 
 }
 
-.dark:root {
-  @include theme(
-    $app-background-color: #000
-  ) 
-}
+// .dark:root {
+//   @include theme(
+//     $app-background-color: #000
+//   ) 
+// }
