@@ -1,0 +1,52 @@
+@mixin theme(
+  $app-bg-color,
+  $app-bg-color-light,
+  // $app-bg-color-lighter,
+  $app-bg-color-dark,
+  $app-bg-color-darker,
+  $app-bg-color-blank,
+
+  $app-text-color-primary,
+  $app-text-color-regular
+) {
+  --app-bg-color: #{$app-bg-color};
+  --app-bg-color-light: #{$app-bg-color-light};
+  // --app-bg-color-lighter: #{$app-bg-color-lighter};
+  --app-bg-color-dark: #{$app-bg-color-dark};
+  --app-bg-color-darker: #{$app-bg-color-darker};
+  --app-bg-color-blank: #{$app-bg-color-blank};
+
+  --app-text-color-primary: #{$app-text-color-primary};
+  --app-text-color-regular: #{$app-text-color-regular};
+
+  --app-color-white: #fff;
+  --app-color-black: #000;
+}
+
+:root {
+  // Typography
+  --app-font-size-extra-large: 18px;
+  --app-font-size-large: 16px;
+  --app-font-size-medium: 14px;
+  --app-font-size-base: 13px;
+  --app-font-size-small: 12px;
+  --app-font-size-extra-small: 12px;
+
+  @include theme(
+    $app-bg-color: #151620,
+    $app-bg-color-light: #222331,
+    // $app-bg-color-lighter: ,
+    $app-bg-color-dark: #11121A,
+    $app-bg-color-darker: #070709,
+    $app-bg-color-blank: #000,
+
+    $app-text-color-primary: #a8abb2,
+    $app-text-color-regular: #c0c4cc,
+  )
+}
+
+// .dark:root {
+//   @include theme(
+//     TODO
+//   ) 
+// }

@@ -7,6 +7,6 @@
 <style scoped lang="scss">
 .player-container {
   flex: 1;
-  background-color: var(--app-player-background-color);
+  background-color: var(--app-bg-color-dark);
 }
 </style>

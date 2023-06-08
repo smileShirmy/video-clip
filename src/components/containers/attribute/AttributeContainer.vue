@@ -9,7 +9,7 @@
   box-sizing: border-box;
   flex-shrink: 0;
   min-width: 370px;
-  border-left: 1px solid var(--app-background-color);
-  background-color: var(--app-menu-background-color);
+  border-left: 1px solid var(--app-bg-color-blank);
+  background-color: var(--app-bg-color);
 }
 </style>

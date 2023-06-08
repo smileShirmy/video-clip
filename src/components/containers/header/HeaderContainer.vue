@@ -15,6 +15,6 @@ const toggleDark = useToggle(isDark)
 .header-container {
   width: 100%;
   height: 48px;
-  background-color: var(--app-header-background-color);
+  background-color: var(--app-bg-color-darker);
 }
 </style>

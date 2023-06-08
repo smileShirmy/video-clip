@@ -1,7 +1,7 @@
 html, body, #app {
   width: 100%;
   height: 100%;
-  background-color: var(--app-background-color);
-  font-size: var(--app-text-size);
-  color: var(--app-text-color);
+  background-color: var(--app-bg-color-blank);
+  font-size: var(--app-font-size-base);
+  color: var(--app-text-color-primary);
 }

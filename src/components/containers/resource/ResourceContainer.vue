@@ -67,14 +67,14 @@ function selectMenu(componentName: ResourceComponentName) {
   display: flex;
   justify-content: flex-start;
   height: 100%;
-  border-right: 1px solid var(--app-background-color);
+  border-right: 1px solid var(--app-bg-color-blank);
 
   .menu-list {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     height: 100%;
-    background-color: var(--app-menu-background-color);
+    background-color: var(--app-bg-color);
 
     .menu-item {
       display: flex;
@@ -86,7 +86,7 @@ function selectMenu(componentName: ResourceComponentName) {
       cursor: pointer;
 
       &.active {
-        background-color: var(--app-resource-background-color);
+        background-color: var(--app-bg-color-light);
       }
     }
   }
@@ -96,7 +96,7 @@ function selectMenu(componentName: ResourceComponentName) {
     padding: 16px;
     min-width: 300px;
     height: 100%;
-    background-color: var(--app-resource-background-color);
+    background-color: var(--app-bg-color-light);
   }
 }
 </style>

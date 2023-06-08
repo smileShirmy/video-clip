@@ -22,5 +22,5 @@ import VideoItem from '../base/video-item/VideoItem.vue'
 </template>
 
 <style scoped lang="scss">
-@import '../../assets/scss/shared.scss';
+@use '../../assets/scss/shared.scss'
 </style>

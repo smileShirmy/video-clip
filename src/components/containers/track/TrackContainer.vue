@@ -8,8 +8,8 @@
 .track-container {
   box-sizing: border-box;
   min-height: 220px;
-  border-top: 1px solid var(--app-background-color);
-  background-color: var(--app-menu-background-color);
+  border-top: 1px solid var(--app-bg-color-blank);
+  background-color: var(--app-bg-color);
 }
 </style>
 

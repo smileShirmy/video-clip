@@ -21,11 +21,15 @@ const props = defineProps({
   .video-cover-wrapper {
     width: 116px;
     height: 78px;
-    background-color: var(--app-back-color);
+    background-color: var(--app-color-black);
+    border-radius: 4px;
+    overflow: hidden;
   }
 
   .video-name {
-    font-size: 12px;
+    margin-top: 8px;
+    color: var(--app-text-color-regular);
+    font-size: var(--app-font-size-extra-small);
   }
 }
 </style>
