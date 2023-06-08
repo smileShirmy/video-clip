@@ -1,11 +1,15 @@
 <script lang="ts">
-import LocalResource from './components/local-resource/LocalResource.vue'
+import VideoResource from './components/video-resource/VideoResource.vue'
 import TextResource from './components/text-resource/TextResource.vue'
+import AudioResource from './components/audio-resource/AudioResource.vue'
+import StickerResource from './components/sticker-resource/StickerResource.vue'
 
 export default {
   components: {
-    [ResourceComponentName.LOCAL_RESOURCE]: LocalResource,
+    [ResourceComponentName.VIDEO_RESOURCE]: VideoResource,
     [ResourceComponentName.TEXT_RESOURCE]: TextResource,
+    [ResourceComponentName.AUDIO_RESOURCE]: AudioResource,
+    [ResourceComponentName.STICKER_RESOURCE]: StickerResource,
   }
 }
 </script>
@@ -15,20 +19,28 @@ import { ref } from 'vue'
 import { ResourceComponentName } from './types'
 import type { MenuItem } from './types'
 
-const component = ref(LocalResource.name)
+const component = ref<ResourceComponentName>(ResourceComponentName.VIDEO_RESOURCE)
 
 const menu: MenuItem[] = [
   {
-    componentName: ResourceComponentName.LOCAL_RESOURCE,
-    name: '本地素材'
+    componentName: ResourceComponentName.VIDEO_RESOURCE,
+    name: '素材库'
   },
   {
     componentName: ResourceComponentName.TEXT_RESOURCE,
     name: '文本'
+  },
+  {
+    componentName: ResourceComponentName.AUDIO_RESOURCE,
+    name: '音频'
+  },
+  {
+    componentName: ResourceComponentName.STICKER_RESOURCE,
+    name: '贴纸'
   }
 ]
 
-function selectMenu(componentName: string) {
+function selectMenu(componentName: ResourceComponentName) {
   component.value = componentName
 }
 </script>
@@ -80,6 +92,8 @@ function selectMenu(componentName: string) {
   }
 
   .resource-wrapper {
+    box-sizing: border-box;
+    padding: 16px;
     min-width: 300px;
     height: 100%;
     background-color: var(--app-resource-background-color);

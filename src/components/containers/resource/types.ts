@@ -1,6 +1,8 @@
 export enum ResourceComponentName {
-  LOCAL_RESOURCE = 'localResource',
-  TEXT_RESOURCE = 'textResource'
+  VIDEO_RESOURCE = 'videoResource',
+  TEXT_RESOURCE = 'textResource',
+  AUDIO_RESOURCE = 'audioResource',
+  STICKER_RESOURCE = 'stickerResource'
 }
 
 export interface MenuItem {

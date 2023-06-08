@@ -9,7 +9,7 @@ export default { name: ResourceComponentName.TEXT_RESOURCE };
 </script>
 
 <template>
-  LocalResource
+  TextResource
 </template>
 
 <style scoped lang="scss"></style>

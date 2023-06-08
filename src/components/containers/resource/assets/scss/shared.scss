@@ -1,0 +1,9 @@
+.s-resource-list {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+
+  .s-resource-item {
+    margin: 8px;
+  }
+}
