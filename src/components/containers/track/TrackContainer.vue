@@ -1,7 +1,14 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import ControlBar from './components/control-bar/ControlBar.vue'
+import TrackController from './components/track-controller/TrackController.vue'
+
+</script>
 
 <template>
-  <div class="track-container">TrackContainer</div>
+  <div class="track-container" style="height: 500px">
+    <ControlBar />
+    <TrackController />
+  </div>
 </template>
 
 <style scoped lang="scss">
