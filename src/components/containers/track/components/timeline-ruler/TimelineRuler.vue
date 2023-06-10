@@ -39,6 +39,8 @@ function initCanvasContext() {
  * 那么缩放到最大和最小时的倍数为 60px / 2px = 30
  * 
  * 放大倍数随 scale 的增大而增大
+ * 
+ * 备注：canvas 的宽度是有上限的，因此如果宽度太长时需要拼接多个 canvas
  */
 type EasingFunction = (x: number) => number
 
