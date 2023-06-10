@@ -28,20 +28,53 @@ function initCanvasContext() {
  * 当缩放到最小时，最大长度为当前总长度的 1.5 倍
  * 当缩放到最大时基础单位为 f（帧）
  * 
- * 以一个 10s 的视频为例
+ * 当缩放到最大时一帧的宽度为 60px
  * 
- * 当滑块在最小时，一屏的宽度为 15s
- * 当滑块在中间时，一瓶的宽度为 (15 / 2) = 7.5s
- * 当滑块在最大时，一屏的宽度为 1s （这是固定的）
+ * 假如某个 30 帧，长度为 6s.20f 的视频
+ * 那么总长度就是 10s
+ * 
+ * 假如初始 timeline 的宽度为 600px
+ * 
+ * frameCount = 10s * 30f = 300f，那么初始状态下 1 帧的宽度为 600px / 300f =  2px
+ * 那么缩放到最大和最小时的倍数为 60px / 2px = 30
+ * 
+ * 放大倍数随 scale 的增大而增大
  */
+type EasingFunction = (x: number) => number
+
+/**
+ * 缓动函数，计算随 scale 增大而放大的倍数
+ * 
+ * @param {number} frameCount 总帧数
+ * @param {number} width 没有进行任何缩放时的宽度
+ * @param {number} [options.frameWidth = 60] 缩放到最大时 1 帧的宽度
+ */
+function initEasingFunction(frameCount: number, width: number, options: { frameWidth?: number } = {}): EasingFunction {
+  const { frameWidth = 60 } = options
+  // 缩放到最大时需要放大的倍数
+  const scale = frameWidth / (width / frameCount)
+  const a = Math.pow(scale, 1 / 100)
+
+  return (x: number): number => {
+    return Math.pow(a, x)
+  }
+}
+
 function drawTimelineRuler() {
   if (!timeline.value) return
 
-  const { width, height } = timeline.value.getBoundingClientRect();
+  const { width: rectWidth, height } = timeline.value.getBoundingClientRect();
 
   const ctx = timeline.value.getContext('2d')
 
   if (!ctx) return
+
+  const scaleLevel = 10;
+  const frameCount = 3000
+
+  const func = initEasingFunction(frameCount, rectWidth)
+  const scale = func(scaleLevel)
+  const width = rectWidth * scale;
 
   // 设置 canvas 大小，canvas 默认大小为 300 * 150，因此需要设置为和容器大小相同
   ctx.canvas.width = width
