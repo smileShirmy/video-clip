@@ -12,7 +12,6 @@ import TrackController from './components/track-controller/TrackController.vue'
 
 <style scoped lang="scss">
 .track-container {
-  box-sizing: border-box;
   min-height: 220px;
   border-top: 1px solid var(--app-bg-color-blank);
   background-color: var(--app-bg-color);

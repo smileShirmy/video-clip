@@ -29,6 +29,7 @@ import AttributeContainer from '@/components/containers/attribute/AttributeConta
     display: flex;
     flex-direction: column;
     width: 100%;
+    overflow: hidden;
 
     .player-workplace {
       flex: 1;

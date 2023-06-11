@@ -6,6 +6,7 @@
 
 <style scoped lang="scss">
 .control-bar {
+  box-sizing: border-box;
   height: 30px;
   background-color: var(--app-bg-color-light);
   border-bottom: 1px solid var(--app-bg-color-blank);
