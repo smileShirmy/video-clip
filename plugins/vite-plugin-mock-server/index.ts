@@ -5,11 +5,11 @@ export function mockServer(): Plugin {
     name: 'vite:mock-server',
     configureServer(server) {
       server.middlewares.use('/mock/resource', (req, res, next) => {
-       res.setHeader('Content-type', 'application/json')
-       res.statusCode = 200
-       res.end('success')
+        res.setHeader('Content-type', 'application/json')
+        res.statusCode = 200
+        res.end('success')
 
-       next();
+        next()
       })
     }
   }

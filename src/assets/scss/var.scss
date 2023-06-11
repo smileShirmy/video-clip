@@ -5,7 +5,6 @@
   $app-bg-color-dark,
   $app-bg-color-darker,
   $app-bg-color-blank,
-
   $app-text-color-primary,
   $app-text-color-regular
 ) {
@@ -36,17 +35,17 @@
     $app-bg-color: #151620,
     $app-bg-color-light: #222331,
     // $app-bg-color-lighter: ,
-    $app-bg-color-dark: #11121A,
+    $app-bg-color-dark: #11121a,
     $app-bg-color-darker: #070709,
     $app-bg-color-blank: #000,
 
     $app-text-color-primary: #a8abb2,
-    $app-text-color-regular: #c0c4cc,
-  )
+    $app-text-color-regular: #c0c4cc
+  );
 }
 
 // .dark:root {
 //   @include theme(
 //     TODO
-//   ) 
+//   )
 // }

@@ -1,15 +1,11 @@
 <script lang="ts">
 import { ResourceComponentName } from '../../types'
 
-export default { name: ResourceComponentName.TEXT_RESOURCE };
+export default { name: ResourceComponentName.TEXT_RESOURCE }
 </script>
 
-<script setup lang="ts">
+<script setup lang="ts"></script>
 
-</script>
-
-<template>
-  StickerResource
-</template>
+<template>StickerResource</template>
 
 <style scoped lang="scss"></style>

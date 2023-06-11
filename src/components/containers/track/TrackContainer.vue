@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import ControlBar from './components/control-bar/ControlBar.vue'
 import TrackController from './components/track-controller/TrackController.vue'
-
 </script>
 
 <template>
@@ -19,4 +18,3 @@ import TrackController from './components/track-controller/TrackController.vue'
   background-color: var(--app-bg-color);
 }
 </style>
-

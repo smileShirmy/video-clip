@@ -1,12 +1,11 @@
 <script lang="ts">
 import { ResourceComponentName } from '../../types'
 
-export default { name: ResourceComponentName.VIDEO_RESOURCE };
+export default { name: ResourceComponentName.VIDEO_RESOURCE }
 </script>
 
 <script setup lang="ts">
 import VideoItem from '../base/video-item/VideoItem.vue'
-
 </script>
 
 <template>
@@ -22,5 +21,5 @@ import VideoItem from '../base/video-item/VideoItem.vue'
 </template>
 
 <style scoped lang="scss">
-@use '../../assets/scss/shared.scss'
+@use '../../assets/scss/shared.scss';
 </style>

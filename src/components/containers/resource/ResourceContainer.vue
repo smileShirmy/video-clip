@@ -9,7 +9,7 @@ export default {
     [ResourceComponentName.VIDEO_RESOURCE]: VideoResource,
     [ResourceComponentName.TEXT_RESOURCE]: TextResource,
     [ResourceComponentName.AUDIO_RESOURCE]: AudioResource,
-    [ResourceComponentName.STICKER_RESOURCE]: StickerResource,
+    [ResourceComponentName.STICKER_RESOURCE]: StickerResource
   }
 }
 </script>
@@ -48,8 +48,13 @@ function selectMenu(componentName: ResourceComponentName) {
 <template>
   <aside class="resource-container">
     <ul class="menu-list">
-      <li class="menu-item" :class="{ active: item.componentName === component }" v-for="item in menu"
-        :key="item.componentName" @click="selectMenu(item.componentName)">
+      <li
+        class="menu-item"
+        :class="{ active: item.componentName === component }"
+        v-for="item in menu"
+        :key="item.componentName"
+        @click="selectMenu(item.componentName)"
+      >
         <span>{{ item.name }}</span>
       </li>
     </ul>

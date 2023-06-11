@@ -1,15 +1,11 @@
 <script lang="ts">
 import { ResourceComponentName } from '../../types'
 
-export default { name: ResourceComponentName.AUDIO_RESOURCE };
+export default { name: ResourceComponentName.AUDIO_RESOURCE }
 </script>
 
-<script setup lang="ts">
+<script setup lang="ts"></script>
 
-</script>
-
-<template>
-  AudioResource
-</template>
+<template>AudioResource</template>
 
 <style scoped lang="scss"></style>
