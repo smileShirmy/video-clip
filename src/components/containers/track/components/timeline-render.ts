@@ -21,11 +21,25 @@ type EasingFunction = (x: number) => number
  * 时间刻度渲染配置
  */
 interface TimelineRenderOptions {
-  ratio?: number // 默认为 window.devicePixelRatio
-  longScaleMinWidth?: number // 至少为多少像素时显示长刻度，默认为 120
-  separateParts?: number // 每个长刻度被分割为多少部分，默认为 10
-  maxFrameWidth?: number // 一帧的最大宽度，默认为 60
-  backgroundColor?: number // 背景颜色，默认为 transparent
+  ratio?: number
+  longScaleMinWidth?: number // 至少为多少像素时显示长刻度
+  separateParts?: number // 每个长刻度被分割为多少部分
+  maxFrameWidth?: number // 一帧的最大宽度
+  backgroundColor?: number // 背景颜色
+
+  scaleHeight?: number // 短刻度的高度
+  scaleStrokeColor?: string // 短刻度的颜色
+
+  longScaleHeight?: number // 长刻度的高度
+  longScaleStrokeColor?: string // 长刻度颜色
+
+  textFont?: string
+  textColor?: string
+  textBaseLine?: string
+  textTranslateX?: number // 文本相对于长刻度的 x 轴位置
+  textTranslateY?: number // 文本相对于顶部的 y 轴位置
+
+  perCanvasMaxWidth?: number // 每个 canvas 的最大宽度
 }
 
 function normalizeOptions(options: TimelineRenderOptions) {
@@ -34,7 +48,16 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleMinWidth = 120,
     separateParts = 10,
     maxFrameWidth = 60,
-    backgroundColor = 'transparent'
+    backgroundColor = 'transparent',
+    scaleHeight = 7,
+    scaleStrokeColor = '#666',
+    longScaleHeight = 13,
+    longScaleStrokeColor = '#999',
+    textFont,
+    textColor = '#999',
+    textBaseLine = 'middle',
+    textTranslateX = 4,
+    perCanvasMaxWidth = 100 // TODO: 默认值是多少？
   } = options
 
   return {
@@ -42,7 +65,17 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleMinWidth,
     separateParts,
     maxFrameWidth,
-    backgroundColor
+    backgroundColor,
+    scaleHeight,
+    scaleStrokeColor,
+    longScaleHeight,
+    longScaleStrokeColor,
+    textFont: textFont ?? `${13 * ratio}px sans-serif`,
+    textColor,
+    textBaseLine,
+    textTranslateX,
+    textTranslateY: longScaleHeight + 2,
+    perCanvasMaxWidth
   }
 }
 
@@ -168,106 +201,114 @@ export class TimelineRender {
     return (x: number) => Math.pow(a, x)
   }
 
-  // private drawTimelineRuler(scaleLevel: number, frameCount: number) {
-  //   if (!timelineCanvasRef.value) return
+  private drawTimelineRuler(scaleLevel: number, frameCount: number) {
+    if (!timelineCanvasRef.value) return
 
-  //   const ctx = timelineCanvasRef.value.getContext('2d')
+    const ctx = timelineCanvasRef.value.getContext('2d')
 
-  //   if (!ctx) return
+    if (!ctx) return
 
-  //   // 计算放大倍数及放大后的宽度
-  //   const minFrameWidth = timelineRect.width / frameCount
-  //   const func = initEasingFunction(minFrameWidth)
-  //   const scale = func(scaleLevel)
-  //   const width = timelineRect.width * scale
+    // 计算放大倍数及放大后的宽度
+    const minFrameWidth = timelineRect.width / frameCount
+    const func = this.initEasingFunction(minFrameWidth)
+    const scale = func(scaleLevel)
+    const width = timelineRect.width * scale
 
-  //   // 设置 canvas 大小，canvas 默认大小为 300 * 150，因此需要设置为和容器大小相同
-  //   ctx.canvas.width = width
-  //   ctx.canvas.height = timelineRect.height
+    // 设置 canvas 大小，canvas 默认大小为 300 * 150，因此需要设置为和容器大小相同
+    ctx.canvas.width = width
+    ctx.canvas.height = timelineRect.height
 
-  //   timelineRect.width = width
+    timelineRect.width = width
 
-  //   // 清空画布
-  //   ctx.scale(RATIO, RATIO)
-  //   ctx.clearRect(0, 0, width, timelineRect.height)
+    const {
+      backgroundColor,
+      ratio,
+      scaleHeight,
+      scaleStrokeColor,
+      longScaleHeight,
+      longScaleStrokeColor,
+      textColor,
+      textFont,
+      textBaseLine,
+      textTranslateX,
+      textTranslateY
+    } = this.options
 
-  //   // canvas 背景色
-  //   ctx.fillStyle = BACKGROUND_COLOR
-  //   ctx.fillRect(0, 0, width, timelineRect.height)
+    // 清空画布
+    ctx.scale(ratio, ratio)
+    ctx.clearRect(0, 0, width, timelineRect.height)
 
-  //   // 根据当前缩放等级下的帧宽度获取长刻度信息
-  //   const { type, level, intervalWidth, parts } = getIntervalConfig(minFrameWidth * scale)
+    // canvas 背景色
+    ctx.fillStyle = backgroundColor
+    ctx.fillRect(0, 0, width, timelineRect.height)
 
-  //   // 绘制刻度
-  //   ctx.lineWidth = 1
+    // 根据当前缩放等级下的帧宽度获取长刻度信息
+    const { type, unit, scaleWidth, parts } = this.getScaleConfig(minFrameWidth * scale)
 
-  //   // 短刻度的高度
-  //   const INTERVAL_HEIGHT = 7
-  //   // 长刻度高度
-  //   const LONG_INTERVAL_HEIGHT = 13
+    // 绘制刻度
+    ctx.lineWidth = 1
 
-  //   // 记录长刻度的 x 轴
-  //   const longIntervalXList: number[] = []
+    // 记录长刻度的 x 轴
+    const longIntervalXList: number[] = []
 
-  //   /**
-  //    * 绘制短刻度 start
-  //    */
-  //   ctx.beginPath()
+    /**
+     * 绘制短刻度 start
+     */
+    ctx.beginPath()
 
-  //   ctx.strokeStyle = '#666'
+    ctx.strokeStyle = scaleStrokeColor
 
-  //   const count = Math.floor(width / intervalWidth)
-  //   for (let i = 0; i <= count; i += 1) {
-  //     // TODO: 优化 x 的取值
-  //     // prevent canvas 1px line blurry
-  //     const x = Math.floor(intervalWidth * i) + 0.5
+    const count = Math.floor(width / scaleWidth)
+    for (let i = 0; i <= count; i += 1) {
+      // TODO: 优化 x 的取值
+      // prevent canvas 1px line blurry
+      const x = Math.floor(scaleWidth * i) + 0.5
 
-  //     // 保存长刻度的 x 轴位置
-  //     if (i % parts === 0) {
-  //       longIntervalXList.push(x)
-  //     }
+      // 保存长刻度的 x 轴位置
+      if (i % parts === 0) {
+        longIntervalXList.push(x)
+      }
 
-  //     ctx.moveTo(x, 0)
-  //     ctx.lineTo(x, INTERVAL_HEIGHT)
-  //   }
-  //   ctx.stroke()
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x, scaleHeight)
+    }
+    ctx.stroke()
 
-  //   ctx.closePath()
-  //   /**
-  //    * 绘制短刻度 end
-  //    */
+    ctx.closePath()
+    /**
+     * 绘制短刻度 end
+     */
 
-  //   /**
-  //    * 绘制长刻度 start
-  //    * 因为长刻度的刻度线颜色和文本颜色跟短刻度不同，因此单独绘制
-  //    */
-  //   ctx.beginPath()
+    /**
+     * 绘制长刻度 start
+     * 因为长刻度的刻度线颜色和文本颜色跟短刻度不同，因此单独绘制
+     */
+    ctx.beginPath()
 
-  //   ctx.strokeStyle = '#999'
-  //   ctx.fillStyle = '#999'
-  //   ctx.font = `${13 * RATIO}px sans-serif`
-  //   ctx.lineWidth = 1
-  //   ctx.textBaseline = 'middle'
+    ctx.strokeStyle = longScaleStrokeColor
+    ctx.fillStyle = textColor
+    ctx.font = textFont
+    ctx.textBaseline = textBaseLine
 
-  //   const l = longIntervalXList.length
-  //   for (let i = 0; i < l; i += 1) {
-  //     const x = longIntervalXList[i]
-  //     ctx.moveTo(x, 0)
-  //     ctx.save()
-  //     ctx.translate(x + 4, LONG_INTERVAL_HEIGHT + 2)
-  //     const text = formatIntervalTime(i, level, type)
-  //     ctx.fillText(text, 0, 0)
-  //     ctx.restore()
-  //     ctx.lineTo(x, LONG_INTERVAL_HEIGHT)
-  //   }
-  //   ctx.stroke()
+    const l = longIntervalXList.length
+    for (let i = 0; i < l; i += 1) {
+      const x = longIntervalXList[i]
+      ctx.moveTo(x, 0)
+      ctx.save()
+      ctx.translate(x + textTranslateX, textTranslateY)
+      const text = this.formatIntervalTime(i, unit, type)
+      ctx.fillText(text, 0, 0)
+      ctx.restore()
+      ctx.lineTo(x, longScaleHeight)
+    }
+    ctx.stroke()
 
-  //   // clearRect 不能清除路径，如果不关闭路径，下次绘制就接着上次的路径继续绘制
-  //   ctx.closePath()
-  //   /**
-  //    * 绘制长刻度 end
-  //    */
+    // clearRect 不能清除路径，如果不关闭路径，下次绘制就接着上次的路径继续绘制
+    ctx.closePath()
+    /**
+     * 绘制长刻度 end
+     */
 
-  //   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  // }
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+  }
 }
