@@ -25,7 +25,10 @@ interface TimelineRenderOptions {
   longScaleMinWidth?: number // 至少为多少像素时显示长刻度
   separateParts?: number // 每个长刻度被分割为多少部分
   maxFrameWidth?: number // 一帧的最大宽度
-  backgroundColor?: number // 背景颜色
+
+  maxCanvasWidth?: number // canvas 的最大宽度
+  canvasHeight?: number // 高度
+  backgroundColor?: string // 背景颜色
 
   scaleHeight?: number // 短刻度的高度
   scaleStrokeColor?: string // 短刻度的颜色
@@ -35,11 +38,8 @@ interface TimelineRenderOptions {
 
   textFont?: string
   textColor?: string
-  textBaseLine?: string
   textTranslateX?: number // 文本相对于长刻度的 x 轴位置
   textTranslateY?: number // 文本相对于顶部的 y 轴位置
-
-  perCanvasMaxWidth?: number // 每个 canvas 的最大宽度
 }
 
 function normalizeOptions(options: TimelineRenderOptions) {
@@ -48,6 +48,8 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleMinWidth = 120,
     separateParts = 10,
     maxFrameWidth = 60,
+    maxCanvasWidth = 500, // canvas 的最大宽度
+    canvasHeight = 30,
     backgroundColor = 'transparent',
     scaleHeight = 7,
     scaleStrokeColor = '#666',
@@ -55,9 +57,7 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleStrokeColor = '#999',
     textFont,
     textColor = '#999',
-    textBaseLine = 'middle',
-    textTranslateX = 4,
-    perCanvasMaxWidth = 100 // TODO: 默认值是多少？
+    textTranslateX = 4
   } = options
 
   return {
@@ -65,6 +65,8 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleMinWidth,
     separateParts,
     maxFrameWidth,
+    maxCanvasWidth,
+    canvasHeight,
     backgroundColor,
     scaleHeight,
     scaleStrokeColor,
@@ -72,15 +74,15 @@ function normalizeOptions(options: TimelineRenderOptions) {
     longScaleStrokeColor,
     textFont: textFont ?? `${13 * ratio}px sans-serif`,
     textColor,
-    textBaseLine,
     textTranslateX,
-    textTranslateY: longScaleHeight + 2,
-    perCanvasMaxWidth
+    textTranslateY: longScaleHeight + 2
   }
 }
 
 export class TimelineRender {
   private options: ReturnType<typeof normalizeOptions>
+
+  private canvasCollection: HTMLCanvasElement[] = []
 
   constructor(options: TimelineRenderOptions = {}) {
     this.options = normalizeOptions(options)
@@ -162,7 +164,7 @@ export class TimelineRender {
    * @param {number} level 长刻度类型值
    * @param {longScaleType} type 类型
    */
-  private formatIntervalTime(index: number, level: number, unit: LongScaleUnit): string {
+  private formatLongScaleTime(index: number, level: number, unit: LongScaleUnit): string {
     if (index === 0) return '00:00'
 
     if (unit === LongScaleUnit.FRAME) {
@@ -201,26 +203,20 @@ export class TimelineRender {
     return (x: number) => Math.pow(a, x)
   }
 
-  private drawTimelineRuler(scaleLevel: number, frameCount: number) {
-    if (!timelineCanvasRef.value) return
-
-    const ctx = timelineCanvasRef.value.getContext('2d')
-
-    if (!ctx) return
-
-    // 计算放大倍数及放大后的宽度
-    const minFrameWidth = timelineRect.width / frameCount
-    const func = this.initEasingFunction(minFrameWidth)
-    const scale = func(scaleLevel)
-    const width = timelineRect.width * scale
-
-    // 设置 canvas 大小，canvas 默认大小为 300 * 150，因此需要设置为和容器大小相同
-    ctx.canvas.width = width
-    ctx.canvas.height = timelineRect.height
-
-    timelineRect.width = width
-
+  /**
+   * 绘制 canvas
+   */
+  render(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    scaleConfig: ScaleConfig,
+    options: {
+      startScaleX?: number
+      startLongScaleX?: number
+    } = {}
+  ) {
     const {
+      canvasHeight,
       backgroundColor,
       ratio,
       scaleHeight,
@@ -229,27 +225,31 @@ export class TimelineRender {
       longScaleStrokeColor,
       textColor,
       textFont,
-      textBaseLine,
       textTranslateX,
       textTranslateY
     } = this.options
 
+    const { startScaleX = 0, startLongScaleX = 0 } = options
+
+    const { type, unit, scaleWidth, parts } = scaleConfig
+
+    // 设置画布的宽度和高度
+    ctx.canvas.width = width
+    ctx.canvas.height = canvasHeight
+
     // 清空画布
     ctx.scale(ratio, ratio)
-    ctx.clearRect(0, 0, width, timelineRect.height)
+    ctx.clearRect(0, 0, width, canvasHeight)
 
     // canvas 背景色
     ctx.fillStyle = backgroundColor
-    ctx.fillRect(0, 0, width, timelineRect.height)
+    ctx.fillRect(0, 0, width, canvasHeight)
 
-    // 根据当前缩放等级下的帧宽度获取长刻度信息
-    const { type, unit, scaleWidth, parts } = this.getScaleConfig(minFrameWidth * scale)
-
-    // 绘制刻度
+    // 绘制刻度宽度
     ctx.lineWidth = 1
 
     // 记录长刻度的 x 轴
-    const longIntervalXList: number[] = []
+    const longLongScaleXList: number[] = []
 
     /**
      * 绘制短刻度 start
@@ -262,13 +262,14 @@ export class TimelineRender {
     for (let i = 0; i <= count; i += 1) {
       // TODO: 优化 x 的取值
       // prevent canvas 1px line blurry
-      const x = Math.floor(scaleWidth * i) + 0.5
+      const x = startScaleX + Math.floor(scaleWidth * i) + 0.5
 
       // 保存长刻度的 x 轴位置
       if (i % parts === 0) {
-        longIntervalXList.push(x)
+        longLongScaleXList.push(x)
       }
 
+      console.log(x)
       ctx.moveTo(x, 0)
       ctx.lineTo(x, scaleHeight)
     }
@@ -288,15 +289,14 @@ export class TimelineRender {
     ctx.strokeStyle = longScaleStrokeColor
     ctx.fillStyle = textColor
     ctx.font = textFont
-    ctx.textBaseline = textBaseLine
 
-    const l = longIntervalXList.length
+    const l = longLongScaleXList.length
     for (let i = 0; i < l; i += 1) {
-      const x = longIntervalXList[i]
+      const x = startLongScaleX + longLongScaleXList[i]
       ctx.moveTo(x, 0)
       ctx.save()
       ctx.translate(x + textTranslateX, textTranslateY)
-      const text = this.formatIntervalTime(i, unit, type)
+      const text = this.formatLongScaleTime(i, unit, type)
       ctx.fillText(text, 0, 0)
       ctx.restore()
       ctx.lineTo(x, longScaleHeight)
@@ -310,5 +310,107 @@ export class TimelineRender {
      */
 
     ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+    // 计算最后的位置信息，为了下一个 canvas 能够继续画
+
+    // 最后一个刻度 x 已经绘制的长度
+    const scaleX = width % scaleWidth
+    // 最后一个长刻度已经绘制的长度
+    const longScaleX = width - longLongScaleXList[longLongScaleXList.length - 1]
+    // 下一个 canvas 开始绘制的偏移值
+    const nextScaleXStart = scaleWidth - scaleX
+    // 下一个 canvas 第一个长刻度剩余需要绘制的短刻度
+    const nextLongScaleStartX = scaleWidth * 10 - longScaleX
+
+    return {
+      nextScaleXStart,
+      nextLongScaleStartX
+    }
+  }
+
+  /**
+   *
+   * @param initRectWidth
+   * @param frameCount
+   * @param scale
+   */
+  init(initRectWidth = 500, frameCount = 400, sliderValue = 10) {
+    const { maxFrameWidth, canvasHeight, maxCanvasWidth } = this.options
+
+    // 总帧数需要 *1.5，预留更多空白操作区域
+    const maxFrameCount = frameCount * 1.5
+
+    // 缩放至最下时每帧的宽度
+    const minFrameWidth = initRectWidth / maxFrameCount
+
+    // 初始化缓动函数
+    const func = this.initEasingFunction(minFrameWidth)
+    // 每帧放大的倍数
+    const scale = func(sliderValue)
+
+    // timeline 的宽度
+    const timelineWidth = initRectWidth * scale
+
+    // 最大宽度
+    const maxWidth = maxFrameWidth * maxFrameCount
+
+    // 创建可供绘制的最多 canvas 个数
+    const canvasCount = Math.ceil(maxWidth / maxCanvasWidth)
+    this.canvasCollection = Array.from({ length: canvasCount }, () =>
+      document.createElement('canvas')
+    )
+
+    // 根据当前缩放等级下的帧的宽度获取刻度信息
+    const scaleConfig = this.getScaleConfig(minFrameWidth * scale)
+
+    // 最后一个被使用的 canvas 的宽度
+    const lastCanvasWidth = timelineWidth % maxCanvasWidth
+
+    // 被使用的 canvas 个数
+    let usedCount = 0
+
+    // TODO: 文本可能会刚好被截断的情况也需要处理
+    let startScaleX = 0
+    let startLongScaleX = 0
+
+    for (let i = 0; i < canvasCount; i += 1) {
+      const canvas = this.canvasCollection[i]
+      const ctx = canvas.getContext('2d')!
+      ctx.canvas.height = canvasHeight
+
+      // 如果当前使用的 canvas 总宽度已经满足当前时间刻度的需求
+      if (maxCanvasWidth * (i + 1) <= timelineWidth) {
+        const { nextScaleXStart, nextLongScaleStartX } = this.render(
+          ctx,
+          maxCanvasWidth,
+          scaleConfig,
+          {
+            startScaleX,
+            startLongScaleX
+          }
+        )
+        startScaleX = nextScaleXStart
+        startLongScaleX = nextLongScaleStartX
+      }
+      // 如果不满足
+      else {
+        usedCount = i + 1
+
+        this.render(ctx, lastCanvasWidth, scaleConfig, {
+          startScaleX,
+          startLongScaleX
+        })
+        break
+      }
+    }
+
+    console.log(usedCount)
+
+    const demo = document.getElementById('demo')
+    if (demo) {
+      for (let i = 0; i < usedCount; i += 1) {
+        demo.appendChild(this.canvasCollection[i])
+      }
+    }
   }
 }

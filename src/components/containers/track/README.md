@@ -54,3 +54,7 @@ function initEasingFunction()
  */
 function getIntervalConfig()
 ```
+
+## canvas 最大宽度限制处理
+
+Chrome、Firefox、Safari 的最大宽度为 `32767px`，IE 最大宽度为 `8192px`，IE 浏览器不考虑

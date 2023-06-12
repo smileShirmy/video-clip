@@ -4,7 +4,7 @@ import { reactive } from 'vue'
 import { ref } from 'vue'
 import { TimelineRender } from '../timeline-render'
 
-const timelineCanvasRef = ref<HTMLCanvasElement | null>(null)
+const timelineRulerRef = ref<HTMLDivElement | null>(null)
 const timelineRect = reactive({
   width: 0,
   height: 0
@@ -23,7 +23,10 @@ function initTimelineRuler(w: number, h = 30) {
   timelineRect.height = h
 
   // TODO:
-  new TimelineRender()
+  // new TimelineRender()
+
+  const e = new TimelineRender()
+  e.init()
 }
 
 defineExpose({
@@ -32,5 +35,5 @@ defineExpose({
 </script>
 
 <template>
-  <canvas :style="timelineStyle" ref="timelineCanvasRef"></canvas>
+  <div class="timeline-ruler" ref="timelineRulerRef" id="demo"></div>
 </template>
