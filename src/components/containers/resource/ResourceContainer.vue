@@ -1,23 +1,20 @@
-<script lang="ts">
+<script setup lang="ts">
+import { ref } from 'vue'
+import { ResourceComponentName } from './types'
+import type { MenuItem } from './types'
 import VideoResource from './components/video-resource/VideoResource.vue'
 import TextResource from './components/text-resource/TextResource.vue'
 import AudioResource from './components/audio-resource/AudioResource.vue'
 import StickerResource from './components/sticker-resource/StickerResource.vue'
 
-export default {
+defineOptions({
   components: {
     [ResourceComponentName.VIDEO_RESOURCE]: VideoResource,
     [ResourceComponentName.TEXT_RESOURCE]: TextResource,
     [ResourceComponentName.AUDIO_RESOURCE]: AudioResource,
     [ResourceComponentName.STICKER_RESOURCE]: StickerResource
   }
-}
-</script>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import { ResourceComponentName } from './types'
-import type { MenuItem } from './types'
+})
 
 const component = ref<ResourceComponentName>(ResourceComponentName.VIDEO_RESOURCE)
 

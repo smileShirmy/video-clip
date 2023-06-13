@@ -1,10 +1,10 @@
-<script lang="ts">
+<script setup lang="ts">
 import { ResourceComponentName } from '../../types'
 
-export default { name: ResourceComponentName.TEXT_RESOURCE }
+defineOptions({
+  name: ResourceComponentName.TEXT_RESOURCE
+})
 </script>
-
-<script setup lang="ts"></script>
 
 <template>TextResource</template>
 

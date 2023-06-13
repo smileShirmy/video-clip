@@ -1,11 +1,10 @@
-<script lang="ts">
-import { ResourceComponentName } from '../../types'
-
-export default { name: ResourceComponentName.VIDEO_RESOURCE }
-</script>
-
 <script setup lang="ts">
 import VideoItem from '../base/video-item/VideoItem.vue'
+import { ResourceComponentName } from '../../types'
+
+defineOptions({
+  name: ResourceComponentName.VIDEO_RESOURCE
+})
 </script>
 
 <template>
