@@ -211,8 +211,9 @@ export class TimelineRender {
     width: number,
     scaleConfig: ScaleConfig,
     options: {
-      startScaleX?: number
-      startLongScaleX?: number
+      scaleStartX?: number // 短刻度偏移量
+      startRestParts?: number // 还有多少个刻度区间绘制完之后要绘制长刻度
+      startLongScaleIndex?: number // 用于获取长刻度显示的时间，记录当前第一个开始的长刻度是第几个
     } = {}
   ) {
     const {
@@ -228,10 +229,9 @@ export class TimelineRender {
       textTranslateX,
       textTranslateY
     } = this.options
-
-    const { startScaleX = 0, startLongScaleX = 0 } = options
-
     const { type, unit, scaleWidth, parts } = scaleConfig
+
+    const { scaleStartX = 0, startRestParts = 0, startLongScaleIndex = 0 } = options
 
     // 设置画布的宽度和高度
     ctx.canvas.width = width
@@ -260,16 +260,15 @@ export class TimelineRender {
 
     const count = Math.floor(width / scaleWidth)
     for (let i = 0; i <= count; i += 1) {
-      // TODO: 优化 x 的取值
       // prevent canvas 1px line blurry
-      const x = startScaleX + Math.floor(scaleWidth * i) + 0.5
+      const x = Math.round(scaleStartX + scaleWidth * i) + 0.5
 
       // 保存长刻度的 x 轴位置
-      if (i % parts === 0) {
+      if (i % parts === startRestParts) {
         longLongScaleXList.push(x)
+        continue
       }
 
-      console.log(x)
       ctx.moveTo(x, 0)
       ctx.lineTo(x, scaleHeight)
     }
@@ -292,11 +291,11 @@ export class TimelineRender {
 
     const l = longLongScaleXList.length
     for (let i = 0; i < l; i += 1) {
-      const x = startLongScaleX + longLongScaleXList[i]
+      const x = longLongScaleXList[i]
       ctx.moveTo(x, 0)
       ctx.save()
       ctx.translate(x + textTranslateX, textTranslateY)
-      const text = this.formatLongScaleTime(i, unit, type)
+      const text = this.formatLongScaleTime(startLongScaleIndex + i, unit, type)
       ctx.fillText(text, 0, 0)
       ctx.restore()
       ctx.lineTo(x, longScaleHeight)
@@ -315,38 +314,41 @@ export class TimelineRender {
 
     // 最后一个刻度 x 已经绘制的长度
     const scaleX = width % scaleWidth
+    // 下一个 canvas 开始绘制的偏移值
+    const nextScaleStartX = scaleWidth - scaleX
+
     // 最后一个长刻度已经绘制的长度
     const longScaleX = width - longLongScaleXList[longLongScaleXList.length - 1]
-    // 下一个 canvas 开始绘制的偏移值
-    const nextScaleXStart = scaleWidth - scaleX
-    // 下一个 canvas 第一个长刻度剩余需要绘制的短刻度
-    const nextLongScaleStartX = scaleWidth * 10 - longScaleX
+    // 剩余没有绘制的短刻度个数
+    const restParts = parts - Math.floor(longScaleX / scaleWidth) - 1
 
     return {
-      nextScaleXStart,
-      nextLongScaleStartX
+      nextScaleStartX,
+      restParts,
+      nextLongScaleIndex: longLongScaleXList.length
     }
   }
 
   /**
+   * 初始化
    *
-   * @param initRectWidth
-   * @param frameCount
-   * @param scale
+   * @param {number} initRectWidth timeline 容器的宽度
+   * @param {number} frameCount 总帧数
+   * @param {number} sliderValue 缩放值
    */
   init(initRectWidth = 500, frameCount = 400, sliderValue = 10) {
     const { maxFrameWidth, canvasHeight, maxCanvasWidth } = this.options
 
-    // 总帧数需要 *1.5，预留更多空白操作区域
+    // 总帧数需要 * 1.5，因为要预留更多空白操作区域
     const maxFrameCount = frameCount * 1.5
 
-    // 缩放至最下时每帧的宽度
+    // 缩放至最小时每帧的宽度
     const minFrameWidth = initRectWidth / maxFrameCount
 
     // 初始化缓动函数
-    const func = this.initEasingFunction(minFrameWidth)
-    // 每帧放大的倍数
-    const scale = func(sliderValue)
+    const getScale = this.initEasingFunction(minFrameWidth)
+    // 根据缩放值获取每帧放大的倍数
+    const scale = getScale(sliderValue)
 
     // timeline 的宽度
     const timelineWidth = initRectWidth * scale
@@ -370,8 +372,9 @@ export class TimelineRender {
     let usedCount = 0
 
     // TODO: 文本可能会刚好被截断的情况也需要处理
-    let startScaleX = 0
-    let startLongScaleX = 0
+    let scaleStartX = 0
+    let startRestParts = 0
+    let startLongScaleIndex = 0
 
     for (let i = 0; i < canvasCount; i += 1) {
       const canvas = this.canvasCollection[i]
@@ -380,31 +383,32 @@ export class TimelineRender {
 
       // 如果当前使用的 canvas 总宽度已经满足当前时间刻度的需求
       if (maxCanvasWidth * (i + 1) <= timelineWidth) {
-        const { nextScaleXStart, nextLongScaleStartX } = this.render(
+        const { nextScaleStartX, restParts, nextLongScaleIndex } = this.render(
           ctx,
           maxCanvasWidth,
           scaleConfig,
           {
-            startScaleX,
-            startLongScaleX
+            scaleStartX,
+            startRestParts,
+            startLongScaleIndex
           }
         )
-        startScaleX = nextScaleXStart
-        startLongScaleX = nextLongScaleStartX
+        scaleStartX = nextScaleStartX
+        startRestParts = restParts
+        startLongScaleIndex = nextLongScaleIndex
       }
       // 如果不满足
       else {
         usedCount = i + 1
 
         this.render(ctx, lastCanvasWidth, scaleConfig, {
-          startScaleX,
-          startLongScaleX
+          scaleStartX,
+          startRestParts,
+          startLongScaleIndex
         })
         break
       }
     }
-
-    console.log(usedCount)
 
     const demo = document.getElementById('demo')
     if (demo) {
