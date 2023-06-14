@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import ScaleSlider from './ScaleSlider.vue'
+
+const scale = ref(0)
 </script>
 
 <template>
-  <div class="control-bar"><ScaleSlider /></div>
+  <div class="control-bar"><ScaleSlider v-model="scale" /></div>
 </template>
 
 <style scoped lang="scss">
