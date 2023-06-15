@@ -136,11 +136,19 @@ function onButtonDown(event: MouseEvent | TouchEvent) {
   window.addEventListener('touchend', onDragEnd)
   window.addEventListener('contextmenu', onDragEnd)
 }
+
+function onSliderClick(event: MouseEvent) {
+  if (!slider.value || dragging) return
+  resetSize()
+  const sliderOffsetLeft = slider.value.getBoundingClientRect().left
+  setPosition(((event.clientX - sliderOffsetLeft) / sliderSize) * 100)
+  emitChange()
+}
 </script>
 
 <template>
   <div class="scale-slider">
-    <div class="slider-runway" ref="slider">
+    <div class="slider-runway" ref="slider" @click="onSliderClick">
       <div class="slider-bar" :style="barStyle"></div>
       <div
         :style="buttonStyle"
