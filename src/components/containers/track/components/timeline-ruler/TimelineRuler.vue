@@ -1,39 +1,23 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { reactive } from 'vue'
-import { ref } from 'vue'
-import { TimelineRender } from '../timeline-render'
+import { useTrackStore } from '@/stores/track'
+import { onMounted, ref } from 'vue'
 
-const timelineRulerRef = ref<HTMLDivElement | null>(null)
-const timelineRect = reactive({
-  width: 0,
-  height: 0
-})
+const trackStore = useTrackStore()
+const timelineRulerRef = ref()
 
-const timelineStyle = computed(() => {
-  const { width, height } = timelineRect
-  return {
-    width: `${width}px`,
-    height: `${height}px`
-  }
-})
-
-function initTimelineRuler(w: number, h = 30) {
-  timelineRect.width = w
-  timelineRect.height = h
-
-  // TODO:
-  // new TimelineRender()
-
-  const e = new TimelineRender()
-  e.init()
-}
-
-defineExpose({
-  initTimelineRuler
+onMounted(() => {
+  trackStore.initTimelineRender(timelineRulerRef.value)
 })
 </script>
 
 <template>
-  <div class="timeline-ruler" ref="timelineRulerRef" id="demo"></div>
+  <div class="timeline-ruler" ref="timelineRulerRef"></div>
 </template>
+
+<style scoped lang="scss">
+.timeline-ruler {
+  display: flex;
+  justify-content: flex-start;
+  height: 30px;
+}
+</style>

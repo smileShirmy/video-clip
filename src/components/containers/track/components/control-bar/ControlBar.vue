@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import ScaleSlider from './ScaleSlider.vue'
+import { useTrackStore } from '@/stores/track'
 
-const scale = ref(0)
+const trackStore = useTrackStore()
 </script>
 
 <template>
-  <div class="control-bar"><ScaleSlider v-model="scale" /></div>
+  <div class="control-bar"><ScaleSlider v-model="trackStore.scale" /></div>
 </template>
 
 <style scoped lang="scss">

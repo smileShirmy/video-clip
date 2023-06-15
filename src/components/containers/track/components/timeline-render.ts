@@ -22,7 +22,7 @@ type EasingFunction = (x: number) => number
  */
 interface TimelineRenderOptions {
   ratio?: number
-  longScaleMinWidth?: number // 至少为多少像素时显示长刻度
+  longScaleMinWidth?: number // 至少为多少像素时显示长刻度（长刻度之间的间隔）
   separateParts?: number // 每个长刻度被分割为多少部分
   maxFrameWidth?: number // 一帧的最大宽度
 
@@ -84,7 +84,10 @@ export class TimelineRender {
 
   private canvasCollection: HTMLCanvasElement[] = []
 
-  constructor(options: TimelineRenderOptions = {}) {
+  private wrapper: HTMLElement
+
+  constructor(wrapper: HTMLElement, options: TimelineRenderOptions = {}) {
+    this.wrapper = wrapper
     this.options = normalizeOptions(options)
   }
 
@@ -410,11 +413,10 @@ export class TimelineRender {
       }
     }
 
-    const demo = document.getElementById('demo')
-    if (demo) {
-      for (let i = 0; i < usedCount; i += 1) {
-        demo.appendChild(this.canvasCollection[i])
-      }
+    for (let i = 0; i < usedCount; i += 1) {
+      this.wrapper.appendChild(this.canvasCollection[i])
     }
+
+    this.wrapper.style.width = `${timelineWidth}px`
   }
 }

@@ -1,25 +1,32 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
+import type { ComputedRef, CSSProperties } from 'vue'
 import TimelineRuler from '../timeline-ruler/TimelineRuler.vue'
+import { useTrackStore } from '@/stores/track'
 
 const trackContainerRef = ref<HTMLDivElement | null>(null)
-const timelineRulerRef = ref<InstanceType<typeof TimelineRuler> | null>(null)
+// const timelineRulerRef = ref<InstanceType<typeof TimelineRuler> | null>(null)
 
-function initTimeline() {
-  if (!trackContainerRef.value || !timelineRulerRef.value) return
+const trackStore = useTrackStore()
+
+const wrapperStyle: ComputedRef<CSSProperties> = computed(() => ({
+  width: `${trackStore.trackControllerWidth}px`
+}))
+
+function setTrackWidth() {
+  if (!trackContainerRef.value) return
   const { width } = trackContainerRef.value.getBoundingClientRect()
-
-  timelineRulerRef.value.initTimelineRuler(width)
+  trackStore.setTrackControllerWidth(width)
 }
 
 onMounted(() => {
-  initTimeline()
+  setTrackWidth()
 })
 </script>
 
 <template>
-  <div class="track-controller" ref="trackContainerRef">
-    <TimelineRuler ref="timelineRulerRef" />
+  <div class="track-controller" :style="wrapperStyle" ref="trackContainerRef">
+    <TimelineRuler />
     <div class="timeline-resource"></div>
   </div>
 </template>
