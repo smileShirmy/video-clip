@@ -85,6 +85,7 @@ function normalizeConfig(config: TimelineRenderConfig = {}) {
 export const useTimelineStore = defineStore('timeline', () => {
   // 基础配置
   const config = normalizeConfig()
+  // canvas 元素缓存
   const canvasCollection: HTMLCanvasElement[] = []
   let wrapper: HTMLElement
   let oldUsedCount = 0
@@ -215,8 +216,6 @@ export const useTimelineStore = defineStore('timeline', () => {
     width: number,
     scaleConfig: ScaleConfig,
     options: {
-      scaleStartX?: number // 短刻度偏移量
-      startRestParts?: number // 还有多少个刻度区间绘制完之后要绘制长刻度
       startLongScaleIndex?: number // 用于获取长刻度显示的时间，记录当前第一个开始的长刻度是第几个
     } = {}
   ) {
@@ -234,8 +233,10 @@ export const useTimelineStore = defineStore('timeline', () => {
       textTranslateY
     } = config
     const { type, unit, scaleWidth, parts } = scaleConfig
+    const { startLongScaleIndex = 0 } = options
 
-    const { scaleStartX = 0, startRestParts = 0, startLongScaleIndex = 0 } = options
+    // 短刻度个数
+    const scaleCount = Math.floor(width / scaleWidth)
 
     // 设置画布的宽度和高度
     ctx.canvas.width = width
@@ -262,13 +263,12 @@ export const useTimelineStore = defineStore('timeline', () => {
 
     ctx.strokeStyle = scaleStrokeColor
 
-    const count = Math.floor(width / scaleWidth)
-    for (let i = 0; i <= count; i += 1) {
+    for (let i = 0; i <= scaleCount; i += 1) {
       // prevent canvas 1px line blurry
-      const x = Math.round(scaleStartX + scaleWidth * i) + 0.5
+      const x = Math.round(scaleWidth * i) + 0.5
 
       // 保存长刻度的 x 轴位置
-      if (i % parts === startRestParts) {
+      if (i % parts === 0) {
         longLongScaleXList.push(x)
         continue
       }
@@ -313,24 +313,6 @@ export const useTimelineStore = defineStore('timeline', () => {
      */
 
     ctx.setTransform(1, 0, 0, 1, 0, 0)
-
-    // 计算最后的位置信息，为了下一个 canvas 能够继续画
-
-    // 最后一个刻度 x 已经绘制的长度
-    const scaleX = width % scaleWidth
-    // 下一个 canvas 开始绘制的偏移值
-    const nextScaleStartX = scaleWidth - scaleX
-
-    // 最后一个长刻度已经绘制的长度
-    const longScaleX = width - longLongScaleXList[longLongScaleXList.length - 1]
-    // 剩余没有绘制的短刻度个数
-    const restParts = parts - Math.floor(longScaleX / scaleWidth) - 1
-
-    return {
-      nextScaleStartX,
-      restParts,
-      nextLongScaleIndex: startLongScaleIndex + longLongScaleXList.length
-    }
   }
 
   /**
@@ -346,7 +328,7 @@ export const useTimelineStore = defineStore('timeline', () => {
       return
     }
 
-    const { maxCanvasWidth } = config
+    let maxCanvasWidth = config.maxCanvasWidth
 
     // 总帧数需要 * 1.5，因为要预留更多空白操作区域
     const maxFrameCount = frameCount * 1.5
@@ -362,62 +344,53 @@ export const useTimelineStore = defineStore('timeline', () => {
     // timeline 的宽度
     timelineWidth.value = rectWidth * scale
 
-    // 需要用到的 canvas 个数
-    const canvasCount = Math.ceil(timelineWidth.value / maxCanvasWidth)
-    const curCanvasCount = canvasCollection.length
-    // 如果当前的 canvas 数量不满足则追加新的
-    if (canvasCount > curCanvasCount) {
-      for (let i = curCanvasCount; i < canvasCount; i += 1) {
-        canvasCollection.push(document.createElement('canvas'))
-      }
-    }
-
     // 根据当前缩放等级下的帧的宽度获取刻度信息
     const scaleConfig = getScaleConfig(minFrameWidth * scale)
+    const { scaleWidth, parts } = scaleConfig
 
-    // 最后一个被使用的 canvas 的宽度
-    const lastCanvasWidth = timelineWidth.value % maxCanvasWidth
+    // 长刻度的个数
+    const longScaleCount = Math.floor(maxCanvasWidth / (scaleWidth * parts))
+
+    // 更新最大 canvas 宽度，刚好画到以长刻度作为结束，主要是为了解决最后一个长刻度的时间文本可能被截断的问题
+    maxCanvasWidth = longScaleCount * parts * scaleWidth
+
+    // 需要用到的最大 canvas 个数
+    const canvasCount = Math.ceil(timelineWidth.value / maxCanvasWidth)
 
     // 被使用的 canvas 个数
     let usedCount = 0
 
-    // TODO: 文本可能会刚好被截断的情况也需要处理
-    let scaleStartX = 0
-    let startRestParts = 0
-    let startLongScaleIndex = 0
+    // 最后一个被使用的 canvas 的宽度
+    const lastCanvasWidth = timelineWidth.value % maxCanvasWidth
+
+    const curCanvasCount = canvasCollection.length
 
     for (let i = 0; i < canvasCount; i += 1) {
+      // 如果当前的 canvas 数量不满足则追加新的
+      if (i >= curCanvasCount) {
+        canvasCollection.push(document.createElement('canvas'))
+      }
+
       const canvas = canvasCollection[i]
       const ctx = canvas.getContext('2d')!
+
       usedCount = i + 1
+      const startLongScaleIndex = longScaleCount * i
 
       // 如果当前使用的 canvas 个数的总宽度已经满足当前时间刻度的需求，则直接渲染满
       if (maxCanvasWidth * usedCount <= timelineWidth.value) {
-        const { nextScaleStartX, restParts, nextLongScaleIndex } = renderCanvas(
-          ctx,
-          maxCanvasWidth,
-          scaleConfig,
-          {
-            scaleStartX,
-            startRestParts,
-            startLongScaleIndex
-          }
-        )
-        scaleStartX = nextScaleStartX
-        startRestParts = restParts
-        startLongScaleIndex = nextLongScaleIndex
-      }
-      // 如果不满足
-      else {
+        renderCanvas(ctx, maxCanvasWidth, scaleConfig, {
+          startLongScaleIndex
+        })
+      } else {
         renderCanvas(ctx, lastCanvasWidth, scaleConfig, {
-          scaleStartX,
-          startRestParts,
           startLongScaleIndex
         })
         break
       }
     }
 
+    // 更新节点数量
     if (usedCount > oldUsedCount) {
       for (let i = oldUsedCount; i < usedCount; i += 1) {
         wrapper.appendChild(canvasCollection[i])

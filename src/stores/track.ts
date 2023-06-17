@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
+import { watchThrottled } from '@vueuse/core'
 
 export const useTrackStore = defineStore('track', () => {
   // 外层宽度（可以伸缩）
@@ -18,9 +19,13 @@ export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
 
   // 当下面三个值发生改变时都要重新绘制
-  watch([initTimelineWidth, scale, frameCount], () => {
-    timelineStore.updateTimeline(initTimelineWidth.value, frameCount, scale.value)
-  })
+  watchThrottled(
+    [initTimelineWidth, scale, frameCount],
+    () => {
+      timelineStore.updateTimeline(initTimelineWidth.value, frameCount, scale.value)
+    },
+    { throttle: 100 }
+  )
 
   function setTrackControllerWidth(trackContainerRef: HTMLDivElement) {
     const { width } = trackContainerRef.getBoundingClientRect()
