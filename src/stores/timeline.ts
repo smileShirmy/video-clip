@@ -93,6 +93,9 @@ export const useTimelineStore = defineStore('timeline', () => {
   // 经过缩放之后的宽度
   const timelineWidth = ref(0)
 
+  // 当前帧的宽度
+  const frameWidth = ref(0)
+
   /**
    * 获取刻度信息
    *
@@ -344,8 +347,10 @@ export const useTimelineStore = defineStore('timeline', () => {
     // timeline 的宽度
     timelineWidth.value = rectWidth * scale
 
+    frameWidth.value = minFrameWidth * scale
+
     // 根据当前缩放等级下的帧的宽度获取刻度信息
-    const scaleConfig = getScaleConfig(minFrameWidth * scale)
+    const scaleConfig = getScaleConfig(frameWidth.value)
     const { scaleWidth, parts } = scaleConfig
 
     // 长刻度的个数
@@ -411,6 +416,7 @@ export const useTimelineStore = defineStore('timeline', () => {
   }
 
   return {
+    frameWidth,
     timelineWidth,
     init,
     updateTimeline

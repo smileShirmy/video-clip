@@ -11,10 +11,13 @@ export const useTrackStore = defineStore('track', () => {
   const initTimelineWidth = ref(0)
 
   // 当前编辑视频的总帧数
-  const frameCount = 1000
+  const frameCount = 5000
 
   // 放大等级
   const scale = ref(0)
+
+  // 当前的帧数
+  const currentFrame = ref(30)
 
   const timelineStore = useTimelineStore()
 
@@ -32,7 +35,7 @@ export const useTrackStore = defineStore('track', () => {
     trackControllerWidth.value = width
 
     // TODO: 暂时随着外层变化而变化，后面优化，只有在 frameCount 变大时才改变这个值，否则不会因为拖动导致宽度变化而更新
-    initTimelineWidth.value = width
+    initTimelineWidth.value = width - 80
   }
 
   function initTimeline(wrapper: HTMLElement) {
@@ -40,6 +43,7 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   return {
+    currentFrame,
     scale,
     trackControllerWidth,
     initTimeline,
