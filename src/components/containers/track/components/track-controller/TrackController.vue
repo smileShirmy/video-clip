@@ -1,33 +1,36 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import type { ComputedRef, CSSProperties } from 'vue'
-import TimelineRuler from '../timeline-ruler/TimelineRuler.vue'
 import { useTrackStore } from '@/stores/track'
+import { useTimelineStore } from '@/stores/timeline'
 
-const trackContainerRef = ref<HTMLDivElement | null>(null)
-// const timelineRulerRef = ref<InstanceType<typeof TimelineRuler> | null>(null)
+const timelineRulerRef = ref<HTMLDivElement>()
 
 const trackStore = useTrackStore()
+const timelineStore = useTimelineStore()
 
 const wrapperStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${trackStore.trackControllerWidth}px`
 }))
 
-function setTrackWidth() {
-  if (!trackContainerRef.value) return
-  const { width } = trackContainerRef.value.getBoundingClientRect()
-  trackStore.setTrackControllerWidth(width)
+const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
+  width: `${timelineStore.timelineWidth}px`
+}))
+
+function initTimelineRuler() {
+  if (!timelineRulerRef.value) return
+  trackStore.initTimeline(timelineRulerRef.value)
 }
 
 onMounted(() => {
-  setTrackWidth()
+  initTimelineRuler()
 })
 </script>
 
 <template>
   <div class="track-controller" :style="wrapperStyle" ref="trackContainerRef">
-    <TimelineRuler />
-    <div class="timeline-resource"></div>
+    <div :style="trackContentWidthStyle" class="timeline-ruler" ref="timelineRulerRef"></div>
+    <div :style="trackContentWidthStyle" class="timeline-resource"></div>
   </div>
 </template>
 
@@ -35,6 +38,12 @@ onMounted(() => {
 .track-controller {
   overflow-x: auto;
   height: calc(100% - 30px);
+
+  .timeline-ruler {
+    display: flex;
+    justify-content: flex-start;
+    height: 30px;
+  }
 
   .timeline-resource {
     width: 100px;

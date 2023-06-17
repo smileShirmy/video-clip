@@ -1,27 +1,43 @@
-import { TimelineRender } from '@/components/containers/track/components/timeline-render'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useTimelineStore } from './timeline'
 
 export const useTrackStore = defineStore('track', () => {
-  // 放大等级
-  const scale = ref(0)
-
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
 
-  // 内层宽度（根据状态改变）
+  // 初始化时 timeline 的宽度
+  const initTimelineWidth = ref(0)
 
-  // 时间刻度渲染器
-  let timelineRender: TimelineRender
+  // 当前编辑视频的总帧数
+  const frameCount = 1000
 
-  function setTrackControllerWidth(width: number) {
+  // 放大等级
+  const scale = ref(0)
+
+  const timelineStore = useTimelineStore()
+
+  // 当下面三个值发生改变时都要重新绘制
+  watch([initTimelineWidth, scale, frameCount], () => {
+    timelineStore.updateTimeline(initTimelineWidth.value, frameCount, scale.value)
+  })
+
+  function setTrackControllerWidth(trackContainerRef: HTMLDivElement) {
+    const { width } = trackContainerRef.getBoundingClientRect()
     trackControllerWidth.value = width
+
+    // TODO: 暂时随着外层变化而变化，后面优化，只有在 frameCount 变大时才改变这个值，否则不会因为拖动导致宽度变化而更新
+    initTimelineWidth.value = width
   }
 
-  function initTimelineRender(wrapper: HTMLElement) {
-    timelineRender = new TimelineRender(wrapper)
-    timelineRender.init()
+  function initTimeline(wrapper: HTMLElement) {
+    timelineStore.init(wrapper)
   }
 
-  return { scale, trackControllerWidth, initTimelineRender, setTrackControllerWidth }
+  return {
+    scale,
+    trackControllerWidth,
+    initTimeline,
+    setTrackControllerWidth
+  }
 })

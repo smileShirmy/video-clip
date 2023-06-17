@@ -1,4 +1,7 @@
+import { defineStore } from 'pinia'
 import { hoursToTime, minutesToTime, secondsToTime } from '@/services/helpers/time'
+import { warn } from '@/services/helpers/warn'
+import { ref } from 'vue'
 
 // 长刻度单位
 enum LongScaleUnit {
@@ -20,7 +23,7 @@ type EasingFunction = (x: number) => number
 /**
  * 时间刻度渲染配置
  */
-interface TimelineRenderOptions {
+interface TimelineRenderConfig {
   ratio?: number
   longScaleMinWidth?: number // 至少为多少像素时显示长刻度（长刻度之间的间隔）
   separateParts?: number // 每个长刻度被分割为多少部分
@@ -42,7 +45,7 @@ interface TimelineRenderOptions {
   textTranslateY?: number // 文本相对于顶部的 y 轴位置
 }
 
-function normalizeOptions(options: TimelineRenderOptions) {
+function normalizeConfig(config: TimelineRenderConfig = {}) {
   const {
     ratio = window.devicePixelRatio,
     longScaleMinWidth = 120,
@@ -58,7 +61,7 @@ function normalizeOptions(options: TimelineRenderOptions) {
     textFont,
     textColor = '#999',
     textTranslateX = 4
-  } = options
+  } = config
 
   return {
     ratio,
@@ -79,25 +82,23 @@ function normalizeOptions(options: TimelineRenderOptions) {
   }
 }
 
-export class TimelineRender {
-  private options: ReturnType<typeof normalizeOptions>
+export const useTimelineStore = defineStore('timeline', () => {
+  // 基础配置
+  const config = normalizeConfig()
+  const canvasCollection: HTMLCanvasElement[] = []
+  let wrapper: HTMLElement
+  let oldUsedCount = 0
 
-  private canvasCollection: HTMLCanvasElement[] = []
-
-  private wrapper: HTMLElement
-
-  constructor(wrapper: HTMLElement, options: TimelineRenderOptions = {}) {
-    this.wrapper = wrapper
-    this.options = normalizeOptions(options)
-  }
+  // 经过缩放之后的宽度
+  const timelineWidth = ref(0)
 
   /**
    * 获取刻度信息
    *
    * @param {number} frameWidth 帧的宽度
    */
-  private getScaleConfig(frameWidth: number): ScaleConfig {
-    const { longScaleMinWidth, separateParts } = this.options
+  function getScaleConfig(frameWidth: number): ScaleConfig {
+    const { longScaleMinWidth, separateParts } = config
 
     // 帧
     const frameUnits = [2, 5, 10, 15]
@@ -167,7 +168,7 @@ export class TimelineRender {
    * @param {number} level 长刻度类型值
    * @param {longScaleType} type 类型
    */
-  private formatLongScaleTime(index: number, level: number, unit: LongScaleUnit): string {
+  function formatLongScaleTime(index: number, level: number, unit: LongScaleUnit): string {
     if (index === 0) return '00:00'
 
     if (unit === LongScaleUnit.FRAME) {
@@ -195,8 +196,8 @@ export class TimelineRender {
    *
    * @param {number} minFrameWidth 没有进行任何缩放时 1 帧的宽度
    */
-  private initEasingFunction(minFrameWidth: number): EasingFunction {
-    const { maxFrameWidth } = this.options
+  function initEasingFunction(minFrameWidth: number): EasingFunction {
+    const { maxFrameWidth } = config
 
     // 缩放到最大时需要放大的倍数
     const scale = maxFrameWidth / minFrameWidth
@@ -209,7 +210,7 @@ export class TimelineRender {
   /**
    * 绘制 canvas
    */
-  render(
+  function renderCanvas(
     ctx: CanvasRenderingContext2D,
     width: number,
     scaleConfig: ScaleConfig,
@@ -231,7 +232,7 @@ export class TimelineRender {
       textFont,
       textTranslateX,
       textTranslateY
-    } = this.options
+    } = config
     const { type, unit, scaleWidth, parts } = scaleConfig
 
     const { scaleStartX = 0, startRestParts = 0, startLongScaleIndex = 0 } = options
@@ -298,7 +299,7 @@ export class TimelineRender {
       ctx.moveTo(x, 0)
       ctx.save()
       ctx.translate(x + textTranslateX, textTranslateY)
-      const text = this.formatLongScaleTime(startLongScaleIndex + i, unit, type)
+      const text = formatLongScaleTime(startLongScaleIndex + i, unit, type)
       ctx.fillText(text, 0, 0)
       ctx.restore()
       ctx.lineTo(x, longScaleHeight)
@@ -328,48 +329,54 @@ export class TimelineRender {
     return {
       nextScaleStartX,
       restParts,
-      nextLongScaleIndex: longLongScaleXList.length
+      nextLongScaleIndex: startLongScaleIndex + longLongScaleXList.length
     }
   }
 
   /**
-   * 初始化
+   * 绘制
    *
-   * @param {number} initRectWidth timeline 容器的宽度
+   * @param {number} rectWidth timeline 容器的宽度
    * @param {number} frameCount 总帧数
    * @param {number} sliderValue 缩放值
    */
-  init(initRectWidth = 500, frameCount = 400, sliderValue = 10) {
-    const { maxFrameWidth, canvasHeight, maxCanvasWidth } = this.options
+  function updateTimeline(rectWidth: number, frameCount: number, sliderValue: number) {
+    if (rectWidth === 0) {
+      warn('容器宽度不能为 0')
+      return
+    }
+
+    const { maxCanvasWidth } = config
 
     // 总帧数需要 * 1.5，因为要预留更多空白操作区域
     const maxFrameCount = frameCount * 1.5
 
     // 缩放至最小时每帧的宽度
-    const minFrameWidth = initRectWidth / maxFrameCount
+    const minFrameWidth = rectWidth / maxFrameCount
 
     // 初始化缓动函数
-    const getScale = this.initEasingFunction(minFrameWidth)
+    const getScale = initEasingFunction(minFrameWidth)
     // 根据缩放值获取每帧放大的倍数
     const scale = getScale(sliderValue)
 
     // timeline 的宽度
-    const timelineWidth = initRectWidth * scale
+    timelineWidth.value = rectWidth * scale
 
-    // 最大宽度
-    const maxWidth = maxFrameWidth * maxFrameCount
-
-    // 创建可供绘制的最多 canvas 个数
-    const canvasCount = Math.ceil(maxWidth / maxCanvasWidth)
-    this.canvasCollection = Array.from({ length: canvasCount }, () =>
-      document.createElement('canvas')
-    )
+    // 需要用到的 canvas 个数
+    const canvasCount = Math.ceil(timelineWidth.value / maxCanvasWidth)
+    const curCanvasCount = canvasCollection.length
+    // 如果当前的 canvas 数量不满足则追加新的
+    if (canvasCount > curCanvasCount) {
+      for (let i = curCanvasCount; i < canvasCount; i += 1) {
+        canvasCollection.push(document.createElement('canvas'))
+      }
+    }
 
     // 根据当前缩放等级下的帧的宽度获取刻度信息
-    const scaleConfig = this.getScaleConfig(minFrameWidth * scale)
+    const scaleConfig = getScaleConfig(minFrameWidth * scale)
 
     // 最后一个被使用的 canvas 的宽度
-    const lastCanvasWidth = timelineWidth % maxCanvasWidth
+    const lastCanvasWidth = timelineWidth.value % maxCanvasWidth
 
     // 被使用的 canvas 个数
     let usedCount = 0
@@ -380,13 +387,13 @@ export class TimelineRender {
     let startLongScaleIndex = 0
 
     for (let i = 0; i < canvasCount; i += 1) {
-      const canvas = this.canvasCollection[i]
+      const canvas = canvasCollection[i]
       const ctx = canvas.getContext('2d')!
-      ctx.canvas.height = canvasHeight
+      usedCount = i + 1
 
-      // 如果当前使用的 canvas 总宽度已经满足当前时间刻度的需求
-      if (maxCanvasWidth * (i + 1) <= timelineWidth) {
-        const { nextScaleStartX, restParts, nextLongScaleIndex } = this.render(
+      // 如果当前使用的 canvas 个数的总宽度已经满足当前时间刻度的需求，则直接渲染满
+      if (maxCanvasWidth * usedCount <= timelineWidth.value) {
+        const { nextScaleStartX, restParts, nextLongScaleIndex } = renderCanvas(
           ctx,
           maxCanvasWidth,
           scaleConfig,
@@ -402,9 +409,7 @@ export class TimelineRender {
       }
       // 如果不满足
       else {
-        usedCount = i + 1
-
-        this.render(ctx, lastCanvasWidth, scaleConfig, {
+        renderCanvas(ctx, lastCanvasWidth, scaleConfig, {
           scaleStartX,
           startRestParts,
           startLongScaleIndex
@@ -413,10 +418,28 @@ export class TimelineRender {
       }
     }
 
-    for (let i = 0; i < usedCount; i += 1) {
-      this.wrapper.appendChild(this.canvasCollection[i])
+    if (usedCount > oldUsedCount) {
+      for (let i = oldUsedCount; i < usedCount; i += 1) {
+        wrapper.appendChild(canvasCollection[i])
+      }
+    } else {
+      // 从后往前移除
+      for (let i = oldUsedCount; i > usedCount; i -= 1) {
+        wrapper.removeChild(canvasCollection[i - 1])
+      }
     }
 
-    this.wrapper.style.width = `${timelineWidth}px`
+    // 记录当前用到的个数
+    oldUsedCount = usedCount
   }
-}
+
+  function init(target: HTMLElement) {
+    wrapper = target
+  }
+
+  return {
+    timelineWidth,
+    init,
+    updateTimeline
+  }
+})
