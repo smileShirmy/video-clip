@@ -4,22 +4,22 @@ import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 
 export const useTrackStore = defineStore('track', () => {
+  const timelineStore = useTimelineStore()
+
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
 
   // 初始化时 timeline 的宽度
   const initTimelineWidth = ref(0)
 
-  // 当前编辑视频的总帧数
+  // 当前编辑视频的总帧数 TODO: 这个数据需要统一到视频控制
   const frameCount = 5000
+
+  // 当前的帧数 TODO: 这个数据需要统一到视频控制
+  const currentFrame = ref(0)
 
   // 放大等级
   const scale = ref(0)
-
-  // 当前的帧数
-  const currentFrame = ref(30)
-
-  const timelineStore = useTimelineStore()
 
   // 当下面三个值发生改变时都要重新绘制
   watchThrottled(

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-/**
- * 参考 element-ui slider
- */
 import { isNumber } from '@/services/helpers/general'
 import { nextTick } from 'vue'
 import { computed, ref } from 'vue'

@@ -90,6 +90,9 @@ export const useTimelineStore = defineStore('timeline', () => {
   let wrapper: HTMLElement
   let oldUsedCount = 0
 
+  // 当前编辑区帧的总宽度
+  const maxFrameCount = ref(0)
+
   // 经过缩放之后的宽度
   const timelineWidth = ref(0)
 
@@ -334,10 +337,10 @@ export const useTimelineStore = defineStore('timeline', () => {
     let maxCanvasWidth = config.maxCanvasWidth
 
     // 总帧数需要 * 1.5，因为要预留更多空白操作区域
-    const maxFrameCount = frameCount * 1.5
+    maxFrameCount.value = Math.round(frameCount * 1.5)
 
     // 缩放至最小时每帧的宽度
-    const minFrameWidth = rectWidth / maxFrameCount
+    const minFrameWidth = rectWidth / maxFrameCount.value
 
     // 初始化缓动函数
     const getScale = initEasingFunction(minFrameWidth)
@@ -416,6 +419,7 @@ export const useTimelineStore = defineStore('timeline', () => {
   }
 
   return {
+    maxFrameCount,
     frameWidth,
     timelineWidth,
     init,
