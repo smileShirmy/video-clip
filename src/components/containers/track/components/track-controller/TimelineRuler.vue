@@ -3,123 +3,40 @@ import { onMounted, computed, ref } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
 import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
+import { Slider } from '@/services/slider/slider'
+import type { SliderDownOptions } from '@/services/slider/slider'
 
 const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
 
-const min = 0 // 最小帧数
-const max = computed(() => timelineStore.maxFrameCount) // 最大帧数
-const step = 1 // step 为 1 帧
+let position = ref<string>('0%')
 
 const timelineRulerRef = ref<HTMLDivElement>()
-let startPosition = 0
-let newPosition = 0
-let startX = 0
-let currentX = 0
-let timelineSize = 1
-let dragging = false
-let isClick = false
 
-const currentPosition = computed(() => {
-  return `${((trackStore.currentFrame - min) / (max.value - min)) * 100}%`
+const slider = new Slider({
+  change(v: number, p: string) {
+    trackStore.currentFrame = v
+    position.value = p
+  }
 })
 
-const seekLineStyle: ComputedRef<CSSProperties> = computed(() => ({
-  left: currentPosition.value
+const sliderOptions = computed<SliderDownOptions>(() => ({
+  min: 0,
+  max: timelineStore.maxFrameCount,
+  sliderSize: timelineStore.timelineWidth,
+  value: trackStore.currentFrame
 }))
 
-// TODO: emit change
-const emitChange = async () => {
-  // await nextTick()
-  // emit model value
-}
+const seekLineStyle: ComputedRef<CSSProperties> = computed(() => ({
+  left: position.value
+}))
 
-function resetSize() {
-  if (timelineRulerRef.value) {
-    timelineSize = timelineRulerRef.value.clientWidth
-  }
-}
-
-function getClientX(event: MouseEvent | TouchEvent) {
-  if (event instanceof TouchEvent) {
-    return event.touches[0].clientX
-  }
-  return event.clientX
-}
-
-function onDragStart(event: MouseEvent | TouchEvent) {
-  dragging = true
-  isClick = true
-  const clientX = getClientX(event)
-  startX = clientX
-  startPosition = parseFloat(currentPosition.value)
-  newPosition = startPosition
-}
-
-function onDragging(event: MouseEvent | TouchEvent) {
-  if (dragging) {
-    isClick = false
-    resetSize()
-    let diff = 0
-    const clientX = getClientX(event)
-    currentX = clientX
-    diff = ((currentX - startX) / timelineSize) * 100
-    newPosition = startPosition + diff
-    setPosition(newPosition)
-  }
-}
-
-function onDragEnd() {
-  /*
-   * 防止在 mouseup 后立即触发 click，导致滑块有几率产生一小段位移
-   * 不使用 preventDefault 是因为 mouseup 和 click 没有注册在同一个 DOM 上
-   */
-  setTimeout(async () => {
-    dragging = false
-    if (!isClick) {
-      setPosition(newPosition)
-    }
-    emitChange()
-  }, 0)
-  window.removeEventListener('mousemove', onDragging)
-  window.removeEventListener('touchmove', onDragging)
-  window.removeEventListener('mouseup', onDragEnd)
-  window.removeEventListener('touchend', onDragEnd)
-  window.removeEventListener('contextmenu', onDragEnd)
-}
-
-function setPosition(newPosition: number) {
-  if (newPosition === null || isNaN(newPosition)) return
-  if (newPosition < 0) {
-    newPosition = 0
-  } else if (newPosition > 100) {
-    newPosition = 100
-  }
-  let lengthPerStep = 100 / ((max.value - min) / step)
-  const steps = Math.round(newPosition / lengthPerStep)
-  let value = steps * lengthPerStep * (max.value - min) * 0.01 + min
-  value = parseFloat(value.toFixed(0))
-  if (value !== trackStore.currentFrame) {
-    trackStore.currentFrame = value
-  }
+function onTimelineClick(event: MouseEvent) {
+  slider.onSliderClick(event, sliderOptions.value, timelineRulerRef.value)
 }
 
 function onSeekLineDown(event: MouseEvent | TouchEvent) {
-  event.preventDefault()
-  onDragStart(event)
-  window.addEventListener('mousemove', onDragging)
-  window.addEventListener('touchmove', onDragging)
-  window.addEventListener('mouseup', onDragEnd)
-  window.addEventListener('touchend', onDragEnd)
-  window.addEventListener('contextmenu', onDragEnd)
-}
-
-function onTimelineClick(event: MouseEvent) {
-  if (!timelineRulerRef.value || dragging) return
-  resetSize()
-  const sliderOffsetLeft = timelineRulerRef.value.getBoundingClientRect().left
-  setPosition(((event.clientX - sliderOffsetLeft) / timelineSize) * 100)
-  emitChange()
+  slider.onDown(event, sliderOptions.value)
 }
 
 function initTimelineRuler() {

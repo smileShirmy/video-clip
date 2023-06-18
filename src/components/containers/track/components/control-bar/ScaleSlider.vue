@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * TODO: 改成使用 slider.ts
+ */
 import { isNumber } from '@/services/helpers/general'
 import { nextTick } from 'vue'
 import { computed, ref } from 'vue'

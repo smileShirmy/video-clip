@@ -4,6 +4,7 @@ import type { ComputedRef, CSSProperties } from 'vue'
 import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
+import VideoItem from '../track-item/VideoItem.vue'
 
 const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
@@ -24,9 +25,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
       <TimelineRuler />
       <div class="timeline-resource">
         <ul class="track-list">
-          <li class="track-item is-main">
-            <!--  -->
-          </li>
+          <li class="track-line is-main"><VideoItem /></li>
         </ul>
       </div>
     </div>
@@ -63,16 +62,17 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 
   .track-list {
     width: 100%;
-    .track-item {
+    .track-line {
       width: 100%;
       height: 60px;
       border-radius: 4px;
 
-      &.is-main {
-        background-color: var(--app-color-black);
-      }
+      // TODO: 先隐藏，后面再取消注释
+      // &.is-main {
+      //   background-color: var(--app-color-black);
+      // }
 
-      + .track-item {
+      + .track-line {
         margin-top: 8px;
       }
     }
