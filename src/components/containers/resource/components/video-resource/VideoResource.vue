@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import VideoItem from '../base/video-item/VideoItem.vue'
 import { ResourceComponentName } from '../../types'
+import { onMounted } from 'vue'
+import { getVideos } from '@/services/models/resource'
 
 defineOptions({
   name: ResourceComponentName.VIDEO_RESOURCE
+})
+
+async function getList() {
+  const res = await getVideos()
+  console.log(res)
+}
+
+onMounted(() => {
+  getList()
 })
 </script>
 
