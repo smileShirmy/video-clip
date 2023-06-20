@@ -16,6 +16,10 @@ const wrapperStyle: ComputedRef<CSSProperties> = computed(() => ({
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
 }))
+
+function onDragover(e: DragEvent) {
+  console.log(e)
+}
 </script>
 
 <template>
@@ -23,7 +27,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
     <div class="track-menu"></div>
     <div class="track-content" :style="trackContentWidthStyle">
       <TimelineRuler />
-      <div class="timeline-resource">
+      <div class="timeline-resource" @dragover="onDragover">
         <ul class="track-list">
           <li class="track-line is-main"><VideoItem /></li>
         </ul>

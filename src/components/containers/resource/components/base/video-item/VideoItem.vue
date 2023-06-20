@@ -5,10 +5,14 @@ const props = defineProps({
     type: String
   }
 })
+
+function onDragStart() {
+  console.log('drag')
+}
 </script>
 
 <template>
-  <div class="video-item-container">
+  <div class="video-item-container" draggable="true" @dragstart="onDragStart">
     <div class="video-cover-wrapper">
       <img src="" />
     </div>
@@ -18,6 +22,9 @@ const props = defineProps({
 
 <style scoped lang="scss">
 .video-item-container {
+  position: relative;
+  z-index: 1;
+
   .video-cover-wrapper {
     width: 116px;
     height: 78px;
