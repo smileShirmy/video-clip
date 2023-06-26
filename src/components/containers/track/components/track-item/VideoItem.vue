@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrackItemName } from '@/components/containers/resource/types'
+import { TrackItemName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
 
 defineOptions({

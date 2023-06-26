@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ResourceComponentName } from './types'
-import type { MenuItem } from './types'
+import { ResourceComponentName } from '@/types'
+import type { MenuItem } from '@/types'
 import VideoResource from './components/video-resource/VideoResource.vue'
 import TextResource from './components/text-resource/TextResource.vue'
 import AudioResource from './components/audio-resource/AudioResource.vue'

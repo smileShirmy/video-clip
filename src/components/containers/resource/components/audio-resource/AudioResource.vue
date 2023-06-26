@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ResourceComponentName } from '../../types'
+import { ResourceComponentName } from '@/types'
 
 defineOptions({
   name: ResourceComponentName.AUDIO_RESOURCE

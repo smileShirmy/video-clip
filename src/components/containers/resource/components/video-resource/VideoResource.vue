@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import VideoItem from '../base/video-item/VideoItem.vue'
-import { ResourceComponentName } from '../../types'
+import { ResourceComponentName } from '@/types'
 import { onMounted } from 'vue'
 import { getVideos } from '@/services/models/resource'
 

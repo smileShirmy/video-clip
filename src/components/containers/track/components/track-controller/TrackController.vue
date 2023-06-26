@@ -5,7 +5,7 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackItemName } from '@/components/containers/resource/types'
+import { TrackItemName } from '@/types'
 import { isNumber } from '@/services/helpers/general'
 
 defineOptions({
