@@ -5,12 +5,12 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackItemName } from '@/types'
-import { isNumber } from '@/services/helpers/general'
+import { TrackComponentName, TrackLineType, ResourceType, type TrackLine } from '@/types'
+import { isNumber, uuid } from '@/services/helpers/general'
 
 defineOptions({
   components: {
-    [TrackItemName.TRACK_VIDEO]: VideoItem
+    [TrackComponentName.TRACK_VIDEO]: VideoItem
   }
 })
 
@@ -52,24 +52,9 @@ const isEmpty = computed(() => {
   return true
 })
 
-enum TrackLineType {
-  Main = 'Main'
-}
-
-interface TrackItem {
-  id: string
-  component: TrackItemName
-}
-
-interface TrackLine {
-  type: TrackLineType
-  id: string
-  trackList: TrackItem[]
-}
-
 const trackLineList: TrackLine[] = reactive([
   {
-    type: TrackLineType.Main,
+    type: TrackLineType.MAIN,
     id: '',
     trackList: []
   }
@@ -124,6 +109,8 @@ function setPlaceholder(options: { top?: number; left?: number; width?: number; 
   }
 }
 
+let trackLineInsertIndex = -1
+
 /**
  * 判断是否处于 trackLine 上
  *
@@ -147,11 +134,12 @@ function onDragover(e: DragEvent) {
 
     // dragover 处于某条 trackLine 上
     if (trackLine === e.target || e.target === trackPlaceholderRef.value) {
+      trackLineInsertIndex = i
       setPlaceholder({ top, left: x })
       return
     }
 
-    if (trackLine.dataset.type === TrackLineType.Main) {
+    if (trackLine.dataset.type === TrackLineType.MAIN) {
       const { top } = getElementPosition(trackLine)
       mainLineTop = top
     }
@@ -159,6 +147,7 @@ function onDragover(e: DragEvent) {
 
   // 如果目前没有插入任何资源，并且 y 大于主轨道顶部，则把占位符显示在主轨道上
   if (isEmpty.value && y > mainLineTop) {
+    trackLineInsertIndex = len - 1
     setPlaceholder({ top: mainLineTop, left: x })
     return
   }
@@ -166,7 +155,21 @@ function onDragover(e: DragEvent) {
 
 function onDrop(e: DragEvent) {
   e.preventDefault()
-  console.log('drop')
+  const draggingData = trackStore.draggingData
+  if (!draggingData) return
+
+  if (trackLineInsertIndex > -1) {
+    const line = trackLineList[trackLineInsertIndex]
+    if (draggingData.type === ResourceType.VIDEO) {
+      line.trackList.push({
+        id: uuid(),
+        resourceType: ResourceType.VIDEO,
+        component: TrackComponentName.TRACK_VIDEO,
+        frameCount: draggingData.frameCount,
+        startFrame: 0
+      })
+    }
+  }
 }
 </script>
 
@@ -195,11 +198,11 @@ function onDrop(e: DragEvent) {
             :key="trackLine.id"
             class="track-line"
             :data-type="trackLine.type"
-            :class="{ 'is-main': trackLine.type === TrackLineType.Main }"
+            :class="{ 'is-main': trackLine.type === TrackLineType.MAIN }"
           >
             <!-- <VideoItem /> -->
-            <template v-for="track in trackLine.trackList" :key="track.id">
-              <component :is="track.component"></component>
+            <template v-for="item in trackLine.trackList" :key="item.id">
+              <component :is="item.component" :data="item"></component>
             </template>
           </li>
         </ul>

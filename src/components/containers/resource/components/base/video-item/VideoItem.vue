@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { useTrackStore } from '@/stores/track'
+import type { VideoResource } from '@/types'
 
-const props = defineProps({
-  name: {
-    required: true,
-    type: String
-  }
-})
+const props = defineProps<{
+  data: VideoResource
+}>()
 
 const trackStore = useTrackStore()
 
 function onDragStart() {
-  console.log('drag')
+  trackStore.draggingData = props.data
 }
 
 function onDragend() {
+  trackStore.draggingData = null
   trackStore.showTrackPlaceholder = false
 }
 </script>
@@ -24,7 +23,7 @@ function onDragend() {
     <div class="video-cover-wrapper">
       <img src="" />
     </div>
-    <h5 class="video-name">{{ props.name }}</h5>
+    <h5 class="video-name">{{ props.data.name }}</h5>
   </div>
 </template>
 

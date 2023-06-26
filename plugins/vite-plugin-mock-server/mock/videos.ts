@@ -1,4 +1,4 @@
-interface Video {
+interface VideoResource {
   name: string
   format: string
   source: string
@@ -8,7 +8,7 @@ interface Video {
   frameCount: number
 }
 
-export const videos: Video[] = [
+export const videos: VideoResource[] = [
   {
     name: 'video-1',
     format: 'mp4',

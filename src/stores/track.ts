@@ -2,9 +2,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
+import type { VideoResource } from '@/types'
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
+
+  const draggingData = ref<VideoResource | null>(null)
 
   // 是否显示占位
   const showTrackPlaceholder = ref<boolean>(false)
@@ -46,6 +49,7 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   return {
+    draggingData,
     currentFrame,
     scale,
     trackControllerWidth,

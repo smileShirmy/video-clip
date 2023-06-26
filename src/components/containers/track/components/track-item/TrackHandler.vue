@@ -1,27 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { Slider } from '@/services/slider/slider'
 
 const timelineStore = useTimelineStore()
 
-const props = defineProps({
-  height: {
-    type: Number,
-    default: 60
-  }
+const props = withDefaults(defineProps<{ height?: number; frameCount: number }>(), {
+  height: 60
 })
 
-// TODO: 测试数据
-const MOCK_DATA = {
-  min: 0,
-  max: 500,
-  frameCount: 500
-}
-
-let leftValue = MOCK_DATA.min
-let rightValue = MOCK_DATA.max
+let leftValue = 0
+let rightValue = toRaw(props.frameCount)
 
 const leftPosition = ref<string>('0%')
 const rightPosition = ref<string>('100%')
@@ -39,7 +29,7 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${trackItemWidth.value}px`
 }))
 
-const trackItemWidth = computed(() => timelineStore.frameWidth * MOCK_DATA.frameCount)
+const trackItemWidth = computed(() => timelineStore.frameWidth * props.frameCount)
 
 const leftSlider = new Slider({
   change(v: number, p: string) {
@@ -57,8 +47,8 @@ const rightSlider = new Slider({
 
 function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
   leftSlider.onDown(event, {
-    min: MOCK_DATA.min,
-    max: MOCK_DATA.max,
+    min: 0,
+    max: props.frameCount,
     sliderSize: trackItemWidth.value,
     value: leftValue
   })
@@ -66,8 +56,8 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   rightSlider.onDown(event, {
-    min: MOCK_DATA.min,
-    max: MOCK_DATA.max,
+    min: 0,
+    max: props.frameCount,
     sliderSize: trackItemWidth.value,
     value: rightValue
   })

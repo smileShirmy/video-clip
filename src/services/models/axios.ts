@@ -12,7 +12,7 @@ instance.interceptors.response.use((res) => {
   return Promise.reject(res)
 })
 
-export function get(url: string, params = {}) {
+export function get<T = any>(url: string, params = {}): Promise<T> {
   return instance({
     method: 'get',
     url,

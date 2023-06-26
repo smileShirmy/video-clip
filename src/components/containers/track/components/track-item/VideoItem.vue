@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { TrackItemName } from '@/types'
+import { TrackComponentName, type TrackItem } from '@/types'
 import TrackHandler from './TrackHandler.vue'
 
 defineOptions({
-  name: TrackItemName.TRACK_VIDEO
+  name: TrackComponentName.TRACK_VIDEO
 })
+
+const props = defineProps<{
+  data: TrackItem
+}>()
 </script>
 
 <template>
-  <TrackHandler> 视频资源 </TrackHandler>
+  <TrackHandler :frame-count="props.data.frameCount"> 视频资源 </TrackHandler>
 </template>

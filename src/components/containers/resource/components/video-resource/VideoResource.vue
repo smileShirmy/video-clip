@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import VideoItem from '../base/video-item/VideoItem.vue'
-import { ResourceComponentName } from '@/types'
-import { onMounted } from 'vue'
+import { ResourceComponentName, type VideoResource } from '@/types'
+import { onMounted, ref } from 'vue'
 import { getVideos } from '@/services/models/resource'
 
 defineOptions({
   name: ResourceComponentName.VIDEO_RESOURCE
 })
 
+const list = ref<VideoResource[]>([])
+
 async function getList() {
-  const res = await getVideos()
-  console.log(res)
+  list.value = await getVideos()
 }
 
 onMounted(() => {
@@ -24,8 +25,8 @@ onMounted(() => {
   <div>Type List</div>
 
   <ul class="s-resource-list">
-    <li class="s-resource-item">
-      <VideoItem name="视频名称" />
+    <li class="s-resource-item" v-for="(item, i) in list" :key="i">
+      <VideoItem :data="item" />
     </li>
   </ul>
 </template>
