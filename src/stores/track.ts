@@ -6,6 +6,9 @@ import { watchThrottled } from '@vueuse/core'
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
 
+  // 是否显示占位
+  const showTrackPlaceholder = ref<boolean>(false)
+
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
 
@@ -46,6 +49,7 @@ export const useTrackStore = defineStore('track', () => {
     currentFrame,
     scale,
     trackControllerWidth,
+    showTrackPlaceholder,
     initTimeline,
     setTrackControllerWidth
   }

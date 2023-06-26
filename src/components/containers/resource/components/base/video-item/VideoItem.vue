@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useTrackStore } from '@/stores/track'
+
 const props = defineProps({
   name: {
     required: true,
@@ -6,13 +8,19 @@ const props = defineProps({
   }
 })
 
+const trackStore = useTrackStore()
+
 function onDragStart() {
   console.log('drag')
+}
+
+function onDragend() {
+  trackStore.showTrackPlaceholder = false
 }
 </script>
 
 <template>
-  <div class="video-item-container" draggable="true" @dragstart="onDragStart">
+  <div class="video-item-container" draggable="true" @dragstart="onDragStart" @dragend="onDragend">
     <div class="video-cover-wrapper">
       <img src="" />
     </div>

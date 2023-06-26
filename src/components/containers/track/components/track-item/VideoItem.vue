@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { TrackItemName } from '@/components/containers/resource/types'
 import TrackHandler from './TrackHandler.vue'
+
+defineOptions({
+  name: TrackItemName.TRACK_VIDEO
+})
 </script>
 
 <template>

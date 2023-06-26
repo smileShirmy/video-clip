@@ -5,6 +5,10 @@ export enum ResourceComponentName {
   STICKER_RESOURCE = 'stickerResource'
 }
 
+export enum TrackItemName {
+  TRACK_VIDEO = 'trackVideo'
+}
+
 export interface MenuItem {
   componentName: ResourceComponentName
   name: string
