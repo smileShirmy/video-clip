@@ -5,7 +5,7 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackComponentName, TrackLineType, ResourceType, type TrackLine } from '@/types'
+import { TrackComponentName, TrackLineType, ResourceType } from '@/types'
 import { isNumber, uuid } from '@/services/helpers/general'
 
 defineOptions({
@@ -49,21 +49,13 @@ const trackPlaceholderStyle: ComputedRef<CSSProperties> = computed(() => {
   }
 })
 
-// 当前是否存在资源
-const isEmpty = computed(() => {
-  return true
-})
-
 const MIN = 0
 const STEP = 1
 
-const trackLineList: TrackLine[] = reactive([
-  {
-    type: TrackLineType.MAIN,
-    id: '',
-    trackList: []
-  }
-])
+// 当前是否存在资源
+const isEmpty = computed(() => {
+  return trackStore.trackLineList.length === 1 && trackStore.trackLineList[0].trackList.length === 0
+})
 
 function getElementPosition(el: HTMLElement): { top: number; left: number } {
   if (el === trackContentRef.value!) return { top: 0, left: 0 }
@@ -151,14 +143,19 @@ function onDragover(e: DragEvent) {
   const { top, y, startFrame } = getDragoverPosition(e)
 
   let mainLineTop = 0
+  let firstLineTop = 0
 
   const len = trackLineListRef.value.length
   for (let i = 0; i < len; i += 1) {
     const trackLine = trackLineListRef.value[i]
+    if (trackLine.dataset.index === '0') {
+      const { top } = getElementPosition(trackLine)
+      firstLineTop = top
+    }
 
     // dragover 处于某条 trackLine 上
     if (trackLine === e.target || e.target === trackPlaceholderRef.value) {
-      trackLineInsertIndex = i
+      trackLineInsertIndex = Number(trackLine.dataset.index)
       setPlaceholder({ top, startFrame, frameCount: trackStore.draggingData.frameCount })
       return
     }
@@ -176,6 +173,11 @@ function onDragover(e: DragEvent) {
     setPlaceholder({ top: mainLineTop, startFrame, frameCount: trackStore.draggingData.frameCount })
     return
   }
+
+  // 如果是在最顶部则在最顶部新插入一个 trackLine
+  if (y < firstLineTop) {
+    trackLineInsertIndex = -1
+  }
 }
 
 function onDrop(e: DragEvent) {
@@ -183,16 +185,33 @@ function onDrop(e: DragEvent) {
   const draggingData = trackStore.draggingData
   if (!draggingData) return
 
-  if (trackLineInsertIndex > -1) {
-    const line = trackLineList[trackLineInsertIndex]
+  const { startFrame } = getDragoverPosition(e)
+
+  const trackItem = {
+    id: uuid(),
+    resourceType: ResourceType.VIDEO,
+    component: TrackComponentName.TRACK_VIDEO,
+    frameCount: draggingData.frameCount,
+    startFrame: 0,
+    endFrame: draggingData.frameCount
+  }
+
+  if (trackLineInsertIndex === -1) {
+    trackItem.startFrame = startFrame
+    trackItem.endFrame = startFrame + draggingData.frameCount
+    trackStore.trackLineList.unshift({
+      type: TrackLineType.VIDEO,
+      id: uuid(),
+      trackList: [trackItem]
+    })
+  } else if (trackLineInsertIndex > -1) {
+    if (!isEmpty.value) {
+      trackItem.startFrame = startFrame
+      trackItem.endFrame = startFrame + draggingData.frameCount
+    }
+    const line = trackStore.trackLineList[trackLineInsertIndex]
     if (draggingData.type === ResourceType.VIDEO) {
-      line.trackList.push({
-        id: uuid(),
-        resourceType: ResourceType.VIDEO,
-        component: TrackComponentName.TRACK_VIDEO,
-        frameCount: draggingData.frameCount,
-        startFrame: 0
-      })
+      line.trackList.push(trackItem)
     }
   }
 }
@@ -216,28 +235,28 @@ function onDrop(e: DragEvent) {
         @dragover="onDragover"
         @drop="onDrop"
       >
+        <ul class="track-list">
+          <li
+            v-for="(trackLine, lineIndex) in trackStore.trackLineList"
+            ref="trackLineListRef"
+            :key="trackLine.id"
+            class="track-line"
+            :data-index="lineIndex"
+            :data-type="trackLine.type"
+            :class="{ 'is-main': trackLine.type === TrackLineType.MAIN }"
+          >
+            <template v-for="item in trackLine.trackList" :key="item.id">
+              <component :is="item.component" :data="item"></component>
+            </template>
+          </li>
+        </ul>
+
         <div
           v-show="trackStore.showTrackPlaceholder"
           class="track-placeholder"
           ref="trackPlaceholderRef"
           :style="trackPlaceholderStyle"
         ></div>
-
-        <ul class="track-list">
-          <li
-            v-for="trackLine in trackLineList"
-            ref="trackLineListRef"
-            :key="trackLine.id"
-            class="track-line"
-            :data-type="trackLine.type"
-            :class="{ 'is-main': trackLine.type === TrackLineType.MAIN }"
-          >
-            <!-- <VideoItem /> -->
-            <template v-for="item in trackLine.trackList" :key="item.id">
-              <component :is="item.component" :data="item"></component>
-            </template>
-          </li>
-        </ul>
       </div>
     </div>
   </div>
@@ -283,7 +302,9 @@ function onDrop(e: DragEvent) {
   .track-list {
     width: 100%;
     .track-line {
+      position: relative;
       width: 100%;
+      height: 60px;
       border-radius: 4px;
 
       &.is-main {

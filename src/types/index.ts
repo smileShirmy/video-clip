@@ -32,7 +32,8 @@ export interface VideoResource extends VideoResourceResponse {
  * 轨道类型
  */
 export enum TrackLineType {
-  MAIN = 'main'
+  MAIN = 'main',
+  VIDEO = 'video'
 }
 
 /**
@@ -51,6 +52,7 @@ export interface TrackItem {
   component: TrackComponentName
   frameCount: number
   startFrame: number
+  endFrame: number
 }
 
 /**

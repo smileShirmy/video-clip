@@ -12,5 +12,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <TrackHandler :frame-count="props.data.frameCount"> 视频资源 </TrackHandler>
+  <TrackHandler :data="props.data"> 视频资源 </TrackHandler>
 </template>

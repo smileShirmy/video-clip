@@ -79,6 +79,7 @@ onMounted(() => {
   height: 100%;
   pointer-events: none;
   transform: translate(-50%);
+  z-index: 1;
 
   .top {
     position: absolute;

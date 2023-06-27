@@ -1,103 +1,142 @@
 <script setup lang="ts">
-import { computed, ref, toRaw } from 'vue'
+import { computed, toRaw } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
+import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
+import type { TrackItem } from '@/types'
 
 const timelineStore = useTimelineStore()
+const trackStore = useTrackStore()
 
-const props = withDefaults(defineProps<{ height?: number; frameCount: number }>(), {
-  height: 60
+const props = defineProps<{
+  data: TrackItem
+}>()
+
+const initStartFrame = toRaw(props.data.startFrame)
+
+const sliderSize = computed(() => timelineStore.frameWidth * props.data.frameCount)
+
+const trackItemContainerStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    left: `${((timelineStore.frameWidth * initStartFrame) / timelineStore.timelineWidth) * 100}%`
+  }
 })
 
-let leftValue = 0
-let rightValue = toRaw(props.frameCount)
+const trackItemWrapperStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    height: '60px',
+    width: `${props.data.frameCount * timelineStore.frameWidth}px`
+  }
+})
 
-const leftPosition = ref<string>('0%')
-const rightPosition = ref<string>('100%')
+const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    left: `${
+      ((timelineStore.frameWidth * (props.data.startFrame - initStartFrame)) / sliderSize.value) *
+      100
+    }%`
+  }
+})
 
-const leftStyle: ComputedRef<CSSProperties> = computed(() => ({
-  left: leftPosition.value
-}))
+const rightHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    left: `${
+      ((timelineStore.frameWidth * (props.data.endFrame - initStartFrame)) / sliderSize.value) * 100
+    }%`
+  }
+})
 
-const rightStyle: ComputedRef<CSSProperties> = computed(() => ({
-  left: rightPosition.value
-}))
-
-const trackItemStyle: ComputedRef<CSSProperties> = computed(() => ({
-  height: `${props.height}px`,
-  width: `${trackItemWidth.value}px`
-}))
-
-const trackItemWidth = computed(() => timelineStore.frameWidth * props.frameCount)
+const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    height: '60px',
+    width: `${(props.data.endFrame - props.data.startFrame) * timelineStore.frameWidth}px`,
+    left: leftHandlerStyle.value.left
+  }
+})
 
 const leftSlider = new Slider({
-  change(v: number, p: string) {
-    leftValue = v
-    leftPosition.value = p
+  change(v: number) {
+    trackStore.updateTrackItemStartFrame(props.data, v + initStartFrame)
   }
 })
 
 const rightSlider = new Slider({
-  change(v: number, p: string) {
-    rightValue = v
-    rightPosition.value = p
+  change(v: number) {
+    trackStore.updateTrackItemEndFrame(props.data, v + initStartFrame)
   }
 })
 
 function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
+  const value = props.data.startFrame - initStartFrame
   leftSlider.onDown(event, {
     min: 0,
-    max: props.frameCount,
-    sliderSize: trackItemWidth.value,
-    value: leftValue
+    max: props.data.frameCount,
+    sliderSize: sliderSize.value,
+    value: value > 0 ? value : 0
   })
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
+  const value = props.data.endFrame - initStartFrame
   rightSlider.onDown(event, {
     min: 0,
-    max: props.frameCount,
-    sliderSize: trackItemWidth.value,
-    value: rightValue
+    max: props.data.frameCount,
+    sliderSize: sliderSize.value,
+    value: value > 0 ? value : 0
   })
 }
 </script>
 
 <template>
-  <div class="track-item" :style="trackItemStyle">
-    <div
-      class="track-handler left-handler"
-      :style="leftStyle"
-      @mousedown="onLeftHandlerDown"
-      @touchstart="onLeftHandlerDown"
-    ></div>
-    <div
-      class="track-handler right-handler"
-      :style="rightStyle"
-      @mousedown="onRightHandlerDown"
-      @touchstart="onRightHandlerDown"
-    ></div>
+  <!-- container 用于定位相对于 trackLine 的偏移值 -->
+  <div class="track-item-container" :style="trackItemContainerStyle">
+    <!-- wrapper 用于提供给 trackHandler 进行定位，并且作为滑轨 -->
+    <div class="track-item-wrapper" :style="trackItemWrapperStyle">
+      <div class="track-item" :style="trackItemStyle">
+        <slot></slot>
+      </div>
 
-    <slot></slot>
+      <div
+        class="track-handler left-handler"
+        :style="leftHandlerStyle"
+        @mousedown="onLeftHandlerDown"
+        @touchstart="onLeftHandlerDown"
+      ></div>
+      <div
+        class="track-handler right-handler"
+        :style="rightHandlerStyle"
+        @mousedown="onRightHandlerDown"
+        @touchstart="onRightHandlerDown"
+      ></div>
+    </div>
   </div>
 </template>
 
 <lang scoped lang="scss">
-.track-item {
-  position: relative;
-  overflow: hidden;
-  border-radius: 4px;
-  background-color: var(--app-color-white);
-  l .track-handler {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
+.track-item-container {
+  position: absolute;
 
-    &.right-handler {
-      transform: translate(-100%);
+  .track-item-wrapper {
+    position: relative;
+
+    .track-handler {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+
+      &.right-handler {
+        transform: translate(-100%);
+      }
+    }
+
+    .track-item {
+      position: absolute;
+      overflow: hidden;
+      border-radius: 4px;
+      background-color: var(--app-color-white);
     }
   }
 }
