@@ -10,8 +10,11 @@ export const useTrackStore = defineStore('track', () => {
 
   const draggingData = ref<VideoResource | null>(null)
 
-  // 是否显示占位
-  const showTrackPlaceholder = ref<boolean>(false)
+  const showTrackPlaceholder = ref(false)
+
+  const showHorizontalLine = ref(false)
+
+  const showVerticalLine = ref(false)
 
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
@@ -72,6 +75,8 @@ export const useTrackStore = defineStore('track', () => {
     scale,
     trackControllerWidth,
     showTrackPlaceholder,
+    showHorizontalLine,
+    showVerticalLine,
     initTimeline,
     setTrackControllerWidth,
     updateTrackItemStartFrame,

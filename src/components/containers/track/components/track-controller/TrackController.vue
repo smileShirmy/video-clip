@@ -33,6 +33,18 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
 }))
 
+const horizontalLineTop = ref(0)
+
+const verticalLineFrame = ref(0)
+
+const horizontalLineStyle: ComputedRef<CSSProperties> = computed(() => ({
+  top: `${horizontalLineTop.value}px`
+}))
+
+const verticalLineStyle: ComputedRef<CSSProperties> = computed(() => ({
+  left: `${(verticalLineFrame.value / timelineStore.maxFrameCount) * 100}%`
+}))
+
 const trackPlaceholder = reactive({
   top: 0,
   startFrame: 0,
@@ -77,7 +89,7 @@ function getDragoverPosition(e: DragEvent): {
   top: number
   left: number
   y: number
-  startFrame: number
+  curFrame: number
 } {
   const { top, left } = getElementPosition(e.target as HTMLElement)
   const y = top + e.offsetY
@@ -92,14 +104,14 @@ function getDragoverPosition(e: DragEvent): {
   const max = timelineStore.maxFrameCount
   const lengthPerStep = 100 / (timelineStore.maxFrameCount - MIN) / STEP
   const steps = Math.round(newPosition / lengthPerStep)
-  let startFrame = steps * lengthPerStep * (max - MIN) * 0.01 + MIN
-  startFrame = parseFloat(startFrame.toFixed(0))
+  let curFrame = steps * lengthPerStep * (max - MIN) * 0.01 + MIN
+  curFrame = parseFloat(curFrame.toFixed(0))
 
   return {
     top,
     left,
     y,
-    startFrame
+    curFrame
   }
 }
 
@@ -139,30 +151,49 @@ function onDragover(e: DragEvent) {
   if (!trackLineListRef.value || !trackStore.draggingData) return
 
   trackStore.showTrackPlaceholder = false
+  trackStore.showHorizontalLine = false
+  trackStore.showVerticalLine = false
 
-  const { top, y, startFrame } = getDragoverPosition(e)
+  const { top, y, curFrame } = getDragoverPosition(e)
 
   let mainLineTop = 0
   let firstLineTop = 0
 
   const len = trackLineListRef.value.length
   for (let i = 0; i < len; i += 1) {
-    const trackLine = trackLineListRef.value[i]
-    if (trackLine.dataset.index === '0') {
-      const { top } = getElementPosition(trackLine)
-      firstLineTop = top
-    }
+    const trackLineRef = trackLineListRef.value[i]
+    const index = Number(trackLineRef.dataset.index)
+    const trackLine = trackStore.trackLineList[index]
+    const trackList = trackLine.trackList
 
     // dragover 处于某条 trackLine 上
-    if (trackLine === e.target || e.target === trackPlaceholderRef.value) {
-      trackLineInsertIndex = Number(trackLine.dataset.index)
-      setPlaceholder({ top, startFrame, frameCount: trackStore.draggingData.frameCount })
+    if (trackLineRef === e.target || e.target === trackPlaceholderRef.value) {
+      trackLineInsertIndex = Number(index)
+      setPlaceholder({ top, startFrame: curFrame, frameCount: trackStore.draggingData.frameCount })
       return
     }
 
-    if (trackLine.dataset.type === TrackLineType.MAIN) {
-      const { top } = getElementPosition(trackLine)
+    if (index === 0) {
+      const { top } = getElementPosition(trackLineRef)
+      firstLineTop = top
+    }
+
+    if (trackLineRef.dataset.type === TrackLineType.MAIN) {
+      const { top } = getElementPosition(trackLineRef)
       mainLineTop = top
+    }
+
+    for (let j = 0; j < trackList.length; j += 1) {
+      // TODO: 这个 30 不应该是帧应该是象素，需要转换一下
+      const STICK_WIDTH = 30
+      const item = trackList[j]
+      const startFrameDiff = Math.abs(item.startFrame - curFrame)
+      const endFrameDiff = Math.abs(item.endFrame - curFrame)
+      if (startFrameDiff < STICK_WIDTH || endFrameDiff < STICK_WIDTH) {
+        trackStore.showVerticalLine = true
+        verticalLineFrame.value = startFrameDiff < endFrameDiff ? item.startFrame : item.endFrame
+        break
+      }
     }
   }
 
@@ -170,12 +201,19 @@ function onDragover(e: DragEvent) {
   if (isEmpty.value && y > mainLineTop) {
     trackLineInsertIndex = len - 1
 
-    setPlaceholder({ top: mainLineTop, startFrame, frameCount: trackStore.draggingData.frameCount })
+    setPlaceholder({
+      top: mainLineTop,
+      startFrame: curFrame,
+      frameCount: trackStore.draggingData.frameCount
+    })
     return
   }
 
   // 如果是在最顶部则在最顶部新插入一个 trackLine
   if (y < firstLineTop) {
+    trackStore.showHorizontalLine = true
+    horizontalLineTop.value = firstLineTop - 4
+
     trackLineInsertIndex = -1
   }
 }
@@ -185,7 +223,7 @@ function onDrop(e: DragEvent) {
   const draggingData = trackStore.draggingData
   if (!draggingData) return
 
-  const { startFrame } = getDragoverPosition(e)
+  const { curFrame } = getDragoverPosition(e)
 
   const trackItem = {
     id: uuid(),
@@ -196,23 +234,28 @@ function onDrop(e: DragEvent) {
     endFrame: draggingData.frameCount
   }
 
-  if (trackLineInsertIndex === -1) {
-    trackItem.startFrame = startFrame
-    trackItem.endFrame = startFrame + draggingData.frameCount
+  // 轨道上没有任何资源
+  if (isEmpty.value) {
+    trackStore.trackLineList[0].trackList.push(trackItem)
+  }
+  // 默认情况从上面插入一个新的 trackLine 和 trackItem
+  else if (trackLineInsertIndex === -1) {
+    trackItem.startFrame = curFrame
+    trackItem.endFrame = curFrame + draggingData.frameCount
+
     trackStore.trackLineList.unshift({
       type: TrackLineType.VIDEO,
       id: uuid(),
       trackList: [trackItem]
     })
-  } else if (trackLineInsertIndex > -1) {
-    if (!isEmpty.value) {
-      trackItem.startFrame = startFrame
-      trackItem.endFrame = startFrame + draggingData.frameCount
-    }
+  }
+  // 如果找到目标 trackLine 则追加一个 trackItem
+  else if (trackLineInsertIndex > -1) {
+    trackItem.startFrame = curFrame
+    trackItem.endFrame = curFrame + draggingData.frameCount
+
     const line = trackStore.trackLineList[trackLineInsertIndex]
-    if (draggingData.type === ResourceType.VIDEO) {
-      line.trackList.push(trackItem)
-    }
+    line.trackList.push(trackItem)
   }
 }
 </script>
@@ -257,6 +300,17 @@ function onDrop(e: DragEvent) {
           ref="trackPlaceholderRef"
           :style="trackPlaceholderStyle"
         ></div>
+
+        <div
+          v-show="trackStore.showHorizontalLine"
+          class="horizontal-line"
+          :style="horizontalLineStyle"
+        ></div>
+        <div
+          v-show="trackStore.showVerticalLine"
+          class="vertical-line"
+          :style="verticalLineStyle"
+        ></div>
       </div>
     </div>
   </div>
@@ -295,7 +349,26 @@ function onDrop(e: DragEvent) {
   }
 
   .track-placeholder {
+    box-sizing: border-box;
     position: absolute;
+    background-color: rgba(#7086e9, 0.2);
+    border: 2px dashed rgba(#7086e9, 0.5);
+    border-radius: 4px;
+  }
+
+  .horizontal-line {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #7086e9;
+  }
+
+  .vertical-line {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    height: calc(100% - 30px);
     background-color: #7086e9;
   }
 
@@ -310,10 +383,6 @@ function onDrop(e: DragEvent) {
       &.is-main {
         background-color: var(--app-color-black);
         height: 60px;
-      }
-
-      &.top-line {
-        border-top: 1px solid #7086e9;
       }
 
       + .track-line {
