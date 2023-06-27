@@ -414,6 +414,28 @@ export const useTimelineStore = defineStore('timeline', () => {
     oldUsedCount = usedCount
   }
 
+  /**
+   * 把当前帧数转换为像素
+   */
+  function frameToPixel(currentFrame: number): number {
+    return currentFrame * frameWidth.value
+  }
+
+  function frameToPixelWithUnit(currentFrame: number): string {
+    return `${frameToPixel(currentFrame)}px`
+  }
+
+  /**
+   * 把当前帧数转为百分比
+   */
+  function frameToPercent(currentFrame: number): number {
+    return (currentFrame / maxFrameCount.value) * 100
+  }
+
+  function frameToPercentWithUnit(currentFrame: number): string {
+    return `${frameToPercent(currentFrame)}%`
+  }
+
   function init(target: HTMLElement) {
     wrapper = target
   }
@@ -423,6 +445,10 @@ export const useTimelineStore = defineStore('timeline', () => {
     frameWidth,
     timelineWidth,
     init,
-    updateTimeline
+    updateTimeline,
+    frameToPixel,
+    frameToPixelWithUnit,
+    frameToPercent,
+    frameToPercentWithUnit
   }
 })

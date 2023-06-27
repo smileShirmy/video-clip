@@ -15,8 +15,6 @@ function onDragStart() {
 function onDragend() {
   trackStore.draggingData = null
   trackStore.showTrackPlaceholder = false
-  trackStore.showVerticalLine = false
-  trackStore.showHorizontalLine = false
 }
 </script>
 
