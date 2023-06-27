@@ -88,8 +88,8 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   position: relative;
   overflow: hidden;
   border-radius: 4px;
-
-  .track-handler {
+  background-color: var(--app-color-white);
+  l .track-handler {
     position: absolute;
     top: 0;
     bottom: 0;

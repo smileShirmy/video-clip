@@ -35,22 +35,27 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 
 const trackPlaceholder = reactive({
   top: 0,
-  left: 0,
-  width: 100,
+  startFrame: 0,
+  frameCount: 0,
   height: 60
 })
 
-const trackPlaceholderStyle: ComputedRef<CSSProperties> = computed(() => ({
-  top: `${trackPlaceholder.top}px`,
-  left: `${trackPlaceholder.left}px`,
-  width: `${trackPlaceholder.width}px`,
-  height: `${trackPlaceholder.height}px`
-}))
+const trackPlaceholderStyle: ComputedRef<CSSProperties> = computed(() => {
+  return {
+    top: `${trackPlaceholder.top}px`,
+    left: `${((trackPlaceholder.startFrame - MIN) / (timelineStore.maxFrameCount - MIN)) * 100}%`,
+    width: `${trackPlaceholder.frameCount * timelineStore.frameWidth}px`,
+    height: `${trackPlaceholder.height}px`
+  }
+})
 
 // 当前是否存在资源
 const isEmpty = computed(() => {
   return true
 })
+
+const MIN = 0
+const STEP = 1
 
 const trackLineList: TrackLine[] = reactive([
   {
@@ -80,29 +85,48 @@ function getDragoverPosition(e: DragEvent): {
   top: number
   left: number
   y: number
-  x: number
+  startFrame: number
 } {
   const { top, left } = getElementPosition(e.target as HTMLElement)
+  const y = top + e.offsetY
+  const x = left + e.offsetX
+
+  let newPosition = (x / timelineStore.timelineWidth) * 100
+  if (newPosition < 0) {
+    newPosition = 0
+  } else if (newPosition > 100) {
+    newPosition = 100
+  }
+  const max = timelineStore.maxFrameCount
+  const lengthPerStep = 100 / (timelineStore.maxFrameCount - MIN) / STEP
+  const steps = Math.round(newPosition / lengthPerStep)
+  let startFrame = steps * lengthPerStep * (max - MIN) * 0.01 + MIN
+  startFrame = parseFloat(startFrame.toFixed(0))
 
   return {
     top,
     left,
-    y: top + e.offsetY,
-    x: left + e.offsetX
+    y,
+    startFrame
   }
 }
 
-function setPlaceholder(options: { top?: number; left?: number; width?: number; height?: number }) {
+function setPlaceholder(options: {
+  top?: number
+  startFrame?: number
+  frameCount?: number
+  height?: number
+}) {
   trackStore.showTrackPlaceholder = true
 
   if (isNumber(options.top)) {
     trackPlaceholder.top = options.top
   }
-  if (isNumber(options.left)) {
-    trackPlaceholder.left = options.left
+  if (isNumber(options.startFrame)) {
+    trackPlaceholder.startFrame = options.startFrame
   }
-  if (isNumber(options.width)) {
-    trackPlaceholder.width = options.width
+  if (isNumber(options.frameCount)) {
+    trackPlaceholder.frameCount = options.frameCount
   }
   if (isNumber(options.height)) {
     trackPlaceholder.height = options.height
@@ -120,11 +144,11 @@ let trackLineInsertIndex = -1
 function onDragover(e: DragEvent) {
   e.preventDefault()
 
-  if (!trackLineListRef.value) return
+  if (!trackLineListRef.value || !trackStore.draggingData) return
 
   trackStore.showTrackPlaceholder = false
 
-  const { top, x, y } = getDragoverPosition(e)
+  const { top, y, startFrame } = getDragoverPosition(e)
 
   let mainLineTop = 0
 
@@ -135,7 +159,7 @@ function onDragover(e: DragEvent) {
     // dragover 处于某条 trackLine 上
     if (trackLine === e.target || e.target === trackPlaceholderRef.value) {
       trackLineInsertIndex = i
-      setPlaceholder({ top, left: x })
+      setPlaceholder({ top, startFrame, frameCount: trackStore.draggingData.frameCount })
       return
     }
 
@@ -148,7 +172,8 @@ function onDragover(e: DragEvent) {
   // 如果目前没有插入任何资源，并且 y 大于主轨道顶部，则把占位符显示在主轨道上
   if (isEmpty.value && y > mainLineTop) {
     trackLineInsertIndex = len - 1
-    setPlaceholder({ top: mainLineTop, left: x })
+
+    setPlaceholder({ top: mainLineTop, startFrame, frameCount: trackStore.draggingData.frameCount })
     return
   }
 }
@@ -174,7 +199,14 @@ function onDrop(e: DragEvent) {
 </script>
 
 <template>
-  <div class="track-controller" :style="wrapperStyle" ref="trackContainerRef">
+  <div
+    class="track-controller"
+    :class="{
+      'overflow-hidden': trackStore.showTrackPlaceholder
+    }"
+    :style="wrapperStyle"
+    ref="trackContainerRef"
+  >
     <div class="track-menu"></div>
     <div class="track-content" ref="trackContentRef" :style="trackContentWidthStyle">
       <TimelineRuler />
@@ -217,6 +249,10 @@ function onDrop(e: DragEvent) {
   justify-content: flex-start;
   overflow-x: auto;
   height: calc(100% - 30px);
+
+  &.overflow-hidden {
+    overflow: hidden;
+  }
 
   .track-menu {
     flex-shrink: 0;
