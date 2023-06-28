@@ -9,3 +9,15 @@ export const uuid = () =>
       16
     )
   )
+
+/**
+ * 判断两个区间是否有交集
+ */
+export const isIntersectionOfTwoIntervals = (
+  arr1: [number, number],
+  arr2: [number, number]
+): boolean => {
+  const start = [Math.min(...arr1), Math.min(...arr2)]
+  const end = [Math.max(...arr1), Math.max(...arr2)]
+  return Math.max(...start) < Math.min(...end)
+}

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { TrackLineType, type TrackLine, type VideoResource, type TrackItem } from '@/types'
@@ -9,6 +9,8 @@ export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
 
   const draggingData = ref<VideoResource | null>(null)
+
+  const disableScroll = ref(false)
 
   const showTrackPlaceholder = ref(false)
 
@@ -31,13 +33,20 @@ export const useTrackStore = defineStore('track', () => {
   // 放大等级
   const scale = ref(0)
 
+  // 轨道资源数据
   const trackLineList: TrackLine[] = reactive([
     {
       type: TrackLineType.MAIN,
       id: uuid(),
+      height: 60,
       trackList: []
     }
   ])
+
+  // 轨道中不存在任何资源
+  const isEmptyResource = computed(
+    () => trackLineList.length === 1 && trackLineList[0].trackList.length === 0
+  )
 
   // 当下面三个值发生改变时都要重新绘制
   watchThrottled(
@@ -69,6 +78,8 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   return {
+    disableScroll,
+    isEmptyResource,
     trackLineList,
     draggingData,
     currentFrame,

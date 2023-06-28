@@ -61,5 +61,6 @@ export interface TrackItem {
 export interface TrackLine {
   type: TrackLineType
   id: string
+  height: number
   trackList: TrackItem[]
 }

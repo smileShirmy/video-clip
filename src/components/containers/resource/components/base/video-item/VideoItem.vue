@@ -9,11 +9,13 @@ const props = defineProps<{
 const trackStore = useTrackStore()
 
 function onDragStart() {
+  trackStore.disableScroll = true
   trackStore.draggingData = props.data
 }
 
 function onDragend() {
   trackStore.draggingData = null
+  trackStore.disableScroll = false
   trackStore.showTrackPlaceholder = false
 }
 </script>

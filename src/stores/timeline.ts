@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { hoursToTime, minutesToTime, secondsToTime } from '@/services/helpers/time'
 import { warn } from '@/services/helpers/warn'
 import { ref } from 'vue'
+import { FRAME_STEP } from '@/config'
 
 // 长刻度单位
 enum LongScaleUnit {
@@ -421,6 +422,9 @@ export const useTimelineStore = defineStore('timeline', () => {
     return currentFrame * frameWidth.value
   }
 
+  /**
+   * 把当前帧数转换为像素（带单位）
+   */
   function frameToPixelWithUnit(currentFrame: number): string {
     return `${frameToPixel(currentFrame)}px`
   }
@@ -432,8 +436,43 @@ export const useTimelineStore = defineStore('timeline', () => {
     return (currentFrame / maxFrameCount.value) * 100
   }
 
+  /**
+   * 把当前帧数转为百分比（带单位）
+   */
   function frameToPercentWithUnit(currentFrame: number): string {
     return `${frameToPercent(currentFrame)}%`
+  }
+
+  /**
+   * 把当前帧数转换为象素宽度
+   */
+  function frameToPixelWidth(frameCount: number): number {
+    return frameCount * frameWidth.value
+  }
+
+  /**
+   * 把当前帧数转换为象素宽度
+   */
+  function frameToPixelWidthWithUnit(frameCount: number): string {
+    return `${frameToPixelWidth(frameCount)}px`
+  }
+
+  /**
+   * 把当前象素转化为帧数
+   */
+  function pixelToFrame(pixel: number): number {
+    let newPosition = (pixel / timelineWidth.value) * 100
+    if (newPosition < 0) {
+      newPosition = 0
+    } else if (newPosition > 100) {
+      newPosition = 100
+    }
+
+    const lengthPerStep = 100 / maxFrameCount.value / FRAME_STEP
+    const steps = Math.round(newPosition / lengthPerStep)
+    let curFrame = steps * lengthPerStep * maxFrameCount.value * 0.01
+    curFrame = parseFloat(curFrame.toFixed(0))
+    return curFrame
   }
 
   function init(target: HTMLElement) {
@@ -449,6 +488,9 @@ export const useTimelineStore = defineStore('timeline', () => {
     frameToPixel,
     frameToPixelWithUnit,
     frameToPercent,
-    frameToPercentWithUnit
+    frameToPercentWithUnit,
+    frameToPixelWidth,
+    frameToPixelWidthWithUnit,
+    pixelToFrame
   }
 })

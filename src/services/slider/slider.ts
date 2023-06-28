@@ -1,3 +1,4 @@
+import { FRAME_STEP } from '@/config'
 import { nextTick } from 'vue'
 
 interface SliderOptions {
@@ -22,7 +23,7 @@ export class Slider {
 
   private options: SliderOptions
 
-  private step = 1 // 滑动时步进的帧数
+  private step = FRAME_STEP
 
   private min = 0
   private max = 0
