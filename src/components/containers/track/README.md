@@ -58,7 +58,3 @@ function getIntervalConfig()
 ## canvas 最大宽度限制处理
 
 Chrome、Firefox、Safari 的最大宽度为 `32767px`，IE 最大宽度为 `8192px`，IE 浏览器不考虑
-
-## 区间标准
-
-都使左闭右开区间进行计算，比如 `[0, 100) [100, 200)，[200, 300)`

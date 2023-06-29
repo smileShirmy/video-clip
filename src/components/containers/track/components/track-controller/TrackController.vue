@@ -6,13 +6,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import { TrackComponentName, TrackLineType, ResourceType } from '@/types'
-import {
-  getEndFrame,
-  getStartFrame,
-  isBoolean,
-  isIntersectionOfTwoIntervals,
-  uuid
-} from '@/services/helpers/general'
+import { isBoolean, isIntersectionOfTwoIntervals, uuid } from '@/services/helpers/general'
 import { getElementPosition } from '@/services/helpers/dom'
 import { usePlaceholder } from './use-placeholder'
 import { useStickyLine } from './use-sticky-line'
@@ -95,7 +89,7 @@ function onDragover(e: DragEvent) {
   let isIntersectionHolder = false
   placeholderProperty.frameCount = frameCount
   placeholderProperty.startFrame = curFrame
-  const holderEndFrame = getEndFrame(curFrame, frameCount)
+  const holderEndFrame = curFrame + frameCount
 
   let verticalLineFrame = 0
   let horizontalTop = 0
@@ -191,9 +185,7 @@ function onDragover(e: DragEvent) {
   if (isNumber(stickyFrame) && isBoolean(isStartStickyFrame)) {
     showVerticalLine = true
     verticalLineFrame = stickyFrame
-    placeholderProperty.startFrame = isStartStickyFrame
-      ? stickyFrame
-      : getStartFrame(stickyFrame, frameCount)
+    placeholderProperty.startFrame = isStartStickyFrame ? stickyFrame : stickyFrame - frameCount
   }
 
   if (trackStore.isEmptyResource && isUnder(y, mainLineTop)) {
@@ -251,7 +243,7 @@ function onDrop(e: DragEvent) {
     component: TrackComponentName.TRACK_VIDEO,
     frameCount: draggingData.frameCount,
     startFrame: 0,
-    endFrame: getEndFrame(0, draggingData.frameCount)
+    endFrame: draggingData.frameCount
   }
 
   if (trackStore.isEmptyResource) {
@@ -265,7 +257,7 @@ function onDrop(e: DragEvent) {
     }
 
     trackItem.startFrame = startFrame
-    trackItem.endFrame = getEndFrame(startFrame, draggingData.frameCount)
+    trackItem.endFrame = startFrame + draggingData.frameCount
 
     trackStore.trackLineList.unshift({
       type: TrackLineType.VIDEO,
@@ -282,7 +274,7 @@ function onDrop(e: DragEvent) {
     }
 
     trackItem.startFrame = startFrame
-    trackItem.endFrame = getEndFrame(startFrame, draggingData.frameCount)
+    trackItem.endFrame = startFrame + draggingData.frameCount
 
     const line = trackStore.trackLineList[trackLineInsertIndex]
     line.trackList.push(trackItem)

@@ -22,27 +22,3 @@ export const isIntersectionOfTwoIntervals = (
   const end = [Math.max(...arr1), Math.max(...arr2)]
   return Math.max(...start) < Math.min(...end)
 }
-
-/**
- * 根据开始帧和总帧数获取结束帧
- *
- * 帧区间为左闭右开区间，比如 [0, 100)
- * startFrame = 0
- * frameCount = 100
- * endFrame = 99
- * 0 + 100 - 1 = 99
- */
-export const getEndFrame = (startFrame: number, frameCount: number): number =>
-  startFrame + frameCount - 1
-
-/**
- * 根据结束帧和总帧数获取结束帧
- *
- * 帧区间为左闭右开区间，比如 [0, 100)
- * endFrame = 99
- * frameCount = 100
- * startFrame = 0
- * 99 - 100 + 1 = 0
- */
-export const getStartFrame = (endFrame: number, frameCount: number): number =>
-  endFrame - frameCount + 1
