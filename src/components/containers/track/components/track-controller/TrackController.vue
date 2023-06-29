@@ -6,11 +6,18 @@ import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import { TrackComponentName, TrackLineType, ResourceType } from '@/types'
-import { isIntersectionOfTwoIntervals, uuid } from '@/services/helpers/general'
+import {
+  getEndFrame,
+  getStartFrame,
+  isBoolean,
+  isIntersectionOfTwoIntervals,
+  uuid
+} from '@/services/helpers/general'
 import { getElementPosition } from '@/services/helpers/dom'
 import { usePlaceholder } from './use-placeholder'
 import { useStickyLine } from './use-sticky-line'
 import { TRACK_STICK_WIDTH } from '@/config'
+import { isNumber } from '@/services/helpers/general'
 
 defineOptions({
   components: {
@@ -23,13 +30,8 @@ const timelineStore = useTimelineStore()
 
 const { placeholderProperty, trackPlaceholderRef, trackPlaceholderStyle, updatePlaceholder } =
   usePlaceholder()
-const {
-  updateHorizontalLine,
-  updateVerticalLine,
-  verticalLineFrame,
-  horizontalLineStyle,
-  verticalLineStyle
-} = useStickyLine()
+const { updateHorizontalLine, updateVerticalLine, horizontalLineStyle, verticalLineStyle } =
+  useStickyLine()
 
 const timelineResourceRef = ref<HTMLDivElement>()
 
@@ -77,8 +79,11 @@ function onDragover(e: DragEvent) {
 
   if (!trackStore.draggingData) return
   const { y, curFrame } = getDragoverPosition(e)
-  const stickyFrameList = []
   const { frameCount } = trackStore.draggingData
+
+  let closestPixel = null
+  let stickyFrame = null
+  let isStartStickyFrame = null
 
   let showTrackPlaceholder = false
   let showHorizontalLine = false
@@ -90,6 +95,7 @@ function onDragover(e: DragEvent) {
   let isIntersectionHolder = false
   placeholderProperty.frameCount = frameCount
   placeholderProperty.startFrame = curFrame
+  const holderEndFrame = getEndFrame(curFrame, frameCount)
 
   let verticalLineFrame = 0
   let horizontalTop = 0
@@ -109,16 +115,48 @@ function onDragover(e: DragEvent) {
     for (let j = 0; j < trackList.length; j += 1) {
       const item = trackList[j]
 
-      // 收集产生黏性的帧
-      const curPixel = timelineStore.frameToPixel(curFrame)
-      const startFrameDiff = Math.abs(timelineStore.frameToPixel(item.startFrame) - curPixel)
-      const endFrameDiff = Math.abs(timelineStore.frameToPixel(item.endFrame) - curPixel)
+      // 获取产生黏性最近的帧
+      const startFramePixel = timelineStore.frameToPixel(item.startFrame)
+      const endFramePixel = timelineStore.frameToPixel(item.endFrame)
+      const holderEndFramePixel = timelineStore.frameToPixel(holderEndFrame)
+      const holderStartFramePixel = timelineStore.frameToPixel(curFrame)
 
-      if (startFrameDiff < TRACK_STICK_WIDTH) {
-        stickyFrameList.push(item.startFrame)
+      // trackItem 开始帧和 trackPlaceholder 开始帧产生黏性
+      const startToStartDiff = Math.abs(startFramePixel - holderStartFramePixel)
+      if (startToStartDiff < TRACK_STICK_WIDTH) {
+        if (closestPixel === null || startToStartDiff < closestPixel) {
+          closestPixel = startToStartDiff
+          isStartStickyFrame = true
+          stickyFrame = item.startFrame
+        }
       }
-      if (endFrameDiff < TRACK_STICK_WIDTH) {
-        stickyFrameList.push(item.endFrame)
+      // trackItem 结束帧和 trackPlaceholder 开始帧产生黏性
+      const endToStartDiff = Math.abs(endFramePixel - holderStartFramePixel)
+      if (endToStartDiff < TRACK_STICK_WIDTH) {
+        if (closestPixel === null || endToStartDiff < closestPixel) {
+          closestPixel = endToStartDiff
+          isStartStickyFrame = true
+          stickyFrame = item.endFrame
+        }
+      }
+
+      // trackItem 开始帧和 trackPlaceholder 结束帧产生黏性
+      const startToEndDiff = Math.abs(startFramePixel - holderEndFramePixel)
+      if (startToEndDiff < TRACK_STICK_WIDTH) {
+        if (closestPixel === null || startToStartDiff < closestPixel) {
+          closestPixel = startToStartDiff
+          isStartStickyFrame = false
+          stickyFrame = item.startFrame
+        }
+      }
+      // trackItem 结束帧和 trackPlaceholder 结束帧产生黏性
+      const endToEndDiff = Math.abs(endFramePixel - holderEndFramePixel)
+      if (endToEndDiff < TRACK_STICK_WIDTH) {
+        if (closestPixel === null || endToStartDiff < closestPixel) {
+          closestPixel = endToStartDiff
+          isStartStickyFrame = false
+          stickyFrame = item.endFrame
+        }
       }
 
       // 如果在某条 trackLine 上，但处于 trackItem 上，则不算在这条 trackLine 上
@@ -129,7 +167,7 @@ function onDragover(e: DragEvent) {
       // 判断 tackPlaceholder 和当前的 trackItem 是否有重合
       if (isOnTrackLine) {
         isIntersectionHolder = isIntersectionOfTwoIntervals(
-          [curFrame, curFrame + frameCount],
+          [curFrame, holderEndFrame],
           [item.startFrame, item.endFrame]
         )
       }
@@ -150,13 +188,16 @@ function onDragover(e: DragEvent) {
     }
   }
 
-  if (stickyFrameList.length > 0) {
+  if (isNumber(stickyFrame) && isBoolean(isStartStickyFrame)) {
     showVerticalLine = true
-    verticalLineFrame = Math.min(...stickyFrameList)
+    verticalLineFrame = stickyFrame
+    placeholderProperty.startFrame = isStartStickyFrame
+      ? stickyFrame
+      : getStartFrame(stickyFrame, frameCount)
   }
 
-  // 如果目前没有插入任何资源，并且在主轨道顶部之下，则把 trackPlaceholder 显示到主轨道上
   if (trackStore.isEmptyResource && isUnder(y, mainLineTop)) {
+    // 如果目前没有插入任何资源，并且在主轨道顶部之下，则把 trackPlaceholder 显示到主轨道上
     showTrackPlaceholder = true
     trackLineInsertIndex = len - 1
     placeholderProperty.startFrame = 0
@@ -210,7 +251,7 @@ function onDrop(e: DragEvent) {
     component: TrackComponentName.TRACK_VIDEO,
     frameCount: draggingData.frameCount,
     startFrame: 0,
-    endFrame: draggingData.frameCount
+    endFrame: getEndFrame(0, draggingData.frameCount)
   }
 
   if (trackStore.isEmptyResource) {
@@ -220,11 +261,11 @@ function onDrop(e: DragEvent) {
   else if (trackLineInsertIndex === -1) {
     let startFrame = curFrame
     if (trackStore.showVerticalLine) {
-      startFrame = verticalLineFrame.value
+      startFrame = placeholderProperty.startFrame
     }
 
     trackItem.startFrame = startFrame
-    trackItem.endFrame = startFrame + draggingData.frameCount
+    trackItem.endFrame = getEndFrame(startFrame, draggingData.frameCount)
 
     trackStore.trackLineList.unshift({
       type: TrackLineType.VIDEO,
@@ -237,11 +278,11 @@ function onDrop(e: DragEvent) {
   else if (trackLineInsertIndex > -1) {
     let startFrame = curFrame
     if (trackStore.showVerticalLine) {
-      startFrame = verticalLineFrame.value
+      startFrame = placeholderProperty.startFrame
     }
 
     trackItem.startFrame = startFrame
-    trackItem.endFrame = startFrame + draggingData.frameCount
+    trackItem.endFrame = getEndFrame(startFrame, draggingData.frameCount)
 
     const line = trackStore.trackLineList[trackLineInsertIndex]
     line.trackList.push(trackItem)
@@ -259,7 +300,6 @@ function onDrop(e: DragEvent) {
       'overflow-hidden': trackStore.disableScroll
     }"
     :style="wrapperStyle"
-    ref="trackContainerRef"
   >
     <div class="track-menu"></div>
     <!-- position: relative -->
