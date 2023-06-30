@@ -380,6 +380,7 @@ function onDrop(e: DragEvent) {
     background-color: rgba(#7086e9, 0.2);
     border: 2px dashed rgba(#7086e9, 0.5);
     border-radius: 4px;
+    pointer-events: none;
   }
 
   .horizontal-line {
@@ -388,6 +389,7 @@ function onDrop(e: DragEvent) {
     width: 100%;
     height: 1px;
     background-color: #7086e9;
+    pointer-events: none;
   }
 
   .vertical-line {
@@ -396,6 +398,7 @@ function onDrop(e: DragEvent) {
     width: 1px;
     height: calc(100% - 30px);
     background-color: #7086e9;
+    pointer-events: none;
   }
 
   .track-list {
