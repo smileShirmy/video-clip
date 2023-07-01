@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTrackStore } from '@/stores/track'
-import type { VideoResource } from '@/types'
+import { type VideoResource } from '@/types'
 
 const props = defineProps<{
   data: VideoResource
@@ -10,18 +10,17 @@ const trackStore = useTrackStore()
 
 function onDragStart() {
   trackStore.disableScroll = true
-  trackStore.draggingData = props.data
-}
-
-function onDragend() {
-  trackStore.draggingData = null
-  trackStore.disableScroll = false
-  trackStore.showTrackPlaceholder = false
+  trackStore.draggingTrackItem = trackStore.createVideoTrackItem(props.data)
 }
 </script>
 
 <template>
-  <div class="video-item-container" draggable="true" @dragstart="onDragStart" @dragend="onDragend">
+  <div
+    class="video-item-container"
+    draggable="true"
+    @dragstart="onDragStart"
+    @dragend="trackStore.onDragend"
+  >
     <div class="video-cover-wrapper">
       <img src="" />
     </div>

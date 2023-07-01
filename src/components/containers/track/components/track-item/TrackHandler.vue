@@ -5,6 +5,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
 import type { TrackItem } from '@/types'
+import { getElementPosition } from '@/services/helpers/dom'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -15,7 +16,9 @@ const props = defineProps<{
 
 const initStartFrame = toRaw(props.data.startFrame)
 
-const sliderSize = computed(() => timelineStore.frameWidth * props.data.frameCount)
+const sliderSize = computed(
+  () => timelineStore.frameWidth * (props.data.endFrame - props.data.startFrame)
+)
 
 const trackItemContainerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
@@ -26,7 +29,7 @@ const trackItemContainerStyle: ComputedRef<CSSProperties> = computed(() => {
 const trackItemWrapperStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
     height: '60px',
-    width: `${props.data.frameCount * timelineStore.frameWidth}px`
+    width: `${(props.data.endFrame - props.data.startFrame) * timelineStore.frameWidth}px`
   }
 })
 
@@ -50,7 +53,7 @@ const rightHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
 const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
     height: '60px',
-    width: `${(props.data.endFrame - props.data.startFrame) * timelineStore.frameWidth}px`,
+    width: timelineStore.frameToPixelWidthWithUnit(props.data.endFrame - props.data.startFrame),
     left: leftHandlerStyle.value.left
   }
 })
@@ -71,7 +74,7 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
   const value = props.data.startFrame - initStartFrame
   leftSlider.onDown(event, {
     min: 0,
-    max: props.data.frameCount,
+    max: props.data.endFrame - props.data.startFrame,
     sliderSize: sliderSize.value,
     value: value > 0 ? value : 0
   })
@@ -81,10 +84,17 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   const value = props.data.endFrame - initStartFrame
   rightSlider.onDown(event, {
     min: 0,
-    max: props.data.frameCount,
+    max: props.data.endFrame - props.data.startFrame,
     sliderSize: sliderSize.value,
     value: value > 0 ? value : 0
   })
+}
+
+function onDragStart(e: DragEvent) {
+  trackStore.disableScroll = true
+  trackStore.draggingTrackItem = props.data
+
+  trackStore.dragstartOffsetX = e.offsetX
 }
 </script>
 
@@ -92,7 +102,13 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   <!-- container 用于定位相对于 trackLine 的偏移值 -->
   <div class="track-item-container" :style="trackItemContainerStyle">
     <!-- wrapper 用于提供给 trackHandler 进行定位，并且作为滑轨 -->
-    <div class="track-item-wrapper" :style="trackItemWrapperStyle">
+    <div
+      class="track-item-wrapper"
+      @dragstart="onDragStart"
+      @dragend="trackStore.onDragend"
+      draggable="true"
+      :style="trackItemWrapperStyle"
+    >
       <div class="track-item" :style="trackItemStyle">
         <slot></slot>
       </div>
@@ -126,6 +142,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
       bottom: 0;
       width: 10px;
       background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1;
 
       &.right-handler {
         transform: translate(-100%);
@@ -137,6 +154,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
       overflow: hidden;
       border-radius: 4px;
       background-color: var(--app-color-white);
+      opacity: 1 !important;
     }
   }
 }

@@ -46,21 +46,35 @@ export enum TrackComponentName {
 /**
  * 轨道资源
  */
-export interface TrackItem {
+interface BaseTrackItem {
   id: string
-  resourceType: ResourceType
-  component: TrackComponentName
-  frameCount: number
   startFrame: number
   endFrame: number
 }
 
+export interface VideoTrackItem extends BaseTrackItem {
+  component: TrackComponentName.TRACK_VIDEO
+  resource: VideoResource
+}
+
+export type TrackItem = VideoTrackItem
+
 /**
  * 轨道
  */
-export interface TrackLine {
-  type: TrackLineType
+interface BaseTrackLine {
   id: string
   height: number
-  trackList: TrackItem[]
 }
+
+export interface MainTrackLine extends BaseTrackLine {
+  type: TrackLineType.MAIN
+  trackList: VideoTrackItem[]
+}
+
+export interface VideoTrackLine extends BaseTrackLine {
+  type: TrackLineType.VIDEO
+  trackList: VideoTrackItem[]
+}
+
+export type TrackLine = MainTrackLine | VideoTrackLine

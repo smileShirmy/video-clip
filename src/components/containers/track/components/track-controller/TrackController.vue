@@ -5,8 +5,8 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackComponentName, TrackLineType, ResourceType } from '@/types'
-import { isBoolean, isIntersectionOfTwoIntervals, uuid } from '@/services/helpers/general'
+import { TrackComponentName, TrackLineType } from '@/types'
+import { isBoolean, isIntersectionOfTwoIntervals } from '@/services/helpers/general'
 import { getElementPosition } from '@/services/helpers/dom'
 import { usePlaceholder } from './use-placeholder'
 import { useStickyLine } from './use-sticky-line'
@@ -44,7 +44,10 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 /**
  * 获取当前拖拽点相对于 track-content 元素的位置
  */
-function getDragoverPosition(event: DragEvent): {
+function getDragoverPosition(
+  event: DragEvent,
+  offsetX = 0
+): {
   elementTop: number
   elementLeft: number
   y: number
@@ -52,7 +55,7 @@ function getDragoverPosition(event: DragEvent): {
 } {
   const { top, left } = getElementPosition(event.target as HTMLElement, trackContentRef.value!)
   const y = top + event.offsetY
-  const x = left + event.offsetX
+  const x = left + event.offsetX + offsetX
 
   return {
     elementTop: top,
@@ -71,9 +74,13 @@ const isUnder = (y: number, top: number) => y > top
 function onDragover(e: DragEvent) {
   e.preventDefault()
 
-  if (!trackStore.draggingData) return
-  const { y, curFrame } = getDragoverPosition(e)
-  const { frameCount } = trackStore.draggingData
+  if (!trackStore.draggingTrackItem) return
+  const { y, curFrame } = getDragoverPosition(
+    e,
+    isNumber(trackStore.dragstartOffsetX) ? -trackStore.dragstartOffsetX : 0
+  )
+
+  const frameCount = trackStore.draggingTrackItem.endFrame - trackStore.draggingTrackItem.startFrame
 
   let closestPixel = null
   let stickyFrame = null
@@ -82,6 +89,8 @@ function onDragover(e: DragEvent) {
   let showTrackPlaceholder = false
   let showHorizontalLine = false
   let showVerticalLine = false
+
+  let isInEmptyMainLine = false
 
   let mainLineTop = 0
   let firstLineTop = 0
@@ -179,6 +188,11 @@ function onDragover(e: DragEvent) {
 
     if (trackLineRef.dataset.type === TrackLineType.MAIN) {
       mainLineTop = trackLineTop
+
+      // 如果在主轨道上
+      if (isOnTrackLine && trackLine.trackList.length === 0) {
+        isInEmptyMainLine = true
+      }
     }
   }
 
@@ -188,7 +202,7 @@ function onDragover(e: DragEvent) {
     placeholderProperty.startFrame = isStartStickyFrame ? stickyFrame : stickyFrame - frameCount
   }
 
-  if (trackStore.isEmptyResource && isUnder(y, mainLineTop)) {
+  if (isInEmptyMainLine || (trackStore.isEmptyResource && isUnder(y, mainLineTop))) {
     // 如果目前没有插入任何资源，并且在主轨道顶部之下，则把 trackPlaceholder 显示到主轨道上
     showTrackPlaceholder = true
     trackLineInsertIndex = len - 1
@@ -232,22 +246,14 @@ function onDragleave(e: DragEvent) {
 
 function onDrop(e: DragEvent) {
   e.preventDefault()
-  const draggingData = trackStore.draggingData
-  if (!draggingData) return
+  const draggingTrackItem = trackStore.draggingTrackItem
+  if (!draggingTrackItem) return
 
   const { curFrame } = getDragoverPosition(e)
 
-  const trackItem = {
-    id: uuid(),
-    resourceType: ResourceType.VIDEO,
-    component: TrackComponentName.TRACK_VIDEO,
-    frameCount: draggingData.frameCount,
-    startFrame: 0,
-    endFrame: draggingData.frameCount
-  }
-
+  // 如果当前没有任何资源则在主轨道上插入一个视频资源
   if (trackStore.isEmptyResource) {
-    trackStore.trackLineList[0].trackList.push(trackItem)
+    trackStore.trackLineList[0].trackList.push(draggingTrackItem)
   }
   // 默认情况从上面插入一个新的 trackLine 和 trackItem
   else if (trackLineInsertIndex === -1) {
@@ -256,28 +262,36 @@ function onDrop(e: DragEvent) {
       startFrame = placeholderProperty.startFrame
     }
 
-    trackItem.startFrame = startFrame
-    trackItem.endFrame = startFrame + draggingData.frameCount
+    const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
+    draggingTrackItem.startFrame = startFrame
+    draggingTrackItem.endFrame = startFrame + frameCount
 
-    trackStore.trackLineList.unshift({
-      type: TrackLineType.VIDEO,
-      height: 60,
-      id: uuid(),
-      trackList: [trackItem]
-    })
+    trackStore.removeTrackItem(draggingTrackItem)
+
+    trackStore.trackLineList.unshift(trackStore.createVideoTrackLine(draggingTrackItem))
+
+    trackStore.removeEmptyTrackLine()
   }
   // 如果找到目标 trackLine 则追加一个 trackItem
   else if (trackLineInsertIndex > -1) {
     let startFrame = curFrame
-    if (trackStore.showVerticalLine) {
+    if (trackStore.showTrackPlaceholder) {
+      startFrame = placeholderProperty.startFrame
+    } else if (trackStore.showVerticalLine) {
       startFrame = placeholderProperty.startFrame
     }
 
-    trackItem.startFrame = startFrame
-    trackItem.endFrame = startFrame + draggingData.frameCount
+    const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
+    draggingTrackItem.startFrame = startFrame
+    draggingTrackItem.endFrame = startFrame + frameCount
 
     const line = trackStore.trackLineList[trackLineInsertIndex]
-    line.trackList.push(trackItem)
+
+    trackStore.removeTrackItem(draggingTrackItem)
+
+    line.trackList.push(draggingTrackItem)
+
+    trackStore.removeEmptyTrackLine()
   }
 
   trackStore.showVerticalLine = false

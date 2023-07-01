@@ -2,13 +2,21 @@ import { defineStore } from 'pinia'
 import { ref, reactive, computed } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
-import { TrackLineType, type TrackLine, type VideoResource, type TrackItem } from '@/types'
-import { uuid } from '@/services/helpers/general'
+import {
+  TrackLineType,
+  type TrackLine,
+  type TrackItem,
+  type VideoResource,
+  type VideoTrackItem,
+  TrackComponentName,
+  type VideoTrackLine
+} from '@/types'
+import { isArray, uuid } from '@/services/helpers/general'
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
 
-  const draggingData = ref<VideoResource | null>(null)
+  const draggingTrackItem = ref<TrackItem | null>(null)
 
   const disableScroll = ref(false)
 
@@ -17,6 +25,8 @@ export const useTrackStore = defineStore('track', () => {
   const showHorizontalLine = ref(false)
 
   const showVerticalLine = ref(false)
+
+  const dragstartOffsetX = ref(0)
 
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
@@ -65,6 +75,47 @@ export const useTrackStore = defineStore('track', () => {
     initTimelineWidth.value = width - 80
   }
 
+  /**
+   * 移除目标 trackItem
+   */
+  function removeTrackItem(trackItem: TrackItem) {
+    trackLineList.forEach((line) => {
+      line.trackList.forEach((item, i) => {
+        if (item.id === trackItem.id) {
+          line.trackList.splice(i, 1)
+        }
+      })
+    })
+  }
+
+  function removeEmptyTrackLine() {
+    trackLineList.forEach((line, i) => {
+      if (line.type !== TrackLineType.MAIN && line.trackList.length === 0) {
+        trackLineList.splice(i, 1)
+      }
+    })
+  }
+
+  function createVideoTrackLine(trackItem: VideoTrackItem | VideoTrackItem[]): VideoTrackLine {
+    return {
+      type: TrackLineType.VIDEO,
+      id: uuid(),
+      height: 60,
+      trackList: isArray(trackItem) ? trackItem : [trackItem]
+    }
+  }
+
+  function createVideoTrackItem(resource: VideoResource): VideoTrackItem {
+    const copy = Object.assign({}, resource)
+    return {
+      id: uuid(),
+      component: TrackComponentName.TRACK_VIDEO,
+      startFrame: 0,
+      endFrame: copy.frameCount,
+      resource: copy
+    }
+  }
+
   function initTimeline(wrapper: HTMLElement) {
     timelineStore.init(wrapper)
   }
@@ -77,11 +128,20 @@ export const useTrackStore = defineStore('track', () => {
     trackItem.endFrame = endFrame
   }
 
+  function onDragend(e: DragEvent) {
+    e.preventDefault()
+
+    draggingTrackItem.value = null
+    disableScroll.value = false
+    showTrackPlaceholder.value = false
+  }
+
   return {
+    dragstartOffsetX,
     disableScroll,
     isEmptyResource,
     trackLineList,
-    draggingData,
+    draggingTrackItem,
     currentFrame,
     scale,
     trackControllerWidth,
@@ -89,8 +149,13 @@ export const useTrackStore = defineStore('track', () => {
     showHorizontalLine,
     showVerticalLine,
     initTimeline,
+    removeTrackItem,
+    removeEmptyTrackLine,
+    createVideoTrackLine,
+    createVideoTrackItem,
     setTrackControllerWidth,
     updateTrackItemStartFrame,
-    updateTrackItemEndFrame
+    updateTrackItemEndFrame,
+    onDragend
   }
 })
