@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { VideoTrackItem } from '@/services/track-item/track-item'
+import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { useTrackStore } from '@/stores/track'
 import { type VideoResource } from '@/types'
 
@@ -10,7 +12,7 @@ const trackStore = useTrackStore()
 
 function onDragStart() {
   trackStore.disableScroll = true
-  trackStore.draggingTrackItem = trackStore.createVideoTrackItem(props.data)
+  trackLineList.setDraggingItem(VideoTrackItem.create(props.data))
 }
 </script>
 

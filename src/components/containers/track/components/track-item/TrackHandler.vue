@@ -4,8 +4,8 @@ import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
-import type { TrackItem } from '@/types'
-import { getElementPosition } from '@/services/helpers/dom'
+import type { TrackItem } from '@/services/track-item/track-item'
+import { trackLineList } from '@/services/track-line-list/track-line-list'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -60,13 +60,13 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const leftSlider = new Slider({
   change(v: number) {
-    trackStore.updateTrackItemStartFrame(props.data, v + initStartFrame)
+    props.data.setStartFrame(v + initStartFrame)
   }
 })
 
 const rightSlider = new Slider({
   change(v: number) {
-    trackStore.updateTrackItemEndFrame(props.data, v + initStartFrame)
+    props.data.setEndFrame(v + initStartFrame)
   }
 })
 
@@ -92,7 +92,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 
 function onDragStart(e: DragEvent) {
   trackStore.disableScroll = true
-  trackStore.draggingTrackItem = props.data
+  trackLineList.setDraggingItem(props.data)
 
   trackStore.dragstartOffsetX = e.offsetX
 }

@@ -5,13 +5,15 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackComponentName, TrackLineType } from '@/types'
+import { TrackComponentName } from '@/types'
 import { isBoolean, isIntersectionOfTwoIntervals } from '@/services/helpers/general'
 import { getElementPosition } from '@/services/helpers/dom'
 import { usePlaceholder } from './use-placeholder'
 import { useStickyLine } from './use-sticky-line'
 import { TRACK_STICK_WIDTH } from '@/config'
 import { isNumber } from '@/services/helpers/general'
+import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { TrackLineType, VideoTrackLine } from '@/services/track-line/track-line'
 
 defineOptions({
   components: {
@@ -73,14 +75,15 @@ const isUnder = (y: number, top: number) => y > top
 
 function onDragover(e: DragEvent) {
   e.preventDefault()
+  const draggingItem = trackLineList.getDraggingItem()
 
-  if (!trackStore.draggingTrackItem) return
+  if (!draggingItem) return
   const { y, curFrame } = getDragoverPosition(
     e,
     isNumber(trackStore.dragstartOffsetX) ? -trackStore.dragstartOffsetX : 0
   )
 
-  const frameCount = trackStore.draggingTrackItem.endFrame - trackStore.draggingTrackItem.startFrame
+  const frameCount = draggingItem.endFrame - draggingItem.startFrame
 
   let closestPixel = null
   let stickyFrame = null
@@ -108,7 +111,7 @@ function onDragover(e: DragEvent) {
   for (let i = 0; i < len; i += 1) {
     const trackLineRef = trackLineListRef.value[i]
     const index = Number(trackLineRef.dataset.index)
-    const trackLine = trackStore.trackLineList[index]
+    const trackLine = trackLineList.list[index]
     const trackList = trackLine.trackList
     const { top: trackLineTop } = getElementPosition(trackLineRef, trackContentRef.value!)
 
@@ -190,7 +193,7 @@ function onDragover(e: DragEvent) {
       mainLineTop = trackLineTop
 
       // 如果在主轨道上
-      if (isOnTrackLine && trackLine.trackList.length === 0) {
+      if (isOnTrackLine && trackList.length === 0) {
         isInEmptyMainLine = true
       }
     }
@@ -202,7 +205,7 @@ function onDragover(e: DragEvent) {
     placeholderProperty.startFrame = isStartStickyFrame ? stickyFrame : stickyFrame - frameCount
   }
 
-  if (isInEmptyMainLine || (trackStore.isEmptyResource && isUnder(y, mainLineTop))) {
+  if (isInEmptyMainLine || (trackLineList.isEmpty && isUnder(y, mainLineTop))) {
     // 如果目前没有插入任何资源，并且在主轨道顶部之下，则把 trackPlaceholder 显示到主轨道上
     showTrackPlaceholder = true
     trackLineInsertIndex = len - 1
@@ -246,14 +249,14 @@ function onDragleave(e: DragEvent) {
 
 function onDrop(e: DragEvent) {
   e.preventDefault()
-  const draggingTrackItem = trackStore.draggingTrackItem
+  const draggingTrackItem = trackLineList.getDraggingItem()
   if (!draggingTrackItem) return
 
   const { curFrame } = getDragoverPosition(e)
 
   // 如果当前没有任何资源则在主轨道上插入一个视频资源
-  if (trackStore.isEmptyResource) {
-    trackStore.trackLineList[0].trackList.push(draggingTrackItem)
+  if (trackLineList.isEmpty) {
+    trackLineList.list[0].trackList.push(draggingTrackItem)
   }
   // 默认情况从上面插入一个新的 trackLine 和 trackItem
   else if (trackLineInsertIndex === -1) {
@@ -263,14 +266,14 @@ function onDrop(e: DragEvent) {
     }
 
     const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
-    draggingTrackItem.startFrame = startFrame
-    draggingTrackItem.endFrame = startFrame + frameCount
+    draggingTrackItem.setStartFrame(startFrame)
+    draggingTrackItem.setEndFrame(startFrame + frameCount)
 
-    trackStore.removeTrackItem(draggingTrackItem)
+    trackLineList.removeTrackItem(draggingTrackItem)
 
-    trackStore.trackLineList.unshift(trackStore.createVideoTrackLine(draggingTrackItem))
+    trackLineList.list.unshift(VideoTrackLine.create(draggingTrackItem))
 
-    trackStore.removeEmptyTrackLine()
+    trackLineList.removeEmptyTrackLine()
   }
   // 如果找到目标 trackLine 则追加一个 trackItem
   else if (trackLineInsertIndex > -1) {
@@ -282,16 +285,16 @@ function onDrop(e: DragEvent) {
     }
 
     const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
-    draggingTrackItem.startFrame = startFrame
-    draggingTrackItem.endFrame = startFrame + frameCount
+    draggingTrackItem.setStartFrame(startFrame)
+    draggingTrackItem.setEndFrame(startFrame + frameCount)
 
-    const line = trackStore.trackLineList[trackLineInsertIndex]
+    const line = trackLineList.list[trackLineInsertIndex]
 
-    trackStore.removeTrackItem(draggingTrackItem)
+    trackLineList.removeTrackItem(draggingTrackItem)
 
     line.trackList.push(draggingTrackItem)
 
-    trackStore.removeEmptyTrackLine()
+    trackLineList.removeEmptyTrackLine()
   }
 
   trackStore.showVerticalLine = false
@@ -320,7 +323,7 @@ function onDrop(e: DragEvent) {
       >
         <ul class="track-list">
           <li
-            v-for="(trackLine, lineIndex) in trackStore.trackLineList"
+            v-for="(trackLine, lineIndex) in trackLineList.list"
             ref="trackLineListRef"
             :key="trackLine.id"
             class="track-line"
