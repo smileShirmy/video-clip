@@ -5,6 +5,18 @@ import { TrackComponentName, type VideoResource } from '@/types'
 abstract class BaseTrackItem<T> {
   readonly id = uuid()
 
+  initStartFrame = 0
+
+  setInitStartFrame(initStartFrame: number) {
+    this.initStartFrame = initStartFrame
+  }
+
+  initEndFrame = 0
+
+  setInitEndFrame(initEndFrame: number) {
+    this.initEndFrame = initEndFrame
+  }
+
   private _startFrame = ref<number>(0)
 
   private _endFrame = ref<number>(0)
@@ -38,6 +50,7 @@ export class VideoTrackItem extends BaseTrackItem<VideoResource> {
   constructor(resource: VideoResource) {
     super()
     this.setEndFrame(resource.frameCount)
+    this.setInitEndFrame(resource.frameCount)
     this.resource = Object.assign({}, resource)
   }
 

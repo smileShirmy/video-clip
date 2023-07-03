@@ -14,39 +14,15 @@ const props = defineProps<{
   data: TrackItem
 }>()
 
-const initStartFrame = toRaw(props.data.startFrame)
-
-const sliderSize = computed(
-  () => timelineStore.frameWidth * (props.data.endFrame - props.data.startFrame)
-)
-
-const trackItemContainerStyle: ComputedRef<CSSProperties> = computed(() => {
-  return {
-    left: `${((timelineStore.frameWidth * initStartFrame) / timelineStore.timelineWidth) * 100}%`
-  }
-})
-
-const trackItemWrapperStyle: ComputedRef<CSSProperties> = computed(() => {
-  return {
-    height: '60px',
-    width: `${(props.data.endFrame - props.data.startFrame) * timelineStore.frameWidth}px`
-  }
-})
-
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
-    left: `${
-      ((timelineStore.frameWidth * (props.data.startFrame - initStartFrame)) / sliderSize.value) *
-      100
-    }%`
+    left: timelineStore.frameToPercentWithUnit(props.data.startFrame)
   }
 })
 
 const rightHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
-    left: `${
-      ((timelineStore.frameWidth * (props.data.endFrame - initStartFrame)) / sliderSize.value) * 100
-    }%`
+    left: timelineStore.frameToPercentWithUnit(props.data.endFrame)
   }
 })
 
@@ -60,33 +36,31 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const leftSlider = new Slider({
   change(v: number) {
-    props.data.setStartFrame(v + initStartFrame)
+    props.data.setStartFrame(v)
   }
 })
 
 const rightSlider = new Slider({
   change(v: number) {
-    props.data.setEndFrame(v + initStartFrame)
+    props.data.setEndFrame(v)
   }
 })
 
 function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
-  const value = props.data.startFrame - initStartFrame
   leftSlider.onDown(event, {
     min: 0,
-    max: props.data.endFrame - props.data.startFrame,
-    sliderSize: sliderSize.value,
-    value: value > 0 ? value : 0
+    max: timelineStore.maxFrameCount,
+    sliderSize: timelineStore.timelineWidth,
+    value: props.data.startFrame
   })
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
-  const value = props.data.endFrame - initStartFrame
   rightSlider.onDown(event, {
     min: 0,
-    max: props.data.endFrame - props.data.startFrame,
-    sliderSize: sliderSize.value,
-    value: value > 0 ? value : 0
+    max: timelineStore.maxFrameCount,
+    sliderSize: timelineStore.timelineWidth,
+    value: props.data.endFrame
   })
 }
 
@@ -99,63 +73,49 @@ function onDragStart(e: DragEvent) {
 </script>
 
 <template>
-  <!-- container 用于定位相对于 trackLine 的偏移值 -->
-  <div class="track-item-container" :style="trackItemContainerStyle">
-    <!-- wrapper 用于提供给 trackHandler 进行定位，并且作为滑轨 -->
-    <div
-      class="track-item-wrapper"
-      @dragstart="onDragStart"
-      @dragend="trackStore.onDragend"
-      draggable="true"
-      :style="trackItemWrapperStyle"
-    >
-      <div class="track-item" :style="trackItemStyle">
-        <slot></slot>
-      </div>
-
-      <div
-        class="track-handler left-handler"
-        :style="leftHandlerStyle"
-        @mousedown="onLeftHandlerDown"
-        @touchstart="onLeftHandlerDown"
-      ></div>
-      <div
-        class="track-handler right-handler"
-        :style="rightHandlerStyle"
-        @mousedown="onRightHandlerDown"
-        @touchstart="onRightHandlerDown"
-      ></div>
-    </div>
+  <div
+    class="track-item"
+    :style="trackItemStyle"
+    @dragstart="onDragStart"
+    @dragend="trackStore.onDragend"
+    draggable="true"
+  >
+    <slot></slot>
   </div>
+
+  <div
+    class="track-handler left-handler"
+    :style="leftHandlerStyle"
+    @mousedown="onLeftHandlerDown"
+    @touchstart="onLeftHandlerDown"
+  ></div>
+  <div
+    class="track-handler right-handler"
+    :style="rightHandlerStyle"
+    @mousedown="onRightHandlerDown"
+    @touchstart="onRightHandlerDown"
+  ></div>
 </template>
 
 <lang scoped lang="scss">
-.track-item-container {
+.track-handler {
   position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
 
-  .track-item-wrapper {
-    position: relative;
-
-    .track-handler {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 10px;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1;
-
-      &.right-handler {
-        transform: translate(-100%);
-      }
-    }
-
-    .track-item {
-      position: absolute;
-      overflow: hidden;
-      border-radius: 4px;
-      background-color: var(--app-color-white);
-      opacity: 1 !important;
-    }
+  &.right-handler {
+    transform: translate(-100%);
   }
+}
+
+.track-item {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: var(--app-color-white);
+  opacity: 1 !important;
 }
 </lang>
