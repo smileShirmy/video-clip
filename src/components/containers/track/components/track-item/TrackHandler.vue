@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, toRaw } from 'vue'
+import { computed } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
@@ -36,13 +36,17 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const leftSlider = new Slider({
   change(v: number) {
-    props.data.setStartFrame(v)
+    if (v >= props.data.minFrame) {
+      props.data.setStartFrame(v)
+    }
   }
 })
 
 const rightSlider = new Slider({
   change(v: number) {
-    props.data.setEndFrame(v)
+    if (v <= props.data.maxFrame) {
+      props.data.setEndFrame(v)
+    }
   }
 })
 
@@ -68,7 +72,9 @@ function onDragStart(e: DragEvent) {
   trackStore.disableScroll = true
   trackLineList.setDraggingItem(props.data)
 
-  trackStore.dragstartOffsetX = e.offsetX
+  trackLineList.dragOffsetX = e.offsetX
+
+  props.data.recordBeforeDragFrame()
 }
 </script>
 

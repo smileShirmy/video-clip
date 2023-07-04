@@ -57,7 +57,7 @@ export class Slider {
     this.newPosition = this.startPosition
   }
 
-  private onDragging(event: MouseEvent | TouchEvent) {
+  onDragging = (event: MouseEvent | TouchEvent) => {
     if (this.dragging) {
       this.isClick = false
       // this.resetSliderSize()
@@ -87,7 +87,7 @@ export class Slider {
     }
   }
 
-  private onDragEnd() {
+  onDragEnd = () => {
     /*
      * 防止在 mouseup 后立即触发 click，导致滑块有几率产生一小段位移
      * 不使用 preventDefault 是因为 mouseup 和 click 没有注册在同一个 DOM 上
@@ -99,6 +99,7 @@ export class Slider {
       }
       this.emitChange()
     }, 0)
+
     window.removeEventListener('mousemove', this.onDragging)
     window.removeEventListener('touchmove', this.onDragging)
     window.removeEventListener('mouseup', this.onDragEnd)
@@ -126,11 +127,11 @@ export class Slider {
 
     event.preventDefault()
     this.onDragStart(event)
-    window.addEventListener('mousemove', this.onDragging.bind(this))
-    window.addEventListener('touchmove', this.onDragging.bind(this))
-    window.addEventListener('mouseup', this.onDragEnd.bind(this))
-    window.addEventListener('touchend', this.onDragEnd.bind(this))
-    window.addEventListener('contextmenu', this.onDragEnd.bind(this))
+    window.addEventListener('mousemove', this.onDragging)
+    window.addEventListener('touchmove', this.onDragging)
+    window.addEventListener('mouseup', this.onDragEnd)
+    window.addEventListener('touchend', this.onDragEnd)
+    window.addEventListener('contextmenu', this.onDragEnd)
   }
 
   onSliderClick(event: MouseEvent, options: SliderDownOptions, element?: HTMLElement) {

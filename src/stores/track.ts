@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
+import { trackLineList } from '@/services/track-line-list/track-line-list'
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
@@ -13,8 +14,6 @@ export const useTrackStore = defineStore('track', () => {
   const showHorizontalLine = ref(false)
 
   const showVerticalLine = ref(false)
-
-  const dragstartOffsetX = ref(0)
 
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
@@ -55,12 +54,12 @@ export const useTrackStore = defineStore('track', () => {
   function onDragend(e: DragEvent) {
     e.preventDefault()
 
+    trackLineList.dragOffsetX = 0
     disableScroll.value = false
     showTrackPlaceholder.value = false
   }
 
   return {
-    dragstartOffsetX,
     disableScroll,
     currentFrame,
     scale,

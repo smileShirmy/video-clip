@@ -93,6 +93,7 @@ function onDragging(event: MouseEvent | TouchEvent) {
 }
 
 function onDragEnd() {
+  console.log('end')
   /*
    * 防止在 mouseup 后立即触发 click，导致滑块有几率产生一小段位移
    * 不使用 preventDefault 是因为 mouseup 和 click 没有注册在同一个 DOM 上

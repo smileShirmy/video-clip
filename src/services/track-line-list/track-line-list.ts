@@ -11,6 +11,8 @@ class TrackLineList {
 
   draggingItem: TrackItem | null = null
 
+  dragOffsetX = 0
+
   /**
    * 轨道中不存在任何资源
    */

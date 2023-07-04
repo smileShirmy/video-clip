@@ -46,10 +46,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 /**
  * 获取当前拖拽点相对于 track-content 元素的位置
  */
-function getDragoverPosition(
-  event: DragEvent,
-  offsetX = 0
-): {
+function getDragoverPosition(event: DragEvent): {
   elementTop: number
   elementLeft: number
   y: number
@@ -57,7 +54,12 @@ function getDragoverPosition(
 } {
   const { top, left } = getElementPosition(event.target as HTMLElement, trackContentRef.value!)
   const y = top + event.offsetY
-  const x = left + event.offsetX + offsetX
+  let x = left + event.offsetX
+  // 如果是拖动 trackItem，需要以 startFrame 作为基准进行计算，而不是以鼠标位置
+  if (isNumber(trackLineList.dragOffsetX)) {
+    const newX = x - trackLineList.dragOffsetX
+    x = newX > 0 ? newX : 0
+  }
 
   return {
     elementTop: top,
@@ -78,13 +80,11 @@ function onDragover(e: DragEvent) {
   const draggingItem = trackLineList.getDraggingItem()
 
   if (!draggingItem) return
-  const { y, curFrame } = getDragoverPosition(
-    e,
-    isNumber(trackStore.dragstartOffsetX) ? -trackStore.dragstartOffsetX : 0
-  )
+  let { y, curFrame } = getDragoverPosition(e)
 
   const frameCount = draggingItem.endFrame - draggingItem.startFrame
 
+  trackLineInsertIndex = -1
   let closestPixel = null
   let stickyFrame = null
   let isStartStickyFrame = null
@@ -120,6 +120,9 @@ function onDragover(e: DragEvent) {
 
     for (let j = 0; j < trackList.length; j += 1) {
       const item = trackList[j]
+
+      // 忽略当前拖拽的 trackItem
+      if (draggingItem.id === item.id) continue
 
       // 获取产生黏性最近的帧
       const startFramePixel = timelineStore.frameToPixel(item.startFrame)
@@ -181,7 +184,7 @@ function onDragover(e: DragEvent) {
 
     if (isOnTrackLine) {
       showTrackPlaceholder = true
-      trackLineInsertIndex = Number(index)
+      trackLineInsertIndex = index
       placeholderProperty.top = trackLineTop
     }
 
@@ -254,7 +257,6 @@ function onDrop(e: DragEvent) {
 
   const { curFrame } = getDragoverPosition(e)
 
-  // 如果当前没有任何资源则在主轨道上插入一个视频资源
   if (trackLineList.isEmpty) {
     trackLineList.list[0].trackList.push(draggingTrackItem)
   }
@@ -265,9 +267,8 @@ function onDrop(e: DragEvent) {
       startFrame = placeholderProperty.startFrame
     }
 
-    const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
     draggingTrackItem.setStartFrame(startFrame)
-    draggingTrackItem.setEndFrame(startFrame + frameCount)
+    draggingTrackItem.updateDropFrame()
 
     trackLineList.removeTrackItem(draggingTrackItem)
 
@@ -284,9 +285,8 @@ function onDrop(e: DragEvent) {
       startFrame = placeholderProperty.startFrame
     }
 
-    const frameCount = draggingTrackItem.endFrame - draggingTrackItem.startFrame
     draggingTrackItem.setStartFrame(startFrame)
-    draggingTrackItem.setEndFrame(startFrame + frameCount)
+    draggingTrackItem.updateDropFrame()
 
     const line = trackLineList.list[trackLineInsertIndex]
 
