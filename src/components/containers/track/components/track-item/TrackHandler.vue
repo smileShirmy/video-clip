@@ -14,6 +14,11 @@ const props = defineProps<{
   data: TrackItem
 }>()
 
+const HANDLER_WIDTH = 10
+
+let allowMaxFrame = 0
+let allowMinFrame = 0
+
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
     left: timelineStore.frameToPercentWithUnit(props.data.startFrame)
@@ -36,21 +41,34 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const leftSlider = new Slider({
   change(v: number) {
-    if (v >= props.data.minFrame) {
-      props.data.setStartFrame(v)
+    if (v > allowMaxFrame) {
+      props.data.setStartFrame(allowMaxFrame)
+    } else {
+      props.data.setStartFrame(v < allowMinFrame ? allowMinFrame : v)
     }
   }
 })
 
 const rightSlider = new Slider({
   change(v: number) {
-    if (v <= props.data.maxFrame) {
-      props.data.setEndFrame(v)
+    if (v < allowMinFrame) {
+      props.data.setEndFrame(allowMinFrame)
+    } else {
+      props.data.setEndFrame(v > allowMaxFrame ? allowMaxFrame : v)
     }
   }
 })
 
+function getMinWidthFrame() {
+  const minFrameCount = timelineStore.pixelToFrame(HANDLER_WIDTH)
+  const frameCount = props.data.endFrame - props.data.startFrame
+  return frameCount < minFrameCount ? frameCount : minFrameCount
+}
+
 function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
+  allowMinFrame = props.data.getAllowMinFrame()
+  allowMaxFrame = props.data.endFrame - getMinWidthFrame()
+
   leftSlider.onDown(event, {
     min: 0,
     max: timelineStore.maxFrameCount,
@@ -60,6 +78,9 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
+  allowMinFrame = props.data.startFrame + getMinWidthFrame()
+  allowMaxFrame = props.data.getAllowMaxFrame()
+
   rightSlider.onDown(event, {
     min: 0,
     max: timelineStore.maxFrameCount,

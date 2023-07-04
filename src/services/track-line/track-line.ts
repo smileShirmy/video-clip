@@ -1,4 +1,4 @@
-import { shallowReactive, type ShallowReactive } from 'vue'
+import { shallowReactive, watch, type ShallowReactive } from 'vue'
 import { isString, uuid } from '../helpers/general'
 import type { TrackItem, VideoTrackItem } from '../track-item/track-item'
 
@@ -14,14 +14,27 @@ abstract class BaseTrackLine<T extends TrackItem> {
 
   abstract readonly type: TrackLineType
 
-  abstract trackList: ShallowReactive<T[]>
+  abstract readonly trackList: ShallowReactive<T[]>
 
   /**
    * 移除指定 trackItem
    */
   removeTrackItem(item: string | TrackItem) {
     const id = isString(item) ? item : item.id
-    this.trackList = this.trackList.filter((v) => v.id !== id)
+
+    const len = this.trackList.length - 1
+    for (let i = len; i >= 0; i -= 1) {
+      const trackItem = this.trackList[i]
+      if (trackItem.id === id) {
+        this.trackList.splice(i, 1)
+      }
+    }
+  }
+
+  bindParentTrackLine(trackList: T[]) {
+    watch(trackList, () => {
+      trackList.forEach((item) => (item.parentTrackLine = this))
+    })
   }
 }
 
@@ -31,6 +44,11 @@ export class MainTrackLine extends BaseTrackLine<VideoTrackItem> {
   height = 60
 
   trackList = shallowReactive<VideoTrackItem[]>([])
+
+  constructor() {
+    super()
+    this.bindParentTrackLine(this.trackList)
+  }
 
   static create() {
     return new MainTrackLine()
@@ -46,7 +64,9 @@ export class VideoTrackLine extends BaseTrackLine<VideoTrackItem> {
 
   constructor(videoTrackItem: VideoTrackItem) {
     super()
-    this.trackList = [videoTrackItem]
+    this.bindParentTrackLine(this.trackList)
+
+    this.trackList.push(videoTrackItem)
   }
 
   static create(videoTrackItem: VideoTrackItem) {

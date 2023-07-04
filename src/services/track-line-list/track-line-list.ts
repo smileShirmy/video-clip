@@ -7,9 +7,9 @@ class TrackLineList {
     return new TrackLineList()
   }
 
-  list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
+  readonly list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
 
-  draggingItem: TrackItem | null = null
+  private draggingItem: TrackItem | null = null
 
   dragOffsetX = 0
 
@@ -36,9 +36,13 @@ class TrackLineList {
    * 移除没有 trackItem 的 trackLine（主轨道不移除）
    */
   removeEmptyTrackLine() {
-    this.list = this.list.filter(
-      (line) => line.type === TrackLineType.MAIN || line.trackList.length > 0
-    )
+    const len = this.list.length - 1
+    for (let i = len; i >= 0; i -= 1) {
+      const trackLine = this.list[i]
+      if (trackLine.type !== TrackLineType.MAIN && trackLine.trackList.length === 0) {
+        this.list.splice(i, 1)
+      }
+    }
   }
 }
 
