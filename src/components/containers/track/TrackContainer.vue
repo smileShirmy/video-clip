@@ -19,7 +19,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="track-container" ref="trackContainerRef" style="height: 500px">
+  <div class="track-container" ref="trackContainerRef">
     <ControlBar />
     <TrackController />
   </div>
@@ -27,7 +27,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .track-container {
-  min-height: 220px;
+  height: 55%;
   border-top: 1px solid var(--app-bg-color-blank);
   background-color: var(--app-bg-color);
 }

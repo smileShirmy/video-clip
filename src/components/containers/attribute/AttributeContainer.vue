@@ -7,8 +7,7 @@
 <style scoped lang="scss">
 .attribute-container {
   box-sizing: border-box;
-  flex-shrink: 0;
-  min-width: 370px;
+  width: 33.33%;
   border-left: 1px solid var(--app-bg-color-blank);
   background-color: var(--app-bg-color);
 }

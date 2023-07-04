@@ -68,6 +68,7 @@ function selectMenu(componentName: ResourceComponentName) {
   box-sizing: border-box;
   display: flex;
   justify-content: flex-start;
+  width: 25%;
   height: 100%;
   border-right: 1px solid var(--app-bg-color-blank);
 
@@ -96,7 +97,7 @@ function selectMenu(componentName: ResourceComponentName) {
   .resource-wrapper {
     box-sizing: border-box;
     padding: 16px;
-    min-width: 300px;
+    width: calc(100% - 80px);
     height: 100%;
     background-color: var(--app-bg-color-light);
   }
