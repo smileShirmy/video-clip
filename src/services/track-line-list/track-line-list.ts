@@ -1,4 +1,4 @@
-import { shallowReactive } from 'vue'
+import { shallowReactive, watch } from 'vue'
 import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/track-line'
 import type { TrackItem } from '../track-item/track-item'
 
@@ -7,7 +7,11 @@ class TrackLineList {
     return new TrackLineList()
   }
 
-  readonly list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
+  private _list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
+
+  get list() {
+    return this._list
+  }
 
   private draggingItem: TrackItem | null = null
 
@@ -20,16 +24,37 @@ class TrackLineList {
     return this.list.length === 1 && this.list[0].trackList.length === 0
   }
 
-  getDraggingItem() {
+  get mainTrackLine(): MainTrackLine {
+    return this.list.find((line) => line.type === TrackLineType.MAIN)!
+  }
+
+  constructor() {
+    watch(
+      this.list,
+      () => {
+        this.list.forEach((line) => (line.parentTrackLineList = this))
+      },
+      { immediate: true }
+    )
+  }
+
+  getDraggingTrackItem() {
     return this.draggingItem
   }
 
-  setDraggingItem(trackItem: TrackItem) {
+  setDraggingTrackItem(trackItem: TrackItem) {
     this.draggingItem = trackItem
   }
 
   removeTrackItem(trackItem: TrackItem) {
-    this.list.forEach((line) => line.removeTrackItem(trackItem))
+    let removed = false
+    this.list.forEach((line) => {
+      const r = line.removeTrackItem(trackItem)
+      if (!removed && r) {
+        removed = true
+      }
+    })
+    return removed
   }
 
   /**
@@ -44,6 +69,13 @@ class TrackLineList {
       }
     }
   }
+
+  insert(trackLine: TrackLine, insertIndex: number) {
+    trackLine.parentTrackLineList = this
+    this.list.splice(insertIndex, 0, trackLine)
+  }
 }
+
+export type TrackLineListType = TrackLineList
 
 export const trackLineList = TrackLineList.create()

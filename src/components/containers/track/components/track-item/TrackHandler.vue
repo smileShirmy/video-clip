@@ -32,9 +32,12 @@ const rightHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
 })
 
 const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
+  const width =
+    timelineStore.frameToPercent(props.data.endFrame) -
+    timelineStore.frameToPercent(props.data.startFrame)
   return {
     height: '60px',
-    width: timelineStore.frameToPixelWidthWithUnit(props.data.endFrame - props.data.startFrame),
+    width: `${width}%`,
     left: leftHandlerStyle.value.left
   }
 })
@@ -91,7 +94,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 
 function onDragStart(e: DragEvent) {
   trackStore.disableScroll = true
-  trackLineList.setDraggingItem(props.data)
+  trackLineList.setDraggingTrackItem(props.data)
 
   trackLineList.dragOffsetX = e.offsetX
 

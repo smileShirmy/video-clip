@@ -33,16 +33,24 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
     return this.minFrame + this.resource.frameCount
   }
 
-  updateDropFrame() {
+  // 更新允许拖动范围的最大最小帧
+  updateMinAndMax() {
     const offsetFrame = this.startFrame - this.beforeDragFrame
     this.minFrame = this.minFrame + offsetFrame
-    this.setEndFrame(this.endFrame + offsetFrame)
   }
 
   setStartFrame(startFrame: number) {
     this._startFrame.value = startFrame
   }
 
+  /**
+   * 在 trackItem 被加入到 trackLine 时初始化
+   */
+  initMinAndMaxFrame(minFrame: number) {
+    this.minFrame = minFrame
+  }
+
+  // 记录拖动之前的帧数
   recordBeforeDragFrame() {
     this.beforeDragFrame = this.startFrame
   }

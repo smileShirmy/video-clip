@@ -15,6 +15,12 @@ export const useTrackStore = defineStore('track', () => {
 
   const showVerticalLine = ref(false)
 
+  // 是否开启自动吸附
+  const enableSticky = ref(true)
+
+  // 是否开启自动磁吸
+  const enableMagneticAttraction = ref(true)
+
   // 外层宽度（可以伸缩）
   const trackControllerWidth = ref(0)
 
@@ -63,6 +69,8 @@ export const useTrackStore = defineStore('track', () => {
     disableScroll,
     currentFrame,
     scale,
+    enableSticky,
+    enableMagneticAttraction,
     trackControllerWidth,
     showTrackPlaceholder,
     showHorizontalLine,

@@ -12,7 +12,7 @@ const trackStore = useTrackStore()
 
 function onDragStart() {
   trackStore.disableScroll = true
-  trackLineList.setDraggingItem(VideoTrackItem.create(props.data))
+  trackLineList.setDraggingTrackItem(VideoTrackItem.create(props.data))
 }
 </script>
 

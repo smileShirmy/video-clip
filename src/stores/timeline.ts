@@ -419,7 +419,8 @@ export const useTimelineStore = defineStore('timeline', () => {
    * 把当前帧数转换为像素
    */
   function frameToPixel(currentFrame: number): number {
-    return currentFrame * frameWidth.value
+    const val = currentFrame * frameWidth.value
+    return isNaN(val) ? 0 : val
   }
 
   /**
@@ -433,7 +434,8 @@ export const useTimelineStore = defineStore('timeline', () => {
    * 把当前帧数转为百分比
    */
   function frameToPercent(currentFrame: number): number {
-    return (currentFrame / maxFrameCount.value) * 100
+    const val = (currentFrame / maxFrameCount.value) * 100
+    return isNaN(val) ? 0 : val
   }
 
   /**
@@ -447,7 +449,8 @@ export const useTimelineStore = defineStore('timeline', () => {
    * 把当前帧数转换为象素宽度
    */
   function frameToPixelWidth(frameCount: number): number {
-    return frameCount * frameWidth.value
+    const val = frameCount * frameWidth.value
+    return isNaN(val) ? 0 : val
   }
 
   /**
