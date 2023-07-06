@@ -14,24 +14,43 @@ const minAttributeContainerSize = 360
 const minPlayerWorkplaceSize = 240
 const minTrackContainerSize = 210
 
-let playerContainer: HTMLElement | null = null
-let attributeContainer: HTMLElement | null = null
-
 const playerContainerRatio = ref(0.67) // 当前播放器占player-workplace容器比例
 
-onMounted(() => {
-  const playerContainerDom = document.querySelector('.player-container') as HTMLElement
-  if (playerContainerDom) {
-    playerContainer = playerContainerDom
+const homeMainDom = ref<HTMLElement>()
+
+const refResourceContainer = ref<InstanceType<typeof ResourceContainer>>()
+let resourceContainerDom: HTMLElement
+
+const editorWrapperDom = ref<HTMLElement>()
+
+const playerWorkplaceDom = ref<HTMLElement>()
+
+const refPlayerContainer = ref<InstanceType<typeof PlayerContainer>>()
+let playerContainerDom: HTMLElement
+
+const refAttributeContainer = ref<InstanceType<typeof AttributeContainer>>()
+let attributeContainerDom: HTMLElement
+
+const refTrackContainer = ref<InstanceType<typeof TrackContainer>>()
+let trackContainerDom: HTMLElement
+
+onMounted(async () => {
+  if (refResourceContainer.value) {
+    resourceContainerDom = refResourceContainer.value.$el
   }
-  const attributeContainerDom = document.querySelector('.attribute-container') as HTMLElement
-  if (attributeContainerDom) {
-    attributeContainer = attributeContainerDom
+  if (refPlayerContainer.value) {
+    playerContainerDom = refPlayerContainer.value.$el
+  }
+  if (refAttributeContainer.value) {
+    attributeContainerDom = refAttributeContainer.value.$el
+  }
+  if (refTrackContainer.value) {
+    trackContainerDom = refTrackContainer.value.$el
   }
 })
 
 function onResize1(size: { afterSize: number }) {
-  if (!playerContainer || !attributeContainer) return
+  if (!playerContainerDom || !attributeContainerDom) return
 
   const { afterSize: playerWorkplaceSize } = size
   // 按比例放大缩小
@@ -41,8 +60,8 @@ function onResize1(size: { afterSize: number }) {
     playerWorkplaceSize - minAttributeContainerSize
   )
   const attributeSize = playerWorkplaceSize - playerSize
-  playerContainer.style.width = `${playerSize}px`
-  attributeContainer.style.width = `${attributeSize}px`
+  playerContainerDom.style.width = `${playerSize}px`
+  attributeContainerDom.style.width = `${attributeSize}px`
 }
 
 function onResize2(size: { beforeSize: number; afterSize: number }) {
@@ -53,38 +72,38 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
 
 <template>
   <HeaderContainer />
-  <main class="home-main">
-    <ResourceContainer />
+  <main ref="homeMainDom" class="home-main">
+    <ResourceContainer ref="refResourceContainer" />
     <ResizeLine
-      containerClass="home-main"
-      beforeClass="resource-container"
-      afterClass="editor-wrapper"
+      :container="homeMainDom"
+      :before="resourceContainerDom"
+      :after="editorWrapperDom"
       :minBefore="minResourceContainerSize"
       :minAfter="minEditorWrapperSize"
       @resize="onResize1"
     />
-    <div class="editor-wrapper">
-      <div class="player-workplace">
-        <PlayerContainer />
+    <div ref="editorWrapperDom" class="editor-wrapper">
+      <div ref="playerWorkplaceDom" class="player-workplace">
+        <PlayerContainer ref="refPlayerContainer" />
         <ResizeLine
-          containerClass="player-workplace"
-          beforeClass="player-container"
-          afterClass="attribute-container"
+          :container="playerWorkplaceDom"
+          :before="playerContainerDom"
+          :after="attributeContainerDom"
           :minBefore="minPlayerContainerSize"
           :minAfter="minAttributeContainerSize"
           @resize="onResize2"
         />
-        <AttributeContainer />
+        <AttributeContainer ref="refAttributeContainer" />
       </div>
       <ResizeLine
-        containerClass="editor-wrapper"
-        beforeClass="player-workplace"
-        afterClass="track-container"
+        :container="editorWrapperDom"
+        :before="playerWorkplaceDom"
+        :after="trackContainerDom"
         :minBefore="minPlayerWorkplaceSize"
         :minAfter="minTrackContainerSize"
         :horizontal="true"
       />
-      <TrackContainer />
+      <TrackContainer ref="refTrackContainer" />
     </div>
   </main>
 </template>

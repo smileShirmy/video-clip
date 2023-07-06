@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 
 const props = defineProps({
-  // 外层容器类名
-  containerClass: {
-    type: String,
-    required: true
+  // 外层容器
+  container: {
+    type: HTMLElement
   },
-  // 前面容器类型
-  beforeClass: {
-    type: String,
-    required: true
+  // 前面容器
+  before: {
+    type: HTMLElement
   },
-  // 后面容器类型
-  afterClass: {
-    type: String,
-    required: true
+  // 后面容器
+  after: {
+    type: HTMLElement
   },
   // 前面容器最小大小
   minBefore: {
@@ -37,27 +34,19 @@ const emit = defineEmits<{
   (e: 'resize', size: { beforeSize: number; afterSize: number }): void
 }>()
 
-let container: HTMLElement | null = null
-let before: HTMLElement | null = null
-let after: HTMLElement | null = null
 let containerRect: DOMRect | null = null
 
 const resizeLine = ref<HTMLElement>()
 
-onMounted(() => {
-  const containerDom = document.querySelector(`.${props.containerClass}`) as HTMLElement
-  if (containerDom) {
-    container = containerDom
+// 直接修改props的值会报错，通过computed转换
+const doms = computed(() => {
+  return {
+    before: props.before,
+    after: props.after
   }
-  const beforeDom = document.querySelector(`.${props.beforeClass}`) as HTMLElement
-  if (beforeDom) {
-    before = beforeDom
-  }
-  const afterDom = document.querySelector(`.${props.afterClass}`) as HTMLElement
-  if (afterDom) {
-    after = afterDom
-  }
+})
 
+onMounted(() => {
   bindEvents()
 })
 
@@ -68,20 +57,22 @@ function bindEvents() {
 }
 
 function onMouseDown(event: MouseEvent) {
-  if (!container) return
+  if (!props.container) return
 
-  containerRect = container.getBoundingClientRect()
+  containerRect = props.container.getBoundingClientRect()
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
 }
 
 function onMouseMove(event: MouseEvent) {
-  if (!containerRect || !container || !before || !after || !resizeLine.value) return
+  if (!containerRect || !props.container || !doms.value.before || !doms.value.after) return
 
   // 防止拖拽的时候滚动
   event.preventDefault()
 
-  const containerSize = props.horizontal ? container.clientHeight : container.clientWidth // 外层容器大小
+  const containerSize = props.horizontal
+    ? props.container.clientHeight
+    : props.container.clientWidth // 外层容器大小
   let beforeSize = props.horizontal
     ? event.clientY - containerRect.top
     : event.clientX - containerRect.left // 前面容器的大小 === 鼠标相对于容器的位置
@@ -89,8 +80,8 @@ function onMouseMove(event: MouseEvent) {
   const maxBefore = containerSize - props.minAfter
   beforeSize = Math.min(Math.max(beforeSize, props.minBefore), maxBefore)
   afterSize = containerSize - beforeSize
-  before.style[props.horizontal ? 'height' : 'width'] = `${beforeSize}px`
-  after.style[props.horizontal ? 'height' : 'width'] = `${afterSize}px`
+  doms.value.before.style[props.horizontal ? 'height' : 'width'] = `${beforeSize}px`
+  doms.value.after.style[props.horizontal ? 'height' : 'width'] = `${afterSize}px`
 
   emit('resize', { beforeSize, afterSize })
 }
@@ -107,16 +98,35 @@ function onMouseUp(event: MouseEvent) {
 
 <style scoped lang="scss">
 .resize-line {
+  position: relative;
   flex-shrink: 0;
-  width: 2px;
+  width: 1px;
   height: 100%;
-  background-color: #000;
-  cursor: col-resize;
+  background-color: var(--app-bg-color-dark);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+  }
 
   &.horizontal {
     width: 100%;
-    height: 2px;
-    cursor: row-resize;
+    height: 1px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: calc(50% - 5px);
+      left: 0;
+      width: 100%;
+      height: 10px;
+      cursor: row-resize;
+    }
   }
 }
 </style>
