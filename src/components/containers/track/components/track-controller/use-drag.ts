@@ -36,8 +36,8 @@ class HolderRect {
 
     let x = position.x
     // 如果是拖动 trackItem，需要以这个被拖动的 trackItem 的 startFrame 作为基准进行计算，而不是以鼠标 x 轴位置进行计算
-    if (isNumber(trackLineList.dragOffsetX)) {
-      const newX = x - trackLineList.dragOffsetX
+    if (trackLineList.move && trackLineList.move.dragOffsetX) {
+      const newX = x - trackLineList.move.dragOffsetX
       x = newX > 0 ? newX : 0
     }
 
@@ -378,7 +378,7 @@ export const useDrag = () => {
       // 如果在顶部空白区域
       if (position.linePosition === LinePosition.OVER_LIST_TOP) {
         insertTrackLineIndex = 0
-        updateHorizontalLine(position.blankTopBottomTop)
+        updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
         visible({ horizontalLine: true })
       } else {
         holderRect.top = position.mainTrackLineTop
@@ -392,7 +392,8 @@ export const useDrag = () => {
     // 当前位置在顶部空白区域
     else if (position.linePosition === LinePosition.OVER_LIST_TOP) {
       insertTrackLineIndex = 0
-      updateHorizontalLine(position.blankTopBottomTop)
+      updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
+      visible({ horizontalLine: true })
     }
     // 当前位置在某条 trackLine 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE) {
@@ -418,7 +419,7 @@ export const useDrag = () => {
       if (trackStore.enableMagneticAttraction) {
         holderRect.startFrame = 0
       }
-      updateHorizontalLine(position.blankBottomTop)
+      updateHorizontalLine(position.blankBottomTop + TRACK_LINE_INTERVAL / 2)
       visible({ horizontalLine: true })
     }
 

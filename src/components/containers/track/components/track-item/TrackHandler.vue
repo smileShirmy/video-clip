@@ -96,9 +96,7 @@ function onDragStart(e: DragEvent) {
   trackStore.disableScroll = true
   trackLineList.setDraggingTrackItem(props.data)
 
-  trackLineList.dragOffsetX = e.offsetX
-
-  props.data.recordBeforeDragFrame()
+  trackLineList.setMove(props.data, { dragOffsetX: e.offsetX })
 }
 </script>
 

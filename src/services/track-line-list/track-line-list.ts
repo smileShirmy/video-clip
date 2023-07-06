@@ -2,6 +2,10 @@ import { shallowReactive, watch } from 'vue'
 import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/track-line'
 import type { TrackItem } from '../track-item/track-item'
 
+interface Move {
+  dragOffsetX: number
+}
+
 class TrackLineList {
   static create() {
     return new TrackLineList()
@@ -15,7 +19,9 @@ class TrackLineList {
 
   private draggingItem: TrackItem | null = null
 
-  dragOffsetX = 0
+  move: Move | null = {
+    dragOffsetX: 0
+  }
 
   /**
    * 轨道中不存在任何资源
@@ -36,6 +42,16 @@ class TrackLineList {
       },
       { immediate: true }
     )
+  }
+
+  removeMove() {
+    this.move = null
+  }
+
+  // 初始化开始移动 trackItem
+  setMove(trackItem: TrackItem, move: Move) {
+    trackItem.recordBeforeDragFrame()
+    this.move = move
   }
 
   getDraggingTrackItem() {
