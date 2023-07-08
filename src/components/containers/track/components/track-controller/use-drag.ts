@@ -87,7 +87,10 @@ interface OverTrackLine extends BaseTrackLinePosition {
 interface OnTrackLineInterval extends BaseTrackLinePosition {
   linePosition: LinePosition.ON_TRACK_LINE_INTERVAL
   isIntersection: boolean
+  overIntervalTrackLine: TrackLine
+  intervalTop: number
   intervalIndex: number
+  overTrackLineTop: number
 }
 
 interface UnderListBottom extends BaseTrackLinePosition {
@@ -193,15 +196,24 @@ export const useDrag = () => {
 
     const length = trackLineListRef.length
     let closestPixel: number | null = null
+    let stickyFrame: number | null = null
+
     let onTrackLine: TrackLine | null = null
     let onTrackLineTop: number | null = null
+
     let intervalIndex: number | null = null
+    let overIntervalTrackLine: TrackLine | null = null
+    let intervalTop: number | null = null
+    let overTrackLineTop: number | null = null
+
     let isIntersection = false
+
     let mainTrackLineTop = 0
+
     let blankTopBottomTop = 0
     let blankBottomTop = 0
+
     let linePositionStatus: LinePosition = LinePosition.OVER_LIST_TOP
-    let stickyFrame: number | null = null
 
     // 遍历所有轨道
     for (let i = 0; i < length; i += 1) {
@@ -215,9 +227,10 @@ export const useDrag = () => {
 
       // 在所有轨道上方
       if (index === 0) {
+        blankTopBottomTop = top
+
         if (isOver(dragPosition.y, top)) {
           linePositionStatus = LinePosition.OVER_LIST_TOP
-          blankTopBottomTop = top
         }
       }
 
@@ -232,14 +245,18 @@ export const useDrag = () => {
       // 在某条轨道下方
       if (isUnderTrackLine) {
         linePositionStatus = LinePosition.ON_TRACK_LINE_INTERVAL
+        overIntervalTrackLine = trackLine
         intervalIndex = index + 1
+        overTrackLineTop = top
+        intervalTop = bottomTop
       }
 
       // 在所有轨道下方
       if (index === length - 1) {
+        blankBottomTop = bottomTop
+
         if (isUnder(dragPosition.y, bottomTop)) {
           linePositionStatus = LinePosition.UNDER_LIST_BOTTOM
-          blankBottomTop = bottomTop
         }
       }
 
@@ -248,7 +265,7 @@ export const useDrag = () => {
 
         if (trackItem.id === draggingItem.id) continue
 
-        if (isOnTrackLine) {
+        if (isOnTrackLine || isUnderTrackLine) {
           isIntersection = isIntersectionOfTwoIntervals(
             [holderRect.startFrame, holderRect.endFrame],
             [trackItem.startFrame, trackItem.endFrame]
@@ -329,8 +346,11 @@ export const useDrag = () => {
       position = {
         linePosition: LinePosition.ON_TRACK_LINE_INTERVAL,
         ...base,
-        isIntersection: isIntersection,
-        intervalIndex: intervalIndex!
+        overIntervalTrackLine: overIntervalTrackLine!,
+        isIntersection,
+        intervalIndex: intervalIndex!,
+        intervalTop: intervalTop!,
+        overTrackLineTop: overTrackLineTop!
       }
     } else {
       position = {
@@ -353,18 +373,19 @@ export const useDrag = () => {
 
     const holderRect = position.holderRect
 
-    const visible = (
-      options:
-        | {
-            horizontalLine?: boolean
-            trackPlaceholder?: boolean
-          }
-        | Record<string, never> = {}
-    ) => {
-      const { horizontalLine = false, trackPlaceholder = false } = options
+    const visibleHorizontalLine = () => {
+      showHorizontalLine = true
+      showTrackPlaceholder = false
+    }
 
-      showHorizontalLine = horizontalLine
-      showTrackPlaceholder = trackPlaceholder
+    const visibleTrackPlaceholder = () => {
+      showHorizontalLine = false
+      showTrackPlaceholder = true
+    }
+
+    const hideAll = () => {
+      showHorizontalLine = false
+      showTrackPlaceholder = false
     }
 
     // 如果 stickyFrame 不为空则是产生了自动吸附
@@ -379,38 +400,56 @@ export const useDrag = () => {
       if (position.linePosition === LinePosition.OVER_LIST_TOP) {
         insertTrackLineIndex = 0
         updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-        visible({ horizontalLine: true })
+        visibleHorizontalLine()
       } else {
         holderRect.top = position.mainTrackLineTop
         if (trackStore.enableMagneticAttraction) {
           holderRect.startFrame = 0
         }
         position.holderRect.setParentTrackLine(trackLineList.mainTrackLine)
-        visible({ trackPlaceholder: true })
+        visibleTrackPlaceholder()
       }
     }
     // 当前位置在顶部空白区域
     else if (position.linePosition === LinePosition.OVER_LIST_TOP) {
       insertTrackLineIndex = 0
       updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-      visible({ horizontalLine: true })
+      visibleHorizontalLine
     }
     // 当前位置在某条 trackLine 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE) {
       if (position.isIntersection) {
-        visible()
+        hideAll()
       } else {
         // 开启了自动磁吸
         if (position.trackLine.type === TrackLineType.MAIN && trackStore.enableMagneticAttraction) {
           holderRect.startFrame = position.trackLine.getLastFrame(position.draggingItem)
         }
         holderRect.top = position.trackLineTop
-        visible({ trackPlaceholder: true })
+        visibleTrackPlaceholder()
       }
     }
-    // 当前位置在 trackLine 间隔上
+    // 当前位置在 trackLine 的 “间隔” 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE_INTERVAL) {
-      insertTrackLineIndex = position.intervalIndex
+      // 如果是移动 trackItem 状态
+      if (trackLineList.move !== null) {
+        insertTrackLineIndex = position.intervalIndex
+        updateHorizontalLine(position.intervalTop + TRACK_LINE_INTERVAL / 2)
+        visibleHorizontalLine()
+      }
+      // 新插入 trackItem 状态则是插入到上方 trackLine 中，如果有冲突则插入到顶部
+      else {
+        if (position.isIntersection) {
+          insertTrackLineIndex = 0
+          console.log(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
+          updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
+          visibleHorizontalLine()
+        } else {
+          insertTrackLineIndex = position.intervalIndex - 1
+          holderRect.top = position.overTrackLineTop
+          visibleTrackPlaceholder()
+        }
+      }
     }
     // 当前位置在 trackLine list 下
     else {
@@ -420,9 +459,10 @@ export const useDrag = () => {
         holderRect.startFrame = 0
       }
       updateHorizontalLine(position.blankBottomTop + TRACK_LINE_INTERVAL / 2)
-      visible({ horizontalLine: true })
+      visibleHorizontalLine()
     }
 
+    // 把数据更新到响应式对象上，触发更新
     holderProperty.startFrame = holderRect.startFrame
     holderProperty.top = holderRect.top
     holderProperty.frameCount = holderRect.frameCount
