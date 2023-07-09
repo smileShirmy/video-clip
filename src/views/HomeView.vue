@@ -6,13 +6,14 @@ import PlayerContainer from '@/components/containers/player/PlayerContainer.vue'
 import ResourceContainer from '@/components/containers/resource/ResourceContainer.vue'
 import AttributeContainer from '@/components/containers/attribute/AttributeContainer.vue'
 import ResizeLine from '@/components/containers/resize-line/ResizeLine.vue'
-
-const minResourceContainerWidth = 374
-const minEditorWrapperWidth = 820
-const minPlayerContainerWidth = 460
-const minAttributeContainerWidth = 360
-const minPlayerWorkplaceHeight = 240
-const minTrackContainerHeight = 210
+import {
+  MIN_ATTRIBUTE_CONTAINER_WIDTH,
+  MIN_EDITOR_WRAPPER_WIDTH,
+  MIN_PLAYER_CONTAINER_WIDTH,
+  MIN_PLAYER_WORKPLACE_HEIGHT,
+  MIN_RESOURCE_CONTAINER_WIDTH,
+  MIN_TRACK_CONTAINER_HEIGHT
+} from '@/config'
 
 const playerContainerRatio = ref(0.67) // 当前播放器占player-workplace容器比例
 
@@ -56,8 +57,8 @@ function onResize1(size: { afterSize: number }) {
   // 按比例放大缩小
   let playerSize = playerWorkplaceSize * playerContainerRatio.value
   playerSize = Math.min(
-    Math.max(playerSize, minPlayerContainerWidth),
-    playerWorkplaceSize - minAttributeContainerWidth
+    Math.max(playerSize, MIN_PLAYER_CONTAINER_WIDTH),
+    playerWorkplaceSize - MIN_ATTRIBUTE_CONTAINER_WIDTH
   )
   const attributeSize = playerWorkplaceSize - playerSize
   playerContainerDom.style.width = `${playerSize}px`
@@ -78,8 +79,8 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
       :container="homeMainDom"
       :before="resourceContainerDom"
       :after="editorWrapperDom"
-      :minBefore="minResourceContainerWidth"
-      :minAfter="minEditorWrapperWidth"
+      :minBefore="MIN_RESOURCE_CONTAINER_WIDTH"
+      :minAfter="MIN_EDITOR_WRAPPER_WIDTH"
       @resize="onResize1"
     />
     <div ref="editorWrapperDom" class="editor-wrapper">
@@ -89,8 +90,8 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
           :container="playerWorkplaceDom"
           :before="playerContainerDom"
           :after="attributeContainerDom"
-          :minBefore="minPlayerContainerWidth"
-          :minAfter="minAttributeContainerWidth"
+          :minBefore="MIN_PLAYER_CONTAINER_WIDTH"
+          :minAfter="MIN_ATTRIBUTE_CONTAINER_WIDTH"
           @resize="onResize2"
         />
         <AttributeContainer ref="refAttributeContainer" />
@@ -99,8 +100,8 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
         :container="editorWrapperDom"
         :before="playerWorkplaceDom"
         :after="trackContainerDom"
-        :minBefore="minPlayerWorkplaceHeight"
-        :minAfter="minTrackContainerHeight"
+        :minBefore="MIN_PLAYER_WORKPLACE_HEIGHT"
+        :minAfter="MIN_TRACK_CONTAINER_HEIGHT"
         :horizontal="true"
       />
       <TrackContainer ref="refTrackContainer" />
