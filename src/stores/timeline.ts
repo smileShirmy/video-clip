@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { hoursToTime, minutesToTime, secondsToTime } from '@/services/helpers/time'
-import { warn } from '@/services/helpers/warn'
-import { ref } from 'vue'
+import { ref, warn } from 'vue'
 import { FRAME_STEP } from '@/config'
 
 // 长刻度单位
@@ -52,7 +51,7 @@ function normalizeConfig(config: TimelineRenderConfig = {}) {
     longScaleMinWidth = 120,
     separateParts = 10,
     maxFrameWidth = 60,
-    maxCanvasWidth = 500, // canvas 的最大宽度
+    maxCanvasWidth = 32767, // canvas 的最大宽度
     canvasHeight = 30,
     backgroundColor = 'transparent',
     scaleHeight = 7,
@@ -92,13 +91,24 @@ export const useTimelineStore = defineStore('timeline', () => {
   let oldUsedCount = 0
 
   // 当前编辑区帧的总宽度
-  const maxFrameCount = ref(0)
+  const maxFrameCount = ref(3000)
+
+  // 当前帧的宽度
+  const frameWidth = ref(0)
+
+  // 初始化时的宽度
+  const initTimelineWidth = ref(0)
 
   // 经过缩放之后的宽度
   const timelineWidth = ref(0)
 
-  // 当前帧的宽度
-  const frameWidth = ref(0)
+  // 改变布局后包裹 timeline 的宽度
+  const timelineWrapperWidth = ref(0)
+
+  // 缩放到最小时每帧的宽度
+  let minFrameWidth = 0
+
+  let eastingFunction: EasingFunction | null = null
 
   /**
    * 获取刻度信息
@@ -325,33 +335,30 @@ export const useTimelineStore = defineStore('timeline', () => {
   /**
    * 绘制
    *
-   * @param {number} rectWidth timeline 容器的宽度
-   * @param {number} frameCount 总帧数
    * @param {number} sliderValue 缩放值
    */
-  function updateTimeline(rectWidth: number, frameCount: number, sliderValue: number) {
-    if (rectWidth === 0) {
-      warn('容器宽度不能为 0')
+  function updateTimeline(sliderValue: number) {
+    if (!eastingFunction) {
+      warn('没有初始化缓动函数')
       return
     }
 
     let maxCanvasWidth = config.maxCanvasWidth
 
-    // 总帧数需要 * 1.5，因为要预留更多空白操作区域
-    maxFrameCount.value = Math.round(frameCount * 1.5)
-
-    // 缩放至最小时每帧的宽度
-    const minFrameWidth = rectWidth / maxFrameCount.value
-
-    // 初始化缓动函数
-    const getScale = initEasingFunction(minFrameWidth)
     // 根据缩放值获取每帧放大的倍数
-    const scale = getScale(sliderValue)
-
-    // timeline 的宽度
-    timelineWidth.value = rectWidth * scale
+    const scale = eastingFunction(sliderValue)
 
     frameWidth.value = minFrameWidth * scale
+
+    // 设置 timeline 的宽度
+    const width = initTimelineWidth.value * scale
+    // 如果宽度小于布局的宽度，则以布局的宽度为准
+    if (width < timelineWrapperWidth.value) {
+      timelineWidth.value = timelineWrapperWidth.value
+      maxFrameCount.value = timelineWrapperWidth.value / frameWidth.value
+    } else {
+      timelineWidth.value = width
+    }
 
     // 根据当前缩放等级下的帧的宽度获取刻度信息
     const scaleConfig = getScaleConfig(frameWidth.value)
@@ -478,14 +485,23 @@ export const useTimelineStore = defineStore('timeline', () => {
     return curFrame
   }
 
+  function updateMinFrameWidth() {
+    minFrameWidth = initTimelineWidth.value / maxFrameCount.value
+    // 初始化缓动函数
+    eastingFunction = initEasingFunction(minFrameWidth)
+  }
+
   function init(target: HTMLElement) {
     wrapper = target
   }
 
   return {
     maxFrameCount,
+    timelineWrapperWidth,
     frameWidth,
     timelineWidth,
+    initTimelineWidth,
+    updateMinFrameWidth,
     init,
     updateTimeline,
     frameToPixel,

@@ -10,7 +10,8 @@ const trackStore = useTrackStore()
 
 function setTrackWidth() {
   if (!trackContainerRef.value) return
-  trackStore.setTrackControllerWidth(trackContainerRef.value)
+  trackStore.setTrackContainerRef(trackContainerRef.value)
+  trackStore.initTimelineWidth()
 }
 
 onMounted(() => {

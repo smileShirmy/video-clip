@@ -31,10 +31,6 @@ const {
   onDrop
 } = useDrag()
 
-const wrapperStyle: ComputedRef<CSSProperties> = computed(() => ({
-  width: `${trackStore.trackControllerWidth}px`
-}))
-
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
 }))
@@ -46,7 +42,6 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
     :class="{
       'overflow-hidden': trackStore.disableScroll
     }"
-    :style="wrapperStyle"
   >
     <div class="track-menu"></div>
     <!-- position: relative -->
@@ -102,6 +97,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   display: flex;
   justify-content: flex-start;
   overflow-x: auto;
+  width: 100%;
   height: calc(100% - 30px);
 
   &.overflow-hidden {

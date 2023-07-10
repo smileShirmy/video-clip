@@ -15,20 +15,13 @@ export const useTrackStore = defineStore('track', () => {
 
   const showVerticalLine = ref(false)
 
+  let trackContainerRef: HTMLDivElement | null = null
+
   // 是否开启自动吸附
   const enableSticky = ref(true)
 
   // 是否开启自动磁吸
   const enableMagneticAttraction = ref(true)
-
-  // 外层宽度（可以伸缩）
-  const trackControllerWidth = ref(0)
-
-  // 初始化时 timeline 的宽度
-  const initTimelineWidth = ref(0)
-
-  // 当前编辑视频的总帧数 TODO: 这个数据需要统一到视频控制
-  const frameCount = 5000
 
   // 当前的帧数 TODO: 这个数据需要统一到视频控制
   const currentFrame = ref(0)
@@ -38,19 +31,38 @@ export const useTrackStore = defineStore('track', () => {
 
   // 当下面三个值发生改变时都要重新绘制
   watchThrottled(
-    [initTimelineWidth, scale, frameCount],
+    [scale],
     () => {
-      timelineStore.updateTimeline(initTimelineWidth.value, frameCount, scale.value)
+      timelineStore.updateTimeline(scale.value)
     },
     { throttle: 100 }
   )
 
-  function setTrackControllerWidth(trackContainerRef: HTMLDivElement) {
-    const { width } = trackContainerRef.getBoundingClientRect()
-    trackControllerWidth.value = width
+  function setTrackContainerRef(trackContainer: HTMLDivElement) {
+    trackContainerRef = trackContainer
+  }
 
-    // TODO: 暂时随着外层变化而变化，后面优化，只有在 frameCount 变大时才改变这个值，否则不会因为拖动导致宽度变化而更新
-    initTimelineWidth.value = width - 80
+  function getTimelineWidth() {
+    if (!trackContainerRef) return 0
+    const { width } = trackContainerRef.getBoundingClientRect()
+    return width - 80
+  }
+
+  function initTimelineWidth() {
+    const width = getTimelineWidth()
+    timelineStore.initTimelineWidth = width
+    timelineStore.timelineWrapperWidth = width
+    timelineStore.updateMinFrameWidth()
+    timelineStore.updateTimeline(scale.value)
+  }
+
+  function resizeTimelineWidth() {
+    console.log(1)
+    const width = getTimelineWidth()
+    if (timelineStore.timelineWidth !== width) {
+      timelineStore.timelineWrapperWidth = width
+      timelineStore.updateTimeline(scale.value)
+    }
   }
 
   function initTimeline(wrapper: HTMLElement) {
@@ -73,12 +85,13 @@ export const useTrackStore = defineStore('track', () => {
     scale,
     enableSticky,
     enableMagneticAttraction,
-    trackControllerWidth,
     showTrackPlaceholder,
     showHorizontalLine,
     showVerticalLine,
+    setTrackContainerRef,
     initTimeline,
-    setTrackControllerWidth,
+    resizeTimelineWidth,
+    initTimelineWidth,
     onDragend
   }
 })

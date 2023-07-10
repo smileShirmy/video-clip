@@ -32,6 +32,8 @@ const props = defineProps({
 
 const emit = defineEmits<{
   (e: 'resize', size: { beforeSize: number; afterSize: number }): void
+  (e: 'mouse-down'): void
+  (e: 'mouse-up'): void
 }>()
 
 let containerRect: DOMRect | null = null
@@ -62,6 +64,8 @@ function onMouseDown(event: MouseEvent) {
   containerRect = props.container.getBoundingClientRect()
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
+
+  emit('mouse-down')
 }
 
 function onMouseMove(event: MouseEvent) {
@@ -89,6 +93,8 @@ function onMouseMove(event: MouseEvent) {
 function onMouseUp(event: MouseEvent) {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
+
+  emit('mouse-up')
 }
 </script>
 

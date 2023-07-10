@@ -14,6 +14,10 @@ import {
   MIN_RESOURCE_CONTAINER_WIDTH,
   MIN_TRACK_CONTAINER_HEIGHT
 } from '@/config'
+import { useTrackStore } from '@/stores/track'
+import { useThrottleFn } from '@vueuse/core'
+
+const trackStore = useTrackStore()
 
 const playerContainerRatio = ref(0.67) // 当前播放器占player-workplace容器比例
 
@@ -50,6 +54,8 @@ onMounted(async () => {
   }
 })
 
+const resizeTimelineWidth = useThrottleFn(trackStore.resizeTimelineWidth, 50)
+
 function onResize1(size: { afterSize: number }) {
   if (!playerContainerDom || !attributeContainerDom) return
 
@@ -63,6 +69,16 @@ function onResize1(size: { afterSize: number }) {
   const attributeSize = playerWorkplaceSize - playerSize
   playerContainerDom.style.width = `${playerSize}px`
   attributeContainerDom.style.width = `${attributeSize}px`
+
+  resizeTimelineWidth()
+}
+
+function onMouseDown() {
+  trackStore.disableScroll = true
+}
+
+function onMouseUp() {
+  trackStore.disableScroll = false
 }
 
 function onResize2(size: { beforeSize: number; afterSize: number }) {
@@ -82,6 +98,8 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
       :minBefore="MIN_RESOURCE_CONTAINER_WIDTH"
       :minAfter="MIN_EDITOR_WRAPPER_WIDTH"
       @resize="onResize1"
+      @mouse-down="onMouseDown"
+      @mouse-up="onMouseUp"
     />
     <div ref="editorWrapperDom" class="editor-wrapper">
       <div ref="playerWorkplaceDom" class="player-workplace">
