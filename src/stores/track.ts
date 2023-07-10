@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { ADAPTIVE_RATIO } from '@/config'
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
@@ -68,19 +69,30 @@ export const useTrackStore = defineStore('track', () => {
     const maxFrame = trackLineList.getMaxFrame()
     // 如果是添加，并且少于等于两个的时候，总宽度为总帧数的 1.5 倍
     if (isAdd && trackLineList.trackItemCount <= 2) {
-      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
     }
     // 超出容量
     else if (maxFrame > timelineStore.maxFrameCount) {
-      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
     }
     // 占比太小
     else if (maxFrame < timelineStore.maxFrameCount * 0.2) {
-      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
     }
+    timelineStore.updateTimeline(scale.value)
+  }
+
+  // 自适应轨道
+  function adaptiveTrack() {
+    const maxFrame = trackLineList.getMaxFrame()
+    const width = getTimelineWidth()
+    timelineStore.initTimelineWidth = width
+    timelineStore.timelineWrapperWidth = width
+    timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
+    timelineStore.updateMinFrameWidth()
     timelineStore.updateTimeline(scale.value)
   }
 
@@ -112,6 +124,7 @@ export const useTrackStore = defineStore('track', () => {
     updateMaxFrameCount,
     resizeTimelineWidth,
     initTimelineWidth,
-    onDragend
+    onDragend,
+    adaptiveTrack
   }
 })

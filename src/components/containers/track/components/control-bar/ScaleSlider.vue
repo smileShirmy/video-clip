@@ -165,7 +165,7 @@ function onSliderClick(event: MouseEvent) {
 .scale-slider {
   display: flex;
   align-items: center;
-  width: 100px;
+  width: 150px;
   height: 12px;
 
   .slider-runway {

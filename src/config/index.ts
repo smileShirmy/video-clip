@@ -22,3 +22,8 @@ export const MIN_PLAYER_CONTAINER_WIDTH = 460
 export const MIN_ATTRIBUTE_CONTAINER_WIDTH = 360
 export const MIN_PLAYER_WORKPLACE_HEIGHT = 240
 export const MIN_TRACK_CONTAINER_HEIGHT = 210
+
+/**
+ * 自适应宽度倍数
+ */
+export const ADAPTIVE_RATIO = 1.5
