@@ -403,7 +403,7 @@ export const useDrag = () => {
         visibleHorizontalLine()
       } else {
         holderRect.top = position.mainTrackLineTop
-        if (trackStore.enableMagneticAttraction) {
+        if (trackStore.enableMagnetic) {
           holderRect.startFrame = 0
         }
         position.holderRect.setParentTrackLine(trackLineList.mainTrackLine)
@@ -422,7 +422,7 @@ export const useDrag = () => {
         hideAll()
       } else {
         // 开启了自动磁吸
-        if (position.trackLine.type === TrackLineType.MAIN && trackStore.enableMagneticAttraction) {
+        if (position.trackLine.type === TrackLineType.MAIN && trackStore.enableMagnetic) {
           holderRect.startFrame = position.trackLine.getLastFrame(position.draggingItem)
         }
         holderRect.top = position.trackLineTop
@@ -455,7 +455,7 @@ export const useDrag = () => {
     else {
       insertTrackLineIndex = trackLineList.list.length
       holderProperty.top = position.mainTrackLineTop
-      if (trackStore.enableMagneticAttraction) {
+      if (trackStore.enableMagnetic) {
         holderRect.startFrame = 0
       }
       updateHorizontalLine(position.blankBottomTop + TRACK_LINE_INTERVAL / 2)

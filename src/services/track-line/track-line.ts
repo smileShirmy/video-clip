@@ -87,7 +87,11 @@ abstract class BaseTrackLine<T extends TrackItem> {
 
     if (list.length) {
       const trackStore = useTrackStore()
-      trackStore.updateMaxFrameCount(trackLineList.trackItemCount > beforeTrackItemCount)
+      if (trackLineList.trackItemCount > beforeTrackItemCount) {
+        trackStore.updateMaxFrameCount(2)
+      } else {
+        trackStore.updateMaxFrameCount()
+      }
     }
   }
 

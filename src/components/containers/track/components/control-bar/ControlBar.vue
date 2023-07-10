@@ -10,6 +10,15 @@ const trackStore = useTrackStore()
     <div></div>
 
     <section class="control-bar-child">
+      <div class="control-item adaptive-item" @click="trackStore.switchMagnetic">
+        {{ trackStore.enableMagnetic ? '关闭' : '打开' }}自动磁吸
+      </div>
+      <div class="control-item adaptive-item" @click="trackStore.switchSticky">
+        {{ trackStore.enableSticky ? '关闭' : '打开' }}自动吸附
+      </div>
+      <div class="control-item adaptive-item" @click="trackStore.switchPreviewLine">
+        {{ trackStore.enablePreviewLine ? '关闭' : '打开' }}预览线
+      </div>
       <div class="split-line"></div>
       <div class="control-item adaptive-item" @click="trackStore.adaptiveTrack">自适应轨道</div>
       <ScaleSlider v-model="trackStore.scale" />

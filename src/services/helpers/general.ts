@@ -3,6 +3,7 @@ export const isArray = Array.isArray
 export const isNumber = (val: unknown): val is number => typeof val === 'number'
 export const isString = (val: unknown): val is string => typeof val === 'string'
 export const isBoolean = (val: unknown): val is boolean => typeof val === 'boolean'
+export const isFunction = (val: unknown): val is Function => typeof val === 'function'
 
 export const uuid = () =>
   '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>

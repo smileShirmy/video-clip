@@ -49,6 +49,9 @@ const leftSlider = new Slider({
     } else {
       props.data.setStartFrame(v < allowMinFrame ? allowMinFrame : v)
     }
+  },
+  dragend() {
+    trackStore.updateMaxFrameCount(1)
   }
 })
 
@@ -59,6 +62,9 @@ const rightSlider = new Slider({
     } else {
       props.data.setEndFrame(v > allowMaxFrame ? allowMaxFrame : v)
     }
+  },
+  dragend() {
+    trackStore.updateMaxFrameCount(1)
   }
 })
 

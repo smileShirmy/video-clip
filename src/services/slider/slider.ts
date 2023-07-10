@@ -1,8 +1,10 @@
 import { FRAME_STEP } from '@/config'
 import { nextTick } from 'vue'
+import { isFunction } from '../helpers/general'
 
 interface SliderOptions {
   change: (modelValue: number, currentPosition: string) => void
+  dragend?: () => void
 }
 
 export interface SliderDownOptions {
@@ -98,6 +100,9 @@ export class Slider {
         this.setPosition(this.newPosition)
       }
       this.emitChange()
+      if (isFunction(this.options.dragend)) {
+        this.options.dragend()
+      }
     }, 0)
 
     window.removeEventListener('mousemove', this.onDragging)

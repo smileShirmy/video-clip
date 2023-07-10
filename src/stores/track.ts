@@ -18,11 +18,14 @@ export const useTrackStore = defineStore('track', () => {
 
   let trackContainerRef: HTMLDivElement | null = null
 
-  // 是否开启自动吸附
+  // 是否打开自动磁吸
+  const enableMagnetic = ref(true)
+
+  // 是否打开自动吸附
   const enableSticky = ref(true)
 
-  // 是否开启自动磁吸
-  const enableMagneticAttraction = ref(true)
+  // 是否打开预览线
+  const enablePreviewLine = ref(true)
 
   // 当前的帧数 TODO: 这个数据需要统一到视频控制
   const currentFrame = ref(0)
@@ -65,10 +68,12 @@ export const useTrackStore = defineStore('track', () => {
     }
   }
 
-  function updateMaxFrameCount(isAdd = false) {
+  /**
+   * @param {number} updateLessThanCount 当少于多少个时直接更新
+   */
+  function updateMaxFrameCount(updateLessThanCount = -1) {
     const maxFrame = trackLineList.getMaxFrame()
-    // 如果是添加，并且少于等于两个的时候，总宽度为总帧数的 1.5 倍
-    if (isAdd && trackLineList.trackItemCount <= 2) {
+    if (trackLineList.trackItemCount <= updateLessThanCount) {
       timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
     }
@@ -96,6 +101,18 @@ export const useTrackStore = defineStore('track', () => {
     timelineStore.updateTimeline(scale.value)
   }
 
+  function switchPreviewLine() {
+    enablePreviewLine.value = !enablePreviewLine.value
+  }
+
+  function switchSticky() {
+    enableSticky.value = !enableSticky.value
+  }
+
+  function switchMagnetic() {
+    enableMagnetic.value = !enableMagnetic.value
+  }
+
   function initTimeline(wrapper: HTMLElement) {
     timelineStore.init(wrapper)
   }
@@ -114,8 +131,9 @@ export const useTrackStore = defineStore('track', () => {
     disableScroll,
     currentFrame,
     scale,
+    enableMagnetic,
     enableSticky,
-    enableMagneticAttraction,
+    enablePreviewLine,
     showTrackPlaceholder,
     showHorizontalLine,
     showVerticalLine,
@@ -125,6 +143,9 @@ export const useTrackStore = defineStore('track', () => {
     resizeTimelineWidth,
     initTimelineWidth,
     onDragend,
-    adaptiveTrack
+    adaptiveTrack,
+    switchPreviewLine,
+    switchSticky,
+    switchMagnetic
   }
 })
