@@ -1,7 +1,8 @@
 import { shallowReactive, warn, watch } from 'vue'
 import { isArray, isString, uuid } from '../helpers/general'
 import type { TrackItem, VideoTrackItem } from '../track-item/track-item'
-import type { TrackLineListType } from '../track-line-list/track-line-list'
+import { trackLineList, type TrackLineListType } from '../track-line-list/track-line-list'
+import { useTrackStore } from '@/stores/track'
 
 export enum TrackLineType {
   MAIN = 'main',
@@ -33,7 +34,7 @@ abstract class BaseTrackLine<T extends TrackItem> {
   /**
    * 移除指定 trackItem
    */
-  removeTrackItem(item: string | TrackItem) {
+  removeTrackItem(item: string | TrackItem, isUpdateMaxFrameCount = false) {
     const id = isString(item) ? item : item.id
     let removed = false
 
@@ -46,6 +47,11 @@ abstract class BaseTrackLine<T extends TrackItem> {
       }
     }
 
+    if (isUpdateMaxFrameCount) {
+      const trackStore = useTrackStore()
+      trackStore.updateMaxFrameCount()
+    }
+
     return removed
   }
 
@@ -54,11 +60,13 @@ abstract class BaseTrackLine<T extends TrackItem> {
    * 添加之前需要移除相同 id 的 trackItem，由此来实现移动
    */
   addTrackItem(trackItem: T | T[]) {
+    const beforeTrackItemCount = trackLineList.trackItemCount
+
     const list = isArray(trackItem) ? trackItem : [trackItem]
     list.forEach((trackItem) => {
       if (this.parentTrackLineList) {
         // 添加之前先移除 trackLine 中相同的 trackItem
-        const removed = this.parentTrackLineList.removeTrackItem(trackItem)
+        const removed = this.parentTrackLineList.removeTrackItem(trackItem, false)
 
         this._trackList.push(trackItem)
 
@@ -76,6 +84,11 @@ abstract class BaseTrackLine<T extends TrackItem> {
       }
       warn('添加 trackItem 之前请先把当前 trackLine 插入到 trackLineList 中')
     })
+
+    if (list.length) {
+      const trackStore = useTrackStore()
+      trackStore.updateMaxFrameCount(trackLineList.trackItemCount > beforeTrackItemCount)
+    }
   }
 
   /**
@@ -83,6 +96,9 @@ abstract class BaseTrackLine<T extends TrackItem> {
    */
   clearTrackList() {
     this._trackList.splice(0, this._trackList.length)
+
+    const trackStore = useTrackStore()
+    trackStore.updateMaxFrameCount()
   }
 
   /**

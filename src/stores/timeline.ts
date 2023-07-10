@@ -430,7 +430,7 @@ export const useTimelineStore = defineStore('timeline', () => {
     return isNaN(val) ? 0 : val
   }
 
-  /**
+  /**f
    * 把当前帧数转换为像素（带单位）
    */
   function frameToPixelWithUnit(currentFrame: number): string {

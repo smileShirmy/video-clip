@@ -1,6 +1,7 @@
 import { shallowReactive, watch } from 'vue'
 import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/track-line'
 import type { TrackItem } from '../track-item/track-item'
+import { useTrackStore } from '@/stores/track'
 
 interface Move {
   dragOffsetX: number
@@ -34,6 +35,10 @@ class TrackLineList {
     return this.list.find((line) => line.type === TrackLineType.MAIN)!
   }
 
+  get trackItemCount(): number {
+    return this.list.reduce((pre, cur) => pre + cur.trackList.length, 0)
+  }
+
   constructor() {
     watch(
       this.list,
@@ -42,6 +47,10 @@ class TrackLineList {
       },
       { immediate: true }
     )
+  }
+
+  getMaxFrame() {
+    return Math.max(...this.list.map((f) => f.getLastFrame()))
   }
 
   removeMove() {
@@ -62,14 +71,19 @@ class TrackLineList {
     this.draggingItem = trackItem
   }
 
-  removeTrackItem(trackItem: TrackItem) {
+  removeTrackItem(trackItem: TrackItem, isUpdateMaxFrameCount = true) {
     let removed = false
     this.list.forEach((line) => {
-      const r = line.removeTrackItem(trackItem)
+      const r = line.removeTrackItem(trackItem, false)
       if (!removed && r) {
         removed = true
       }
     })
+
+    if (isUpdateMaxFrameCount) {
+      const trackStore = useTrackStore()
+      trackStore.updateMaxFrameCount()
+    }
     return removed
   }
 

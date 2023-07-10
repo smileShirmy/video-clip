@@ -57,12 +57,31 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   function resizeTimelineWidth() {
-    console.log(1)
     const width = getTimelineWidth()
-    if (timelineStore.timelineWidth !== width) {
+    if (timelineStore.timelineWrapperWidth !== width) {
       timelineStore.timelineWrapperWidth = width
       timelineStore.updateTimeline(scale.value)
     }
+  }
+
+  function updateMaxFrameCount(isAdd = false) {
+    const maxFrame = trackLineList.getMaxFrame()
+    // 如果是添加，并且少于等于两个的时候，总宽度为总帧数的 1.5 倍
+    if (isAdd && trackLineList.trackItemCount <= 2) {
+      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.updateMinFrameWidth()
+    }
+    // 超出容量
+    else if (maxFrame > timelineStore.maxFrameCount) {
+      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.updateMinFrameWidth()
+    }
+    // 占比太小
+    else if (maxFrame < timelineStore.maxFrameCount * 0.2) {
+      timelineStore.maxFrameCount = Math.round(maxFrame * 1.5)
+      timelineStore.updateMinFrameWidth()
+    }
+    timelineStore.updateTimeline(scale.value)
   }
 
   function initTimeline(wrapper: HTMLElement) {
@@ -90,6 +109,7 @@ export const useTrackStore = defineStore('track', () => {
     showVerticalLine,
     setTrackContainerRef,
     initTimeline,
+    updateMaxFrameCount,
     resizeTimelineWidth,
     initTimelineWidth,
     onDragend
