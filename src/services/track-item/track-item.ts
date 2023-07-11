@@ -33,6 +33,18 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
     return this.minFrame + this.resource.frameCount
   }
 
+  abstract split(splitFrame: number): TrackItem
+
+  protected baseSplit(newItem: TrackItem, splitFrame: number): TrackItem {
+    newItem.setStartFrame(splitFrame)
+    newItem.setEndFrame(this.endFrame)
+    newItem.minFrame = this.minFrame
+    this.parentTrackLine?.addTrackItemWithNoEffect(newItem)
+
+    this.setEndFrame(splitFrame)
+    return newItem
+  }
+
   // 更新允许拖动范围的最大最小帧
   updateMinAndMax() {
     const offsetFrame = this.startFrame - this.beforeDragFrame
@@ -99,6 +111,12 @@ export class VideoTrackItem extends BaseTrackItem<VideoResource, VideoTrackLine 
     super()
     this.setEndFrame(resource.frameCount)
     this.resource = Object.assign({}, resource)
+  }
+
+  split(splitFrame: number) {
+    const newItem = VideoTrackItem.create(Object.assign({}, this.resource))
+
+    return this.baseSplit(newItem, splitFrame)
   }
 
   static create(resource: VideoResource) {

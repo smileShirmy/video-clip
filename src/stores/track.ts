@@ -136,6 +136,10 @@ export const useTrackStore = defineStore('track', () => {
     showTrackPlaceholder.value = false
   }
 
+  function split() {
+    trackLineList.split(seekLineFrame.value)
+  }
+
   return {
     disableScroll,
     currentFrame,
@@ -157,6 +161,7 @@ export const useTrackStore = defineStore('track', () => {
     adaptiveTrack,
     switchPreviewLine,
     switchSticky,
-    switchMagnetic
+    switchMagnetic,
+    split
   }
 })

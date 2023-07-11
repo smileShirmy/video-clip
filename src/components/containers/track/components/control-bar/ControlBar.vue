@@ -12,7 +12,7 @@ const trackStore = useTrackStore()
       <div class="control-item">撤销 TODO</div>
       <div class="control-item">重做 TODO</div>
       <div class="control-item" @click="trackLineList.removeSelected">删除</div>
-      <div class="control-item">分割</div>
+      <div class="control-item" @click="trackStore.split">分割</div>
     </section>
 
     <section class="control-bar-child">

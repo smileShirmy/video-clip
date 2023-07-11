@@ -55,6 +55,10 @@ abstract class BaseTrackLine<T extends TrackItem> {
     return removed
   }
 
+  addTrackItemWithNoEffect(trackItem: T) {
+    this._trackList.push(trackItem)
+  }
+
   /**
    * 添加 trackItem
    * 添加之前需要移除相同 id 的 trackItem，由此来实现移动

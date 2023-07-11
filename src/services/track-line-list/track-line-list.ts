@@ -92,6 +92,8 @@ class TrackLineList {
   }
 
   removeSelected() {
+    if (!this.selectedId) return
+
     const trackItem = this.selectedTrackItem
     trackItem && this.removeTrackItem(trackItem)
     this.removeEmptyTrackLine()
@@ -129,6 +131,27 @@ class TrackLineList {
   insert(trackLine: TrackLine, insertIndex: number) {
     trackLine.parentTrackLineList = this
     this.list.splice(insertIndex, 0, trackLine)
+  }
+
+  getSplitTrackItem(splitFrame: number): TrackItem | null {
+    const len = trackLineList.list.length
+    for (let i = len - 1; i >= 0; i -= 1) {
+      const line = trackLineList.list[i]
+      for (let j = 0; j < line.trackList.length; j += 1) {
+        const item = line.trackList[j]
+        if (splitFrame > item.startFrame && splitFrame < item.endFrame) {
+          return line.trackList[j]
+        }
+      }
+    }
+    return null
+  }
+
+  split(splitFrame: number) {
+    const clipItem = this.getSplitTrackItem(splitFrame)
+    if (!clipItem) return
+
+    clipItem.split(splitFrame)
   }
 }
 
