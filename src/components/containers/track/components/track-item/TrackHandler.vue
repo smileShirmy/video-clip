@@ -100,6 +100,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 
 function onDragStart(e: DragEvent) {
   trackStore.disableScroll = true
+  trackStore.showPreviewLine = false
   trackLineList.setDraggingTrackItem(props.data)
 
   trackLineList.setMove(props.data, { dragOffsetX: e.offsetX })

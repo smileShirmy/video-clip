@@ -9,6 +9,7 @@ import { TrackComponentName } from '@/types'
 import { useDrag } from './use-drag'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { TrackLineType } from '@/services/track-line/track-line'
+import { usePreviewLine } from './use-preview-line'
 
 defineOptions({
   components: {
@@ -30,6 +31,8 @@ const {
   onDragleave,
   onDrop
 } = useDrag()
+
+const { timelineResourceRef, previewLineStyle } = usePreviewLine(trackContentRef)
 
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
@@ -86,6 +89,12 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
           v-show="trackStore.showVerticalLine"
           class="vertical-line"
           :style="verticalLineStyle"
+        ></div>
+
+        <div
+          v-show="trackStore.showPreviewLine"
+          :style="previewLineStyle"
+          class="preview-line"
         ></div>
       </div>
     </div>
@@ -149,6 +158,14 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
     width: 1px;
     height: calc(100% - 30px);
     background-color: #7086e9;
+    pointer-events: none;
+  }
+
+  .preview-line {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    height: calc(100% - 30px);
     pointer-events: none;
   }
 

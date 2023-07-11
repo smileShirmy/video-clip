@@ -16,6 +16,8 @@ export const useTrackStore = defineStore('track', () => {
 
   const showVerticalLine = ref(false)
 
+  const showPreviewLine = ref(false)
+
   let trackContainerRef: HTMLDivElement | null = null
 
   // 是否打开自动磁吸
@@ -137,6 +139,7 @@ export const useTrackStore = defineStore('track', () => {
     showTrackPlaceholder,
     showHorizontalLine,
     showVerticalLine,
+    showPreviewLine,
     setTrackContainerRef,
     initTimeline,
     updateMaxFrameCount,
