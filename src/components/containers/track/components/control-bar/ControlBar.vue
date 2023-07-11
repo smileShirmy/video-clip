@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trackLineList } from '@/services/track-line-list/track-line-list'
 import ScaleSlider from './ScaleSlider.vue'
 import { useTrackStore } from '@/stores/track'
 
@@ -7,16 +8,21 @@ const trackStore = useTrackStore()
 
 <template>
   <div class="control-bar">
-    <div></div>
+    <section class="control-bar-child">
+      <div class="control-item">撤销 TODO</div>
+      <div class="control-item">重做 TODO</div>
+      <div class="control-item" @click="trackLineList.removeSelected">删除</div>
+      <div class="control-item">分割</div>
+    </section>
 
     <section class="control-bar-child">
-      <div class="control-item adaptive-item" @click="trackStore.switchMagnetic">
+      <div class="control-item" @click="trackStore.switchMagnetic">
         {{ trackStore.enableMagnetic ? '关闭' : '打开' }}自动磁吸
       </div>
-      <div class="control-item adaptive-item" @click="trackStore.switchSticky">
+      <div class="control-item" @click="trackStore.switchSticky">
         {{ trackStore.enableSticky ? '关闭' : '打开' }}自动吸附
       </div>
-      <div class="control-item adaptive-item" @click="trackStore.switchPreviewLine">
+      <div class="control-item" @click="trackStore.switchPreviewLine">
         {{ trackStore.enablePreviewLine ? '关闭' : '打开' }}预览线
       </div>
       <div class="split-line"></div>

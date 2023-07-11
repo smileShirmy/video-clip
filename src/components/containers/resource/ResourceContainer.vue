@@ -101,7 +101,7 @@ defineExpose({
         <span>{{ item.name }}</span>
       </li>
     </ul>
-    <div v-show="!isFold" class="resource-wrapper" ref="resourceWrapper">
+    <div v-show="!isFold" class="resource-wrapper" ref="resourceWrapper" data-clear-selected>
       <KeepAlive>
         <component :is="component" />
       </KeepAlive>

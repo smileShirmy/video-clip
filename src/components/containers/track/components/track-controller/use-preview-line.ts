@@ -32,7 +32,7 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   }))
 
   const onMove = useThrottleFn((e: MouseEvent) => {
-    if (!trackContentRef.value) return
+    if (!trackContentRef.value || trackLineList.resizingTrackItem) return
 
     const { left } = getElementPosition(e.target as HTMLElement, trackContentRef.value)
     const x = left + e.offsetX
@@ -115,6 +115,7 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   })
 
   return {
+    previewLineX,
     previewLineStyle,
     timelineResourceRef
   }

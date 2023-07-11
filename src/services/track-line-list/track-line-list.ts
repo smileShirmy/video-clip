@@ -1,4 +1,4 @@
-import { shallowReactive, watch } from 'vue'
+import { ref, shallowReactive, watch } from 'vue'
 import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/track-line'
 import type { TrackItem } from '../track-item/track-item'
 import { useTrackStore } from '@/stores/track'
@@ -14,14 +14,30 @@ class TrackLineList {
 
   private _list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
 
-  get list() {
-    return this._list
-  }
+  private _selectedId = ref('')
 
   private draggingItem: TrackItem | null = null
 
   move: Move | null = {
     dragOffsetX: 0
+  }
+
+  resizingTrackItem = false
+
+  get selectedId() {
+    return this._selectedId.value
+  }
+
+  get selectedTrackItem(): TrackItem | null {
+    for (let i = 0; i < this.list.length; i += 1) {
+      const exist = this.list[i].getTrackItem(this.selectedId)
+      if (exist) return exist
+    }
+    return null
+  }
+
+  get list() {
+    return this._list
   }
 
   /**
@@ -63,12 +79,22 @@ class TrackLineList {
     this.move = move
   }
 
+  setSelectedId(id: string) {
+    this._selectedId.value = id
+  }
+
   getDraggingTrackItem() {
     return this.draggingItem
   }
 
   setDraggingTrackItem(trackItem: TrackItem) {
     this.draggingItem = trackItem
+  }
+
+  removeSelected() {
+    const trackItem = this.selectedTrackItem
+    trackItem && this.removeTrackItem(trackItem)
+    this.removeEmptyTrackLine()
   }
 
   removeTrackItem(trackItem: TrackItem, isUpdateMaxFrameCount = true) {

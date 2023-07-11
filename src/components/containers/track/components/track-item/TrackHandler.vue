@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
 import type { TrackItem } from '@/services/track-item/track-item'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { onClickOutside } from '@vueuse/core'
+import { isString } from '@/services/helpers/general'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -18,6 +20,8 @@ const HANDLER_WIDTH = 10
 
 let allowMaxFrame = 0
 let allowMinFrame = 0
+
+const trackItemRef = ref<HTMLDivElement | null>(null)
 
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
@@ -52,6 +56,8 @@ const leftSlider = new Slider({
   },
   dragend() {
     trackStore.updateMaxFrameCount(1)
+    trackLineList.setSelectedId(props.data.id)
+    trackLineList.resizingTrackItem = false
   }
 })
 
@@ -65,6 +71,8 @@ const rightSlider = new Slider({
   },
   dragend() {
     trackStore.updateMaxFrameCount(1)
+    trackLineList.setSelectedId(props.data.id)
+    trackLineList.resizingTrackItem = false
   }
 })
 
@@ -75,8 +83,12 @@ function getMinWidthFrame() {
 }
 
 function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
+  event.stopPropagation()
+
   allowMinFrame = props.data.getAllowMinFrame()
   allowMaxFrame = props.data.endFrame - getMinWidthFrame()
+  trackLineList.resizingTrackItem = true
+  trackStore.showPreviewLine = false
 
   leftSlider.onDown(event, {
     min: 0,
@@ -87,8 +99,12 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
+  event.stopPropagation()
+
   allowMinFrame = props.data.startFrame + getMinWidthFrame()
   allowMaxFrame = props.data.getAllowMaxFrame()
+  trackLineList.resizingTrackItem = true
+  trackStore.showPreviewLine = false
 
   rightSlider.onDown(event, {
     min: 0,
@@ -105,14 +121,32 @@ function onDragStart(e: DragEvent) {
 
   trackLineList.setMove(props.data, { dragOffsetX: e.offsetX })
 }
+
+onClickOutside(trackItemRef, (e: PointerEvent) => {
+  const el = e.target
+  if (el instanceof HTMLElement && isString(el.dataset.clearSelected)) {
+    if (trackLineList.selectedId === props.data.id) {
+      trackLineList.setSelectedId('')
+    }
+  }
+})
+
+function onSelect(e: MouseEvent) {
+  e.stopPropagation()
+
+  trackLineList.setSelectedId(props.data.id)
+}
 </script>
 
 <template>
   <div
+    ref="trackItemRef"
     class="track-item"
+    :class="{ selected: props.data.id === trackLineList.selectedId }"
     :style="trackItemStyle"
     @dragstart="onDragStart"
     @dragend="trackStore.onDragend"
+    @mousedown="onSelect"
     draggable="true"
   >
     <slot></slot>
@@ -150,7 +184,11 @@ function onDragStart(e: DragEvent) {
   position: absolute;
   overflow: hidden;
   border-radius: 4px;
-  background-color: var(--app-color-white);
+  background-color: #666;
   opacity: 1 !important;
+
+  &.selected {
+    box-shadow: 0 0 0 1px var(--app-color-white) inset;
+  }
 }
 </lang>

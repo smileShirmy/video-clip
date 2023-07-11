@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
-import { ADAPTIVE_RATIO } from '@/config'
+import { ADAPTIVE_RATIO, INIT_MAX_FRAME_COUNT } from '@/config'
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
@@ -32,6 +32,8 @@ export const useTrackStore = defineStore('track', () => {
   // 当前的帧数 TODO: 这个数据需要统一到视频控制
   const currentFrame = ref(0)
 
+  const seekLineFrame = ref(0)
+
   // 放大等级
   const scale = ref(0)
 
@@ -58,6 +60,7 @@ export const useTrackStore = defineStore('track', () => {
     const width = getTimelineWidth()
     timelineStore.initTimelineWidth = width
     timelineStore.timelineWrapperWidth = width
+    timelineStore.maxFrameCount = INIT_MAX_FRAME_COUNT
     timelineStore.updateMinFrameWidth()
     timelineStore.updateTimeline(scale.value)
   }
@@ -75,6 +78,10 @@ export const useTrackStore = defineStore('track', () => {
    */
   function updateMaxFrameCount(updateLessThanCount = -1) {
     const maxFrame = trackLineList.getMaxFrame()
+    if (maxFrame === 0) {
+      initTimelineWidth()
+      return
+    }
     if (trackLineList.trackItemCount <= updateLessThanCount) {
       timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
@@ -132,6 +139,7 @@ export const useTrackStore = defineStore('track', () => {
   return {
     disableScroll,
     currentFrame,
+    seekLineFrame,
     scale,
     enableMagnetic,
     enableSticky,

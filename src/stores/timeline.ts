@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { hoursToTime, minutesToTime, secondsToTime } from '@/services/helpers/time'
 import { ref, warn } from 'vue'
-import { FRAME_STEP } from '@/config'
+import { FRAME_STEP, INIT_MAX_FRAME_COUNT } from '@/config'
 
 // 长刻度单位
 enum LongScaleUnit {
@@ -91,7 +91,7 @@ export const useTimelineStore = defineStore('timeline', () => {
   let oldUsedCount = 0
 
   // 当前编辑区帧的总宽度
-  const maxFrameCount = ref(3000)
+  const maxFrameCount = ref(INIT_MAX_FRAME_COUNT)
 
   // 当前帧的宽度
   const frameWidth = ref(0)

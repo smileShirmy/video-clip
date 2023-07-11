@@ -95,6 +95,12 @@ abstract class BaseTrackLine<T extends TrackItem> {
     }
   }
 
+  getTrackItem(item: string | TrackItem): TrackItem | null {
+    const id = isString(item) ? item : item.id
+    const target = this._trackList.find((item) => item.id === id)
+    return target ?? null
+  }
+
   /**
    * 清空当前 trackLine 的 trackList
    */

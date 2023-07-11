@@ -10,6 +10,7 @@ import { useDrag } from './use-drag'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { TrackLineType } from '@/services/track-line/track-line'
 import { usePreviewLine } from './use-preview-line'
+import { useMousedown } from './use-mousedown'
 
 defineOptions({
   components: {
@@ -32,7 +33,9 @@ const {
   onDrop
 } = useDrag()
 
-const { timelineResourceRef, previewLineStyle } = usePreviewLine(trackContentRef)
+const { timelineResourceRef, previewLineStyle, previewLineX } = usePreviewLine(trackContentRef)
+
+useMousedown(timelineResourceRef, previewLineX)
 
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
@@ -56,6 +59,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
         @dragover="onDragover"
         @drop="onDrop"
         @dragleave="onDragleave"
+        data-clear-selected
       >
         <ul class="track-list">
           <li
@@ -65,6 +69,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
             class="track-line"
             :data-index="lineIndex"
             :data-type="trackLine.type"
+            data-clear-selected
             :class="{ 'is-main': trackLine.type === TrackLineType.MAIN }"
           >
             <template v-for="item in trackLine.trackList" :key="item.id">

@@ -27,3 +27,5 @@ export const MIN_TRACK_CONTAINER_HEIGHT = 210
  * 自适应宽度倍数
  */
 export const ADAPTIVE_RATIO = 1.5
+
+export const INIT_MAX_FRAME_COUNT = 3000
