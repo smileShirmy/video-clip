@@ -39,19 +39,23 @@ let attributeContainerDom: HTMLElement
 const refTrackContainer = ref<InstanceType<typeof TrackContainer>>()
 let trackContainerDom: HTMLElement
 
-onMounted(async () => {
-  if (refResourceContainer.value) {
-    resourceContainerDom = refResourceContainer.value.$el
+let editorWrapperWidth = 0
+
+onMounted(() => {
+  if (refResourceContainer.value?.resourceContainer) {
+    resourceContainerDom = refResourceContainer.value.resourceContainer
   }
-  if (refPlayerContainer.value) {
-    playerContainerDom = refPlayerContainer.value.$el
+  if (refPlayerContainer.value?.playerContainer) {
+    playerContainerDom = refPlayerContainer.value.playerContainer
   }
-  if (refAttributeContainer.value) {
-    attributeContainerDom = refAttributeContainer.value.$el
+  if (refAttributeContainer.value?.attributeContainer) {
+    attributeContainerDom = refAttributeContainer.value.attributeContainer
   }
-  if (refTrackContainer.value) {
-    trackContainerDom = refTrackContainer.value.$el
+  if (refTrackContainer.value?.trackContainerRef) {
+    trackContainerDom = refTrackContainer.value.trackContainerRef
   }
+
+  editorWrapperWidth = editorWrapperDom.value?.clientWidth ?? 0
 })
 
 const resizeTimelineWidth = useThrottleFn(trackStore.resizeTimelineWidth, 50)
@@ -85,12 +89,36 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
   const { beforeSize: playerSize, afterSize: attributeSize } = size
   playerContainerRatio.value = playerSize / (playerSize + attributeSize)
 }
+
+function resizeEditorWrapper() {
+  if (!editorWrapperDom.value || !playerWorkplaceDom.value) return
+
+  editorWrapperDom.value.style.width = `${editorWrapperWidth}px`
+  playerWorkplaceDom.value.style.width = `${editorWrapperWidth}px`
+  playerContainerDom.style.width = `${editorWrapperWidth * playerContainerRatio.value}px`
+  attributeContainerDom.style.width = `${editorWrapperWidth * (1 - playerContainerRatio.value)}px`
+  trackContainerDom.style.width = `${editorWrapperWidth}px`
+}
+
+function onFoldResourceContainer(width: number) {
+  editorWrapperWidth += width
+  resizeEditorWrapper()
+}
+
+function onUnFoldResourceContainer(width: number) {
+  editorWrapperWidth -= width
+  resizeEditorWrapper()
+}
 </script>
 
 <template>
   <HeaderContainer />
   <main ref="homeMainDom" class="home-main">
-    <ResourceContainer ref="refResourceContainer" />
+    <ResourceContainer
+      ref="refResourceContainer"
+      @fold="onFoldResourceContainer"
+      @unfold="onUnFoldResourceContainer"
+    />
     <ResizeLine
       :container="homeMainDom"
       :before="resourceContainerDom"
@@ -135,7 +163,7 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
   .editor-wrapper {
     display: flex;
     flex-direction: column;
-    width: 75%;
+    width: calc(75% - 1px);
     overflow: hidden;
 
     .player-workplace {

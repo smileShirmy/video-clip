@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ResourceComponentName } from '@/types'
 import type { MenuItem } from '@/types'
 import VideoResource from './components/video-resource/VideoResource.vue'
@@ -16,7 +16,21 @@ defineOptions({
   }
 })
 
-const component = ref<ResourceComponentName>(ResourceComponentName.VIDEO_RESOURCE)
+const emit = defineEmits<{
+  (e: 'fold', width: number): void
+  (e: 'unfold', width: number): void
+}>()
+
+const component = ref<ResourceComponentName | ''>(ResourceComponentName.VIDEO_RESOURCE)
+
+const resourceContainer = ref<HTMLElement>()
+
+const resourceWrapper = ref<HTMLElement>()
+
+const isFold = ref(false)
+
+let resourceContainerWidth = 0
+let resourceWrapperWidth = 0
 
 const menu: MenuItem[] = [
   {
@@ -37,17 +51,49 @@ const menu: MenuItem[] = [
   }
 ]
 
+onMounted(() => {
+  resourceContainerWidth = resourceContainer.value?.clientWidth ?? 0
+  resourceWrapperWidth = resourceWrapper.value?.clientWidth ?? 0
+})
+
 function selectMenu(componentName: ResourceComponentName) {
   component.value = componentName
+  if (isFold.value) {
+    unfold()
+  }
 }
+
+function fold() {
+  if (!resourceContainer.value || !resourceWrapper.value) return
+
+  resourceContainerWidth -= resourceWrapperWidth
+  resourceContainer.value.style.width = `${resourceContainerWidth}px`
+  emit('fold', resourceWrapperWidth)
+
+  isFold.value = true
+}
+
+function unfold() {
+  if (!resourceContainer.value || !resourceWrapper.value) return
+
+  resourceContainerWidth += resourceWrapperWidth
+  resourceContainer.value.style.width = `${resourceContainerWidth}px`
+  emit('unfold', resourceWrapperWidth)
+
+  isFold.value = false
+}
+
+defineExpose({
+  resourceContainer
+})
 </script>
 
 <template>
-  <aside class="resource-container">
+  <aside ref="resourceContainer" class="resource-container">
     <ul class="menu-list">
       <li
         class="menu-item"
-        :class="{ active: item.componentName === component }"
+        :class="{ active: item.componentName === component && !isFold }"
         v-for="item in menu"
         :key="item.componentName"
         @click="selectMenu(item.componentName)"
@@ -55,10 +101,14 @@ function selectMenu(componentName: ResourceComponentName) {
         <span>{{ item.name }}</span>
       </li>
     </ul>
-    <div class="resource-wrapper">
+    <div v-show="!isFold" class="resource-wrapper" ref="resourceWrapper">
       <KeepAlive>
         <component :is="component" />
       </KeepAlive>
+    </div>
+
+    <div v-show="!isFold" class="fold-wrapper" @click="fold">
+      <i class="fold-icon"></i>
     </div>
   </aside>
 </template>
@@ -66,11 +116,11 @@ function selectMenu(componentName: ResourceComponentName) {
 <style lang="scss" scoped>
 .resource-container {
   box-sizing: border-box;
+  position: relative;
   display: flex;
   justify-content: flex-start;
   width: 25%;
   height: 100%;
-  border-right: 1px solid var(--app-bg-color-blank);
 
   .menu-list {
     flex-shrink: 0;
@@ -100,6 +150,45 @@ function selectMenu(componentName: ResourceComponentName) {
     width: calc(100% - 80px);
     height: 100%;
     background-color: var(--app-bg-color-light);
+  }
+
+  .fold-wrapper {
+    position: absolute;
+    top: calc(45% + 30px);
+    right: 0;
+    display: flex;
+    align-items: center;
+    width: 10px;
+    height: 34px;
+    background-color: #37384b;
+    border-radius: 4px 0 0 4px;
+    cursor: pointer;
+
+    .fold-icon {
+      position: relative;
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border: 6px solid transparent;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 3px solid transparent;
+      border-right: 3px solid #7a7d8d;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: -2px;
+        top: -6px;
+        display: inline-block;
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 3px solid transparent;
+        border-right: 3px solid #37384b;
+      }
+    }
   }
 }
 </style>

@@ -17,6 +17,10 @@ function setTrackWidth() {
 onMounted(() => {
   setTrackWidth()
 })
+
+defineExpose({
+  trackContainerRef
+})
 </script>
 
 <template>
@@ -28,8 +32,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .track-container {
-  height: 55%;
-  border-top: 1px solid var(--app-bg-color-blank);
+  height: calc(55% - 1px);
   background-color: var(--app-bg-color);
 }
 </style>

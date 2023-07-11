@@ -69,7 +69,14 @@ function onMouseDown(event: MouseEvent) {
 }
 
 function onMouseMove(event: MouseEvent) {
-  if (!containerRect || !props.container || !doms.value.before || !doms.value.after) return
+  if (
+    !containerRect ||
+    !props.container ||
+    !doms.value.before ||
+    !doms.value.after ||
+    !resizeLine.value
+  )
+    return
 
   // 防止拖拽的时候滚动
   event.preventDefault()
@@ -77,11 +84,14 @@ function onMouseMove(event: MouseEvent) {
   const containerSize = props.horizontal
     ? props.container.clientHeight
     : props.container.clientWidth // 外层容器大小
+  const resizeLineSize = props.horizontal
+    ? resizeLine.value.clientHeight
+    : resizeLine.value.clientWidth
   let beforeSize = props.horizontal
     ? event.clientY - containerRect.top
     : event.clientX - containerRect.left // 前面容器的大小 === 鼠标相对于容器的位置
   let afterSize = 0 // 后面容器的大小
-  const maxBefore = containerSize - props.minAfter
+  const maxBefore = containerSize - props.minAfter - resizeLineSize
   beforeSize = Math.min(Math.max(beforeSize, props.minBefore), maxBefore)
   afterSize = containerSize - beforeSize
   doms.value.before.style[props.horizontal ? 'height' : 'width'] = `${beforeSize}px`
@@ -108,13 +118,13 @@ function onMouseUp(event: MouseEvent) {
   flex-shrink: 0;
   width: 1px;
   height: 100%;
-  background-color: var(--app-bg-color-dark);
+  background-color: var(--app-bg-color-blank);
 
   &::after {
     content: '';
     position: absolute;
     top: 0;
-    left: calc(50% - 5px);
+    left: -5px;
     width: 10px;
     height: 100%;
     cursor: col-resize;
@@ -127,7 +137,7 @@ function onMouseUp(event: MouseEvent) {
     &::after {
       content: '';
       position: absolute;
-      top: calc(50% - 5px);
+      top: -5px;
       left: 0;
       width: 100%;
       height: 10px;
