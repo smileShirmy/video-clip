@@ -40,7 +40,8 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
     let closestDiff: number | null = null
     isSticky.value = false
 
-    if (x > timelineStore.frameToPixelWidth(trackLineList.getMaxFrame())) {
+    const maxFrame = timelineStore.frameToPixelWidth(trackLineList.getMaxFrame())
+    if (maxFrame > 0 && x > maxFrame) {
       showPreviewLine.value = false
       return
     }
@@ -87,7 +88,6 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   function addListener() {
     const ref = timelineResourceRef.value
     if (ref) {
-      showPreviewLine.value = true
       ref.addEventListener('mousemove', onMove)
       ref.addEventListener('mouseleave', onMouseleave)
       ref.addEventListener('mouseenter', onMouseenter)
@@ -97,7 +97,6 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   function removeListener() {
     const ref = timelineResourceRef.value
     if (ref) {
-      showPreviewLine.value = false
       ref.removeEventListener('mousemove', onMove)
       ref.removeEventListener('mouseleave', onMouseleave)
       ref.removeEventListener('mouseenter', onMouseenter)
