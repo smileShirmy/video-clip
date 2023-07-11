@@ -310,7 +310,7 @@ export const useDrag = () => {
           if (endToEndDiff < TRACK_STICK_WIDTH) {
             if (closestPixel === null || endToStartDiff < closestPixel) {
               closestPixel = endToStartDiff
-              holderRect.startFrame = trackItem.endFrame - holderRect.endFrame
+              holderRect.startFrame = trackItem.endFrame - holderRect.frameCount
               stickyFrame = trackItem.endFrame
             }
           }
