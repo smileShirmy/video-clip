@@ -129,7 +129,6 @@ export const useTrackStore = defineStore('track', () => {
   function onDragend(e: DragEvent) {
     e.preventDefault()
 
-    trackLineList.removeMove()
     disableScroll.value = false
     showHorizontalLine.value = false
     showVerticalLine.value = false

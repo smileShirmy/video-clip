@@ -4,10 +4,11 @@ import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
-import type { TrackItem } from '@/services/track-item/track-item'
+import { type TrackItem } from '@/services/track-item/track-item'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { onClickOutside } from '@vueuse/core'
 import { isString } from '@/services/helpers/general'
+import { draggable } from '@/services/draggable/draggable'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -25,12 +26,14 @@ const trackItemRef = ref<HTMLDivElement | null>(null)
 
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
+    visibility: draggable.movingId.value === props.data.id ? 'hidden' : 'unset',
     left: timelineStore.frameToPercentWithUnit(props.data.startFrame)
   }
 })
 
 const rightHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
   return {
+    visibility: draggable.movingId.value === props.data.id ? 'hidden' : 'unset',
     left: timelineStore.frameToPercentWithUnit(props.data.endFrame)
   }
 })
@@ -40,6 +43,7 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
     timelineStore.frameToPercent(props.data.endFrame) -
     timelineStore.frameToPercent(props.data.startFrame)
   return {
+    visibility: draggable.movingId.value === props.data.id ? 'hidden' : 'unset',
     height: '60px',
     width: `${width}%`,
     left: leftHandlerStyle.value.left
@@ -57,7 +61,7 @@ const leftSlider = new Slider({
   dragend() {
     trackStore.updateMaxFrameCount(1)
     trackLineList.setSelectedId(props.data.id)
-    trackLineList.resizingTrackItem = false
+    draggable.resizing = false
   }
 })
 
@@ -72,7 +76,7 @@ const rightSlider = new Slider({
   dragend() {
     trackStore.updateMaxFrameCount(1)
     trackLineList.setSelectedId(props.data.id)
-    trackLineList.resizingTrackItem = false
+    draggable.resizing = false
   }
 })
 
@@ -87,7 +91,7 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
 
   allowMinFrame = props.data.getAllowMinFrame()
   allowMaxFrame = props.data.endFrame - getMinWidthFrame()
-  trackLineList.resizingTrackItem = true
+  draggable.resizing = true
   trackStore.showPreviewLine = false
 
   leftSlider.onDown(event, {
@@ -103,7 +107,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 
   allowMinFrame = props.data.startFrame + getMinWidthFrame()
   allowMaxFrame = props.data.getAllowMaxFrame()
-  trackLineList.resizingTrackItem = true
+  draggable.resizing = true
   trackStore.showPreviewLine = false
 
   rightSlider.onDown(event, {
@@ -114,12 +118,18 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   })
 }
 
-function onDragStart(e: DragEvent) {
+function onDragStart(e: PointerEvent) {
+  if (!trackItemRef.value) return
+
+  trackLineList.setSelectedId(props.data.id)
+
   trackStore.disableScroll = true
   trackStore.showPreviewLine = false
-  trackLineList.setDraggingTrackItem(props.data)
 
-  trackLineList.setMove(props.data, { dragOffsetX: e.offsetX })
+  draggable.onDragStart(e, trackItemRef.value, props.data, props.data.id, {
+    offsetX: e.offsetX,
+    offsetY: e.offsetY
+  })
 }
 
 onClickOutside(trackItemRef, (e: PointerEvent) => {
@@ -130,12 +140,6 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     }
   }
 })
-
-function onSelect(e: MouseEvent) {
-  e.stopPropagation()
-
-  trackLineList.setSelectedId(props.data.id)
-}
 </script>
 
 <template>
@@ -144,10 +148,7 @@ function onSelect(e: MouseEvent) {
     class="track-item"
     :class="{ selected: props.data.id === trackLineList.selectedId }"
     :style="trackItemStyle"
-    @dragstart="onDragStart"
-    @dragend="trackStore.onDragend"
-    @mousedown="onSelect"
-    draggable="true"
+    @pointerdown="onDragStart"
   >
     <slot></slot>
   </div>

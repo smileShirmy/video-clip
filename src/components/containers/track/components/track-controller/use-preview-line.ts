@@ -15,6 +15,7 @@ import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { useTimelineStore } from '@/stores/timeline'
 import { TRACK_STICK_WIDTH } from '@/config'
 import { isNumber } from '@/services/helpers/general'
+import { draggable } from '@/services/draggable/draggable'
 
 export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>) => {
   const trackStore = useTrackStore()
@@ -32,7 +33,7 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   }))
 
   const onMove = useThrottleFn((e: MouseEvent) => {
-    if (!trackContentRef.value || trackLineList.resizingTrackItem) return
+    if (!trackContentRef.value || draggable.resizing || draggable.dragging) return
 
     const { left } = getElementPosition(e.target as HTMLElement, trackContentRef.value)
     const x = left + e.offsetX
@@ -80,7 +81,7 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   }
 
   function onMouseenter() {
-    if (enablePreviewLine.value) {
+    if (enablePreviewLine.value && !draggable.dragging) {
       showPreviewLine.value = true
     }
   }
@@ -88,18 +89,18 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
   function addListener() {
     const ref = timelineResourceRef.value
     if (ref) {
+      ref.addEventListener('mouseenter', onMouseenter)
       ref.addEventListener('mousemove', onMove)
       ref.addEventListener('mouseleave', onMouseleave)
-      ref.addEventListener('mouseenter', onMouseenter)
     }
   }
 
   function removeListener() {
     const ref = timelineResourceRef.value
     if (ref) {
+      ref.removeEventListener('mouseenter', onMouseenter)
       ref.removeEventListener('mousemove', onMove)
       ref.removeEventListener('mouseleave', onMouseleave)
-      ref.removeEventListener('mouseenter', onMouseenter)
     }
   }
 

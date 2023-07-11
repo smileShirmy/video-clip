@@ -6,11 +6,11 @@ import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import { TrackComponentName } from '@/types'
-import { useDrag } from './use-drag'
 import { trackLineList } from '@/services/track-line-list/track-line-list'
 import { TrackLineType } from '@/services/track-line/track-line'
 import { usePreviewLine } from './use-preview-line'
-import { useMousedown } from './use-mousedown'
+import { useSeekLine } from './use-seek-line'
+import { draggable } from '@/services/draggable/draggable'
 
 defineOptions({
   components: {
@@ -22,20 +22,17 @@ const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
 
 const {
-  horizontalLineStyle,
-  verticalLineStyle,
-  trackPlaceholderRef,
-  trackPlaceholderStyle,
   trackLineListRef,
   trackContentRef,
-  onDragover,
-  onDragleave,
-  onDrop
-} = useDrag()
+  trackPlaceholderRef,
+  verticalLineStyle,
+  horizontalLineStyle,
+  trackPlaceholderStyle
+} = draggable.setup()
 
 const { timelineResourceRef, previewLineStyle, previewLineX } = usePreviewLine(trackContentRef)
 
-useMousedown(timelineResourceRef, previewLineX)
+useSeekLine(timelineResourceRef, previewLineX)
 
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
@@ -53,14 +50,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
     <!-- position: relative -->
     <div class="track-content" ref="trackContentRef" :style="trackContentWidthStyle">
       <TimelineRuler />
-      <div
-        class="timeline-resource"
-        ref="timelineResourceRef"
-        @dragover="onDragover"
-        @drop="onDrop"
-        @dragleave="onDragleave"
-        data-clear-selected
-      >
+      <div class="timeline-resource" ref="timelineResourceRef" data-clear-selected>
         <ul class="track-list">
           <li
             v-for="(trackLine, lineIndex) in trackLineList.list"
@@ -194,3 +184,4 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   }
 }
 </style>
+./use-seekLine

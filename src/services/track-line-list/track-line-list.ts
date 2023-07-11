@@ -3,10 +3,6 @@ import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/trac
 import type { TrackItem } from '../track-item/track-item'
 import { useTrackStore } from '@/stores/track'
 
-interface Move {
-  dragOffsetX: number
-}
-
 class TrackLineList {
   static create() {
     return new TrackLineList()
@@ -15,14 +11,6 @@ class TrackLineList {
   private _list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
 
   private _selectedId = ref('')
-
-  private draggingItem: TrackItem | null = null
-
-  move: Move | null = {
-    dragOffsetX: 0
-  }
-
-  resizingTrackItem = false
 
   get selectedId() {
     return this._selectedId.value
@@ -69,26 +57,8 @@ class TrackLineList {
     return Math.max(...this.list.map((f) => f.getLastFrame()))
   }
 
-  removeMove() {
-    this.move = null
-  }
-
-  // 初始化开始移动 trackItem
-  setMove(trackItem: TrackItem, move: Move) {
-    trackItem.recordBeforeDragFrame()
-    this.move = move
-  }
-
   setSelectedId(id: string) {
     this._selectedId.value = id
-  }
-
-  getDraggingTrackItem() {
-    return this.draggingItem
-  }
-
-  setDraggingTrackItem(trackItem: TrackItem) {
-    this.draggingItem = trackItem
   }
 
   removeSelected() {

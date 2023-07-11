@@ -1,28 +1,24 @@
 <script setup lang="ts">
 import { VideoTrackItem } from '@/services/track-item/track-item'
-import { trackLineList } from '@/services/track-line-list/track-line-list'
-import { useTrackStore } from '@/stores/track'
+import { draggable } from '@/services/draggable/draggable'
 import { type VideoResource } from '@/types'
+import { ref } from 'vue'
 
 const props = defineProps<{
   data: VideoResource
 }>()
 
-const trackStore = useTrackStore()
+const resourceItemRef = ref<HTMLDivElement | null>(null)
 
-function onDragStart() {
-  trackStore.disableScroll = true
-  trackLineList.setDraggingTrackItem(VideoTrackItem.create(props.data))
+function onDragStart(e: PointerEvent) {
+  if (!resourceItemRef.value) return
+
+  draggable.onDragStart(e, resourceItemRef.value, VideoTrackItem.create(props.data))
 }
 </script>
 
 <template>
-  <div
-    class="video-item-container"
-    draggable="true"
-    @dragstart="onDragStart"
-    @dragend="trackStore.onDragend"
-  >
+  <div ref="resourceItemRef" class="video-item-container" @pointerdown="onDragStart">
     <div class="video-cover-wrapper">
       <img src="" />
     </div>
