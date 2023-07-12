@@ -1,3 +1,4 @@
+import { draggable } from '@/services/draggable/draggable'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { onMounted, type Ref } from 'vue'
@@ -9,7 +10,9 @@ export const useSeekLine = (
   const trackStore = useTrackStore()
   const timeLienStore = useTimelineStore()
 
-  function onPointerdown(e: PointerEvent) {
+  function onPointerup(e: PointerEvent) {
+    if (draggable.resizing || draggable.dragging || e.target !== timelineResourceRef.value) return
+
     if (trackStore.showPreviewLine) {
       trackStore.seekLineFrame = timeLienStore.pixelToFrame(previewLineX.value)
       return
@@ -22,7 +25,7 @@ export const useSeekLine = (
     const ref = timelineResourceRef.value
     if (!ref) return
 
-    ref.addEventListener('pointerdown', onPointerdown)
+    ref.addEventListener('pointerup', onPointerup)
   }
 
   onMounted(() => {
