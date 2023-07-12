@@ -119,12 +119,12 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 }
 
 function onDragStart(e: PointerEvent) {
+  e.stopPropagation()
+  e.preventDefault()
+
   if (!trackItemRef.value) return
 
   trackLineList.setSelectedId(props.data.id)
-
-  trackStore.disableScroll = true
-  trackStore.showPreviewLine = false
 
   draggable.onDragStart(e, trackItemRef.value, props.data, props.data.id, {
     offsetX: e.offsetX,

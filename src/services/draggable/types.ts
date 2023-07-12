@@ -1,3 +1,4 @@
+import type { TrackItem } from '../track-item/track-item'
 import type { TrackLine } from '../track-line/track-line'
 import type { TrackPlaceholder } from './track-placeholder'
 
@@ -19,6 +20,12 @@ export enum LinePosition {
   ON_TRACK_LINE = 'onTrackLine',
   ON_TRACK_LINE_INTERVAL = 'onTrackLineInterval',
   UNDER_LIST_BOTTOM = 'underListBottom'
+}
+
+export interface DragStartStore {
+  dragTarget: HTMLElement | null
+  dragging: TrackItem | null
+  movingId: string | null
 }
 
 export interface BaseTrackLinePosition {

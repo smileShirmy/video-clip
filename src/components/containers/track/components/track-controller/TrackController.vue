@@ -25,12 +25,13 @@ const {
   trackLineListRef,
   trackContentRef,
   trackPlaceholderRef,
+  timelineResourceRef,
   verticalLineStyle,
   horizontalLineStyle,
   trackPlaceholderStyle
 } = draggable.setup()
 
-const { timelineResourceRef, previewLineStyle, previewLineX } = usePreviewLine(trackContentRef)
+const { previewLineStyle, previewLineX } = usePreviewLine(trackContentRef, timelineResourceRef)
 
 useSeekLine(timelineResourceRef, previewLineX)
 

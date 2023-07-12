@@ -17,11 +17,13 @@ import { TRACK_STICK_WIDTH } from '@/config'
 import { isNumber } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
 
-export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>) => {
+export const usePreviewLine = (
+  trackContentRef: Ref<HTMLDivElement | undefined>,
+  timelineResourceRef: Ref<HTMLDivElement | undefined>
+) => {
   const trackStore = useTrackStore()
   const timelineStore = useTimelineStore()
   const { enablePreviewLine, showPreviewLine, enableSticky } = storeToRefs(trackStore)
-  const timelineResourceRef = ref<HTMLDivElement>()
 
   const previewLineX = ref(0)
 
@@ -116,7 +118,6 @@ export const usePreviewLine = (trackContentRef: Ref<HTMLDivElement | undefined>)
 
   return {
     previewLineX,
-    previewLineStyle,
-    timelineResourceRef
+    previewLineStyle
   }
 }

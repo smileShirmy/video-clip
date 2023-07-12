@@ -26,7 +26,7 @@ export class TrackPlaceholder {
     this.parentTrackLine = trackLine
   }
 
-  static create(position: DragPosition, draggingItem: TrackItem, dragOffset: DragOffset) {
+  static create(position: DragPosition, dragging: TrackItem, dragOffset: DragOffset) {
     const timelineStore = useTimelineStore()
 
     const x = position.x - dragOffset.offsetX
@@ -34,7 +34,7 @@ export class TrackPlaceholder {
     return new TrackPlaceholder(
       position.y,
       timelineStore.pixelToFrame(x),
-      draggingItem.endFrame - draggingItem.startFrame
+      dragging.endFrame - dragging.startFrame
     )
   }
 }

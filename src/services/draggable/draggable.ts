@@ -12,7 +12,8 @@ import {
   type DragPosition,
   type TrackPosition,
   type BaseTrackLinePosition,
-  type DragOffset
+  type DragOffset,
+  type DragStartStore
 } from './types'
 import { TrackPlaceholder } from './track-placeholder'
 import { warn } from '../helpers/warn'
@@ -22,18 +23,27 @@ const isOver = (y: number, top: number) => y < top
 const isUnder = (y: number, top: number) => y > top
 
 class Draggable {
-  private target: HTMLElement | null = null
+  private draggingTarget: HTMLElement | null = null
+
+  // 缓存需要拖动目标的数据，正式拖动的时候才使用
+  private dragStartStore: DragStartStore = {
+    dragTarget: null,
+    dragging: null,
+    movingId: null
+  }
 
   trackLineListRef = ref<HTMLDivElement[]>()
   trackContentRef = ref<HTMLDivElement>()
   trackPlaceholderRef = ref<HTMLDivElement>()
+  timelineResourceRef = ref<HTMLDivElement>()
 
   verticalLineFrame = ref(0)
   horizontalLineTop = ref(0)
 
-  // 是否正在移动 trackItem
+  // 正在移动的 trackItem id（只有移动时才不为 null）
   movingId = ref<string | null>(null)
 
+  // 正在拖拽的 trackItem（可能是移动的，也可能是新创建的）
   dragging: TrackItem | null = null
 
   // 是否正在调整 trackItem 的大小
@@ -41,12 +51,19 @@ class Draggable {
 
   dragOffset: DragOffset = { offsetX: 0, offsetY: 0 }
 
+  timelineResourceRefTop = 0
+  timelineResourceRefLeft = 0
+
   holderProperty = reactive({
     top: 0,
     startFrame: 0,
     frameCount: 0,
     height: 60
   })
+
+  get moving(): boolean {
+    return isString(this.movingId.value)
+  }
 
   setup() {
     const timelineStore = useTimelineStore()
@@ -72,32 +89,52 @@ class Draggable {
       horizontalLineStyle,
       verticalLineStyle,
       trackPlaceholderStyle,
-      trackLineListRef: this.trackLineListRef,
       trackContentRef: this.trackContentRef,
+      timelineResourceRef: this.timelineResourceRef,
+      trackLineListRef: this.trackLineListRef,
       trackPlaceholderRef: this.trackPlaceholderRef
     }
   }
 
   setTargetPosition({ x, y }: { x: number; y: number }) {
-    if (this.target) {
+    if (this.draggingTarget) {
       const { offsetX, offsetY } = this.dragOffset
-      this.target.style.left = `${x - offsetX}px`
-      this.target.style.top = `${y - offsetY}px`
+      let left = x - offsetX
+      if (this.moving && left < this.timelineResourceRefLeft) {
+        left = this.timelineResourceRefLeft
+      }
+      this.draggingTarget.style.left = `${left}px`
+      this.draggingTarget.style.top = `${y - offsetY}px`
     }
   }
 
-  appendTarget(e: PointerEvent, target: HTMLElement) {
-    const cloneNode = target.cloneNode(true)
+  /**
+   * 初始化拖拽，当第一次移动的时才进行初始化
+   */
+  initDraggable(e: PointerEvent) {
+    const { dragTarget, movingId, dragging } = this.dragStartStore
+
+    if (!dragTarget) return
+
+    const { top, left } = this.timelineResourceRef.value!.getBoundingClientRect()
+    this.timelineResourceRefLeft = left
+    this.timelineResourceRefTop = top
+
+    this.movingId.value = movingId
+    this.dragging = dragging
+
+    const cloneNode = dragTarget.cloneNode(true)
     if (cloneNode instanceof HTMLElement) {
-      const { width, height } = target.getBoundingClientRect()
+      const { width, height } = dragTarget.getBoundingClientRect()
       cloneNode.style.position = 'fixed'
       cloneNode.style.pointerEvents = 'none'
       cloneNode.style.width = `${width}px`
       cloneNode.style.height = `${height}px`
-      this.target = cloneNode
+      cloneNode.style.zIndex = '1'
+      this.draggingTarget = cloneNode
 
       this.setTargetPosition({ x: e.pageX, y: e.pageY })
-      this.appendToBody(this.target)
+      this.appendToBody(this.draggingTarget)
     }
   }
 
@@ -148,12 +185,22 @@ class Draggable {
     }
   }
 
+  isInTrackContent(e: PointerEvent) {
+    return e.pageX >= this.timelineResourceRefLeft && e.pageY >= this.timelineResourceRefTop
+  }
+
   /**
    * 获取当前拖拽点在轨道中相应的数据
    */
-  positionHandler(e: PointerEvent, trackLineListRef: HTMLDivElement[]): TrackPosition {
+  positionHandler(e: PointerEvent, trackLineListRef: HTMLDivElement[]): TrackPosition | null {
     const trackStore = useTrackStore()
     const timelineStore = useTimelineStore()
+
+    // 如果不是移动状态并且不在可放下区域
+    if (!this.moving && !this.isInTrackContent(e)) {
+      return null
+    }
+
     const dragPosition = this.getDragPosition(e)
     const trackPlaceholder = TrackPlaceholder.create(dragPosition, this.dragging!, this.dragOffset)
 
@@ -395,7 +442,7 @@ class Draggable {
     // 当前位置在 trackLine 的 “间隔” 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE_INTERVAL) {
       // 如果是移动 trackItem 状态
-      if (isString(this.movingId)) {
+      if (this.moving) {
         insertTrackLineIndex = position.intervalIndex
         this.updateHorizontalLine(position.intervalTop + TRACK_LINE_INTERVAL / 2)
         visibleHorizontalLine()
@@ -440,10 +487,22 @@ class Draggable {
   onDragging = (e: PointerEvent) => {
     e.preventDefault()
 
-    this.setTargetPosition({ x: e.pageX, y: e.pageY })
+    // 第一次拖动时初始化
+    if (!this.draggingTarget) {
+      this.initDraggable(e)
+    }
+
     const trackStore = useTrackStore()
+    this.setTargetPosition({ x: e.pageX, y: e.pageY })
 
     const position = this.positionHandler(e, this.trackLineListRef.value!)
+
+    if (position === null) {
+      trackStore.showVerticalLine = false
+      trackStore.showHorizontalLine = false
+      trackStore.showTrackPlaceholder = false
+      return
+    }
 
     const { showVerticalLine, showHorizontalLine, showTrackPlaceholder } =
       this.updateTrackStatus(position)
@@ -456,71 +515,87 @@ class Draggable {
   onDragEnd = (e: PointerEvent) => {
     e.preventDefault()
 
-    const trackStore = useTrackStore()
-    const position = this.positionHandler(e, this.trackLineListRef.value!)
-    const trackPlaceholder = position.trackPlaceholder
-    const dragging = this.dragging!
+    if (this.dragging) {
+      const trackStore = useTrackStore()
+      const position = this.positionHandler(e, this.trackLineListRef.value!)
 
-    /**
-     * 显示占位符则表示在某条 trackLine 插入当前拖拽的 trackItem
-     * 显示水平线则表示在这个位置插入一个新的 trackLine，水平线和插入占位不会同时存在
-     * insertTrackLineIndex 不为 null 时，表示插入新的 trackLine
-     */
-    const { insertTrackLineIndex, showTrackPlaceholder } = this.updateTrackStatus(position)
+      if (position !== null) {
+        const trackPlaceholder = position.trackPlaceholder
+        const dragging = this.dragging!
 
-    dragging.setStartFrame(trackPlaceholder.startFrame)
-    dragging.setEndFrame(trackPlaceholder.endFrame)
+        /**
+         * 显示占位符则表示在某条 trackLine 插入当前拖拽的 trackItem
+         * 显示水平线则表示在这个位置插入一个新的 trackLine，水平线和插入占位不会同时存在
+         * insertTrackLineIndex 不为 null 时，表示插入新的 trackLine
+         */
+        const { insertTrackLineIndex, showTrackPlaceholder } = this.updateTrackStatus(position)
 
-    if (showTrackPlaceholder) {
-      if (trackPlaceholder.parentTrackLine) {
-        trackPlaceholder.parentTrackLine.addTrackItem(dragging)
-      } else {
-        warn('没有设置 parentTrackLine ?')
+        dragging.setStartFrame(trackPlaceholder.startFrame)
+        dragging.setEndFrame(trackPlaceholder.endFrame)
+
+        if (showTrackPlaceholder) {
+          if (trackPlaceholder.parentTrackLine) {
+            trackPlaceholder.parentTrackLine.addTrackItem(dragging)
+          } else {
+            warn('没有设置 parentTrackLine ?')
+          }
+        }
+
+        if (insertTrackLineIndex !== null) {
+          // 插入到底部时，需要把所有的 trackLine 往上移动
+          if (insertTrackLineIndex === trackLineList.list.length) {
+            // 在主轨道上面插入一条新的 videoTrackLine，并把主轨道的 trackItem 复制进去
+            const lastTrackList = trackLineList.list[trackLineList.list.length - 1].trackList
+            const trackLine = VideoTrackLine.create()
+            trackLineList.insert(trackLine, insertTrackLineIndex - 1)
+            trackLine.addTrackItem(lastTrackList)
+
+            trackLineList.mainTrackLine.clearTrackList()
+            trackLineList.mainTrackLine.addTrackItem(dragging)
+          } else {
+            const trackLine = VideoTrackLine.create()
+            trackLineList.insert(trackLine, insertTrackLineIndex)
+            trackLine.addTrackItem(dragging)
+          }
+        }
       }
+
+      trackStore.showVerticalLine = false
+      trackStore.showHorizontalLine = false
+      trackStore.showTrackPlaceholder = false
     }
 
-    if (insertTrackLineIndex !== null) {
-      // 插入到底部时，需要把所有的 trackLine 往上移动
-      if (insertTrackLineIndex === trackLineList.list.length) {
-        // 在主轨道上面插入一条新的 videoTrackLine，并把主轨道的 trackItem 复制进去
-        const lastTrackList = trackLineList.list[trackLineList.list.length - 1].trackList
-        const trackLine = VideoTrackLine.create()
-        trackLineList.insert(trackLine, insertTrackLineIndex - 1)
-        trackLine.addTrackItem(lastTrackList)
-
-        trackLineList.mainTrackLine.clearTrackList()
-        trackLineList.mainTrackLine.addTrackItem(dragging)
-      } else {
-        const trackLine = VideoTrackLine.create()
-        trackLineList.insert(trackLine, insertTrackLineIndex)
-        trackLine.addTrackItem(dragging)
-      }
-    }
-
-    trackStore.showVerticalLine = false
-    trackStore.showHorizontalLine = false
-    trackStore.showTrackPlaceholder = false
-
+    // 恢复成未拖拽状态
     this.dragging = null
     this.movingId.value = null
+    this.dragStartStore.dragTarget = null
+    this.dragStartStore.dragging = null
+    this.dragStartStore.movingId = null
     this.dragOffset = { offsetX: 0, offsetY: 0 }
-    this.removeTarget()
+    this.removeDraggingTarget()
     this.removeListener()
   }
 
   onDragStart(
     e: PointerEvent,
-    target: HTMLElement,
+    dragTarget: HTMLElement,
     dragging: TrackItem,
     movingId: string | null = null,
     dragOffset: DragOffset = { offsetX: 0, offsetY: 0 }
   ) {
     e.preventDefault()
-    this.dragging = dragging
-    this.dragOffset = dragOffset
-    this.movingId.value = movingId
 
-    this.appendTarget(e, target)
+    const trackStore = useTrackStore()
+
+    this.dragOffset = dragOffset
+
+    this.dragStartStore.dragTarget = dragTarget
+    this.dragStartStore.dragging = dragging
+    this.dragStartStore.movingId = movingId
+
+    trackStore.disableScroll = true
+    trackStore.showPreviewLine = false
+
     this.addListener()
   }
 
@@ -528,10 +603,10 @@ class Draggable {
     document.body.appendChild(target)
   }
 
-  removeTarget() {
-    if (this.target) {
-      this.target.remove()
-      this.target = null
+  removeDraggingTarget() {
+    if (this.draggingTarget) {
+      this.draggingTarget.remove()
+      this.draggingTarget = null
     }
   }
 
