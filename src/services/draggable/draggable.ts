@@ -574,6 +574,9 @@ class Draggable {
     this.dragStartStore.dragging = null
     this.dragStartStore.movingId = null
     this.dragOffset = { offsetX: 0, offsetY: 0 }
+    if (trackStore.enablePreviewLine) {
+      trackStore.showPreviewLine = true
+    }
     this.removeDraggingTarget()
     this.removeListener()
   }

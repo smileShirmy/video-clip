@@ -13,6 +13,7 @@ const timelineRulerRef = ref<HTMLDivElement>()
 
 const slider = new Slider({
   change(v: number) {
+    console.log(v)
     trackStore.seekLineFrame = v
   }
 })

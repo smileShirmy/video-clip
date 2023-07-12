@@ -30,12 +30,13 @@ export const usePreviewLine = (
   const isSticky = ref(false)
 
   const previewLineStyle: ComputedRef<CSSProperties> = computed(() => ({
+    visibility: previewLineX.value < 0 ? 'hidden' : 'unset',
     left: `${previewLineX.value}px`,
     backgroundColor: isSticky.value ? '#7086e9' : '#ff6490'
   }))
 
   const onMove = useThrottleFn((e: MouseEvent) => {
-    if (!trackContentRef.value || draggable.resizing || draggable.dragging) return
+    if (!trackContentRef.value || !showPreviewLine.value) return
 
     const { left } = getElementPosition(e.target as HTMLElement, trackContentRef.value)
     const x = left + e.offsetX
@@ -44,8 +45,8 @@ export const usePreviewLine = (
     isSticky.value = false
 
     const maxFrame = timelineStore.frameToPixelWidth(trackLineList.getMaxFrame())
-    if (maxFrame > 0 && x > maxFrame) {
-      showPreviewLine.value = false
+    if (maxFrame === 0 || x > maxFrame) {
+      previewLineX.value = -1
       return
     }
 

@@ -50,6 +50,15 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
   }
 })
 
+const dragSliderEnd = () => {
+  trackStore.updateMaxFrameCount(1)
+  trackLineList.setSelectedId(props.data.id)
+  draggable.resizing = false
+  if (trackStore.enablePreviewLine) {
+    trackStore.showPreviewLine = true
+  }
+}
+
 const leftSlider = new Slider({
   change(v: number) {
     if (v > allowMaxFrame) {
@@ -58,11 +67,7 @@ const leftSlider = new Slider({
       props.data.setStartFrame(v < allowMinFrame ? allowMinFrame : v)
     }
   },
-  dragend() {
-    trackStore.updateMaxFrameCount(1)
-    trackLineList.setSelectedId(props.data.id)
-    draggable.resizing = false
-  }
+  dragend: dragSliderEnd
 })
 
 const rightSlider = new Slider({
@@ -73,11 +78,7 @@ const rightSlider = new Slider({
       props.data.setEndFrame(v > allowMaxFrame ? allowMaxFrame : v)
     }
   },
-  dragend() {
-    trackStore.updateMaxFrameCount(1)
-    trackLineList.setSelectedId(props.data.id)
-    draggable.resizing = false
-  }
+  dragend: dragSliderEnd
 })
 
 function getMinWidthFrame() {
