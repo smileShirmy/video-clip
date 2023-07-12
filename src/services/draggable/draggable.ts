@@ -515,8 +515,9 @@ class Draggable {
   onDragEnd = (e: PointerEvent) => {
     e.preventDefault()
 
+    const trackStore = useTrackStore()
+
     if (this.dragging) {
-      const trackStore = useTrackStore()
       const position = this.positionHandler(e, this.trackLineListRef.value!)
 
       if (position !== null) {
@@ -560,6 +561,7 @@ class Draggable {
         }
       }
 
+      trackStore.disableScroll = false
       trackStore.showVerticalLine = false
       trackStore.showHorizontalLine = false
       trackStore.showTrackPlaceholder = false
@@ -577,7 +579,7 @@ class Draggable {
   }
 
   onDragStart(
-    e: PointerEvent,
+    e: PointerEvent | MouseEvent,
     dragTarget: HTMLElement,
     dragging: TrackItem,
     movingId: string | null = null,

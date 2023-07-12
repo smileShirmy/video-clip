@@ -126,6 +126,8 @@ function onDragStart(e: PointerEvent) {
 
   trackLineList.setSelectedId(props.data.id)
 
+  props.data.recordBeforeDragFrame()
+
   draggable.onDragStart(e, trackItemRef.value, props.data, props.data.id, {
     offsetX: e.offsetX,
     offsetY: e.offsetY
@@ -144,6 +146,7 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
 
 <template>
   <div
+    data-track-item
     ref="trackItemRef"
     class="track-item"
     :class="{ selected: props.data.id === trackLineList.selectedId }"

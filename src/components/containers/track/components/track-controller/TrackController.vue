@@ -102,6 +102,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   display: flex;
   justify-content: flex-start;
   overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
   height: calc(100% - 30px);
 
@@ -125,9 +126,10 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
     flex-direction: column;
     justify-content: center;
     box-sizing: border-box;
-    min-height: calc(100% - 30px);
+    height: calc(100% - 30px);
     width: 100%;
     padding: 80px 0;
+    overflow-y: auto;
   }
 
   .track-placeholder {
@@ -150,18 +152,20 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 
   .vertical-line {
     position: absolute;
+    top: 0;
+    bottom: 0;
     left: 0;
     width: 1px;
-    height: calc(100% - 30px);
     background-color: #7086e9;
     pointer-events: none;
   }
 
   .preview-line {
     position: absolute;
+    top: 0;
+    bottom: 0;
     left: 0;
     width: 1px;
-    height: calc(100% - 30px);
     pointer-events: none;
   }
 
