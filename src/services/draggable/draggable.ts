@@ -196,8 +196,8 @@ class Draggable {
     const trackStore = useTrackStore()
     const timelineStore = useTimelineStore()
 
-    // 如果不是移动状态并且不在可放下区域
-    if (!this.moving && !this.isInTrackContent(e)) {
+    // 如果不是移动状态并且不在可拖放区域
+    if (!this.isInTrackContent(e)) {
       return null
     }
 
