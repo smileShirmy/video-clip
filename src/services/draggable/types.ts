@@ -1,5 +1,5 @@
-import type { TrackItem } from '../track-item/track-item'
-import type { TrackLine } from '../track-line/track-line'
+import type { Track } from '../track'
+import type { TrackItem } from '../track-item'
 import type { TrackPlaceholder } from './track-placeholder'
 
 export interface DragPosition {
@@ -17,8 +17,8 @@ export interface DragOffset {
 // Y 轴方向上所处的位置
 export enum LinePosition {
   OVER_LIST_TOP = 'overListTop',
-  ON_TRACK_LINE = 'onTrackLine',
-  ON_TRACK_LINE_INTERVAL = 'onTrackLineInterval',
+  ON_TRACK_LINE = 'onTrack',
+  ON_TRACK_LINE_INTERVAL = 'onTrackInterval',
   UNDER_LIST_BOTTOM = 'underListBottom'
 }
 
@@ -28,36 +28,38 @@ export interface DragStartStore {
   movingId: string | null
 }
 
-export interface BaseTrackLinePosition {
+export interface BaseTrackPosition {
   blankTopBottomTop: number
   blankBottomTop: number
-  mainTrackLineTop: number
+  mainTrackTop: number
+  mainTrackIndex: number
   trackPlaceholder: TrackPlaceholder
   stickyFrame: number | null
 }
 
-export interface OverListTop extends BaseTrackLinePosition {
+export interface OverListTop extends BaseTrackPosition {
   linePosition: LinePosition.OVER_LIST_TOP
 }
 
-export interface OverTrackLine extends BaseTrackLinePosition {
+export interface OverTrack extends BaseTrackPosition {
   linePosition: LinePosition.ON_TRACK_LINE
-  trackLine: TrackLine
+  track: Track
+  trackIndex: number
   isIntersection: boolean
-  trackLineTop: number
+  trackTop: number
 }
 
-export interface OnTrackLineInterval extends BaseTrackLinePosition {
+export interface OnTrackInterval extends BaseTrackPosition {
   linePosition: LinePosition.ON_TRACK_LINE_INTERVAL
   isIntersection: boolean
-  overIntervalTrackLine: TrackLine
+  overIntervalTrack: Track
   intervalTop: number
   intervalIndex: number
-  overTrackLineTop: number
+  overTrackTop: number
 }
 
-export interface UnderListBottom extends BaseTrackLinePosition {
+export interface UnderListBottom extends BaseTrackPosition {
   linePosition: LinePosition.UNDER_LIST_BOTTOM
 }
 
-export type TrackPosition = OverListTop | OverTrackLine | OnTrackLineInterval | UnderListBottom
+export type TrackPosition = OverListTop | OverTrack | OnTrackInterval | UnderListBottom

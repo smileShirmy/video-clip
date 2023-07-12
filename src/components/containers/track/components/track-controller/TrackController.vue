@@ -5,16 +5,18 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
-import { TrackComponentName } from '@/types'
-import { trackLineList } from '@/services/track-line-list/track-line-list'
-import { TrackLineType } from '@/services/track-line/track-line'
+import TextItem from '../track-item/TextItem.vue'
+import { TrackItemComponentName } from '@/types'
+import { trackList } from '@/services/track-list/track-list'
+import { TrackType } from '@/services/track/base-track'
 import { usePreviewLine } from './use-preview-line'
 import { useSeekLine } from './use-seek-line'
 import { draggable } from '@/services/draggable/draggable'
 
 defineOptions({
   components: {
-    [TrackComponentName.TRACK_VIDEO]: VideoItem
+    [TrackItemComponentName.TRACK_ITEM_VIDEO]: VideoItem,
+    [TrackItemComponentName.TRACK_ITEM_TEXT]: TextItem
   }
 })
 
@@ -22,7 +24,7 @@ const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
 
 const {
-  trackLineListRef,
+  trackListRef,
   trackContentRef,
   trackPlaceholderRef,
   timelineResourceRef,
@@ -54,16 +56,17 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
       <div class="timeline-resource" ref="timelineResourceRef" data-clear-selected>
         <ul class="track-list">
           <li
-            v-for="(trackLine, lineIndex) in trackLineList.list"
-            ref="trackLineListRef"
-            :key="trackLine.id"
-            class="track-line"
-            :data-index="lineIndex"
-            :data-type="trackLine.type"
+            v-for="(track, trackIndex) in trackList.list"
+            ref="trackListRef"
+            :key="track.id"
+            class="track"
+            :data-index="trackIndex"
+            :data-type="track.type"
             data-clear-selected
-            :class="{ 'is-main': trackLine.type === TrackLineType.MAIN }"
+            :style="{ height: `${track.height}px` }"
+            :class="{ 'is-main': track.type === TrackType.MAIN }"
           >
-            <template v-for="item in trackLine.trackList" :key="item.id">
+            <template v-for="item in track.trackList" :key="item.id">
               <component :is="item.component" :data="item"></component>
             </template>
           </li>
@@ -171,7 +174,7 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 
   .track-list {
     width: 100%;
-    .track-line {
+    .track {
       position: relative;
       width: 100%;
       height: 60px;
@@ -182,11 +185,11 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
         height: 60px;
       }
 
-      + .track-line {
+      + .track {
         margin-top: 8px;
       }
     }
   }
 }
 </style>
-./use-seekLine
+./use-seekLine @/services/track/base-line @/services/track-list/track-list

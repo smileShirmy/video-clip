@@ -1,22 +1,23 @@
 import { shallowReactive, warn, watch } from 'vue'
 import { isArray, isString, uuid } from '../helpers/general'
-import type { TrackItem, VideoTrackItem } from '../track-item/track-item'
-import { trackLineList, type TrackLineListType } from '../track-line-list/track-line-list'
+import { trackList, type TrackListType } from '../track-list/track-list'
 import { useTrackStore } from '@/stores/track'
+import type { TrackItem } from '../track-item'
 
-export enum TrackLineType {
+export enum TrackType {
   MAIN = 'main',
-  VIDEO = 'video'
+  VIDEO = 'video',
+  OTHER = 'other'
 }
 
-abstract class BaseTrackLine<T extends TrackItem> {
+export abstract class BaseTrack<T extends TrackItem> {
   readonly id = uuid()
 
-  parentTrackLineList: TrackLineListType | null = null
+  parentTrackList: TrackListType | null = null
 
   abstract readonly height: number
 
-  abstract readonly type: TrackLineType
+  abstract readonly type: TrackType
 
   protected readonly _trackList = shallowReactive<T[]>([])
 
@@ -64,13 +65,13 @@ abstract class BaseTrackLine<T extends TrackItem> {
    * 添加之前需要移除相同 id 的 trackItem，由此来实现移动
    */
   addTrackItem(trackItem: T | T[]) {
-    const beforeTrackItemCount = trackLineList.trackItemCount
+    const beforeTrackItemCount = trackList.trackItemCount
 
     const list = isArray(trackItem) ? trackItem : [trackItem]
     list.forEach((trackItem) => {
-      if (this.parentTrackLineList) {
+      if (this.parentTrackList) {
         // 添加之前先移除 trackLine 中相同的 trackItem
-        const removed = this.parentTrackLineList.removeTrackItem(trackItem, false)
+        const removed = this.parentTrackList.removeTrackItem(trackItem, false)
 
         this._trackList.push(trackItem)
 
@@ -83,15 +84,15 @@ abstract class BaseTrackLine<T extends TrackItem> {
         }
 
         // 添加之后需要移除空的 trackLine
-        this.parentTrackLineList.removeEmptyTrackLine()
+        this.parentTrackList.removeEmptyTrack()
         return
       }
-      warn('添加 trackItem 之前请先把当前 trackLine 插入到 trackLineList 中')
+      warn('添加 trackItem 之前请先把当前 trackLine 插入到 trackList 中')
     })
 
     if (list.length) {
       const trackStore = useTrackStore()
-      if (trackLineList.trackItemCount > beforeTrackItemCount) {
+      if (trackList.trackItemCount > beforeTrackItemCount) {
         trackStore.updateMaxFrameCount(2)
       } else {
         trackStore.updateMaxFrameCount()
@@ -118,45 +119,13 @@ abstract class BaseTrackLine<T extends TrackItem> {
   /**
    * 绑定所属 trackLine
    */
-  bindParentTrackLine(trackList: T[]) {
+  bindParentTrack(trackList: T[]) {
     watch(
       trackList,
       () => {
-        trackList.forEach((item) => (item.parentTrackLine = this))
+        trackList.forEach((item) => (item.parentTrack = this))
       },
       { immediate: true }
     )
   }
 }
-
-export class MainTrackLine extends BaseTrackLine<VideoTrackItem> {
-  type = TrackLineType.MAIN
-
-  height = 60
-
-  constructor() {
-    super()
-    this.bindParentTrackLine(this._trackList)
-  }
-
-  static create() {
-    return new MainTrackLine()
-  }
-}
-
-export class VideoTrackLine extends BaseTrackLine<VideoTrackItem> {
-  type = TrackLineType.VIDEO
-
-  height = 60
-
-  constructor() {
-    super()
-    this.bindParentTrackLine(this._trackList)
-  }
-
-  static create() {
-    return new VideoTrackLine()
-  }
-}
-
-export type TrackLine = MainTrackLine | VideoTrackLine

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
-import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { trackList } from '@/services/track-list/track-list'
 import { ADAPTIVE_RATIO, INIT_MAX_FRAME_COUNT } from '@/config'
 
 export const useTrackStore = defineStore('track', () => {
@@ -77,12 +77,12 @@ export const useTrackStore = defineStore('track', () => {
    * @param {number} updateLessThanCount 当少于多少个时直接更新
    */
   function updateMaxFrameCount(updateLessThanCount = -1) {
-    const maxFrame = trackLineList.getMaxFrame()
+    const maxFrame = trackList.getMaxFrame()
     if (maxFrame === 0) {
       initTimelineWidth()
       return
     }
-    if (trackLineList.trackItemCount <= updateLessThanCount) {
+    if (trackList.trackItemCount <= updateLessThanCount) {
       timelineStore.maxFrameCount = Math.round(maxFrame * ADAPTIVE_RATIO)
       timelineStore.updateMinFrameWidth()
     }
@@ -101,7 +101,7 @@ export const useTrackStore = defineStore('track', () => {
 
   // 自适应轨道
   function adaptiveTrack() {
-    const maxFrame = trackLineList.getMaxFrame()
+    const maxFrame = trackList.getMaxFrame()
     const width = getTimelineWidth()
     timelineStore.initTimelineWidth = width
     timelineStore.timelineWrapperWidth = width
@@ -136,7 +136,7 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   function split() {
-    trackLineList.split(seekLineFrame.value)
+    trackList.split(seekLineFrame.value)
   }
 
   return {

@@ -4,7 +4,7 @@ import TrackHandler from './TrackHandler.vue'
 import type { VideoTrackItem } from '@/services/track-item/video-item'
 
 defineOptions({
-  name: TrackItemComponentName.TRACK_ITEM_VIDEO
+  name: TrackItemComponentName.TRACK_ITEM_TEXT
 })
 
 const props = defineProps<{
@@ -13,5 +13,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <TrackHandler :data="props.data"> 视频资源 </TrackHandler>
+  <TrackHandler :data="props.data"> 文本资源 </TrackHandler>
 </template>

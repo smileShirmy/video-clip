@@ -4,11 +4,11 @@ import type { CSSProperties, ComputedRef } from 'vue'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { Slider } from '@/services/slider/slider'
-import { type TrackItem } from '@/services/track-item/track-item'
-import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { trackList } from '@/services/track-list/track-list'
 import { onClickOutside } from '@vueuse/core'
 import { isString } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
+import type { TrackItem } from '@/services/track-item'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -44,7 +44,6 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
     timelineStore.frameToPercent(props.data.startFrame)
   return {
     visibility: draggable.movingId.value === props.data.id ? 'hidden' : 'unset',
-    height: '60px',
     width: `${width}%`,
     left: leftHandlerStyle.value.left
   }
@@ -52,7 +51,7 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const dragSliderEnd = () => {
   trackStore.updateMaxFrameCount(1)
-  trackLineList.setSelectedId(props.data.id)
+  trackList.setSelectedId(props.data.id)
   draggable.resizing = false
   if (trackStore.enablePreviewLine) {
     trackStore.showPreviewLine = true
@@ -125,7 +124,7 @@ function onDragStart(e: PointerEvent) {
 
   if (!trackItemRef.value) return
 
-  trackLineList.setSelectedId(props.data.id)
+  trackList.setSelectedId(props.data.id)
 
   props.data.recordBeforeDragFrame()
 
@@ -138,8 +137,8 @@ function onDragStart(e: PointerEvent) {
 onClickOutside(trackItemRef, (e: PointerEvent) => {
   const el = e.target
   if (el instanceof HTMLElement && isString(el.dataset.clearSelected)) {
-    if (trackLineList.selectedId === props.data.id) {
-      trackLineList.setSelectedId('')
+    if (trackList.selectedId === props.data.id) {
+      trackList.setSelectedId('')
     }
   }
 })
@@ -150,7 +149,7 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     data-track-item
     ref="trackItemRef"
     class="track-item"
-    :class="{ selected: props.data.id === trackLineList.selectedId }"
+    :class="{ selected: props.data.id === trackList.selectedId }"
     :style="trackItemStyle"
     @pointerdown="onDragStart"
   >
@@ -187,6 +186,8 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
 
 .track-item {
   position: absolute;
+  top: 0;
+  bottom: 0;
   overflow: hidden;
   border-radius: 4px;
   background-color: #666;

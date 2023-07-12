@@ -1,15 +1,19 @@
 import { ref } from 'vue'
 import { uuid } from '../helpers/general'
-import { TrackComponentName, type VideoResource } from '@/types'
-import type { MainTrackLine, TrackLine, VideoTrackLine } from '../track-line/track-line'
+import { TrackItemComponentName } from '@/types'
+import type { TrackItem } from '.'
+import type { Track } from '../track'
 
-// TODO: extends 的类型抽个 base 类型出来
-abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLine> {
-  abstract readonly component: TrackComponentName
+export abstract class BaseTrackItem<
+  R extends { frameCount: number },
+  T extends TrackItem,
+  P extends Track
+> {
+  abstract readonly component: TrackItemComponentName
 
   abstract resource: R
 
-  parentTrackLine: P | null = null
+  parentTrack: P | null = null
 
   readonly id = uuid()
 
@@ -33,13 +37,12 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
     return this.minFrame + this.resource.frameCount
   }
 
-  abstract split(splitFrame: number): TrackItem
+  abstract split(splitFrame: number): T
 
-  protected baseSplit(newItem: TrackItem, splitFrame: number): TrackItem {
+  protected baseSplit(newItem: T, splitFrame: number): T {
     newItem.setStartFrame(splitFrame)
     newItem.setEndFrame(this.endFrame)
     newItem.minFrame = this.minFrame
-    this.parentTrackLine?.addTrackItemWithNoEffect(newItem)
 
     this.setEndFrame(splitFrame)
     return newItem
@@ -72,10 +75,10 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
   }
 
   getAllowMaxFrame() {
-    if (!this.parentTrackLine) return this.maxFrame
+    if (!this.parentTrack) return this.maxFrame
 
-    const { trackList } = this.parentTrackLine
-    const frames = trackList.reduce((pre: number[], cur) => {
+    const { trackList } = this.parentTrack
+    const frames = (trackList as T[]).reduce((pre: number[], cur) => {
       if (
         cur.id !== this.id &&
         cur.startFrame <= this.maxFrame &&
@@ -89,10 +92,10 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
   }
 
   getAllowMinFrame() {
-    if (!this.parentTrackLine) return this.maxFrame
+    if (!this.parentTrack) return this.maxFrame
 
-    const { trackList } = this.parentTrackLine
-    const frames = trackList.reduce((pre: number[], cur) => {
+    const { trackList } = this.parentTrack
+    const frames = (trackList as T[]).reduce((pre: number[], cur) => {
       if (cur.id !== this.id && cur.endFrame >= this.minFrame && cur.endFrame <= this.startFrame) {
         return pre.concat([cur.endFrame])
       }
@@ -101,27 +104,3 @@ abstract class BaseTrackItem<R extends { frameCount: number }, P extends TrackLi
     return Math.max(...frames, this.minFrame)
   }
 }
-
-export class VideoTrackItem extends BaseTrackItem<VideoResource, VideoTrackLine | MainTrackLine> {
-  readonly component = TrackComponentName.TRACK_VIDEO
-
-  resource: VideoResource
-
-  constructor(resource: VideoResource) {
-    super()
-    this.setEndFrame(resource.frameCount)
-    this.resource = Object.assign({}, resource)
-  }
-
-  split(splitFrame: number) {
-    const newItem = VideoTrackItem.create(Object.assign({}, this.resource))
-
-    return this.baseSplit(newItem, splitFrame)
-  }
-
-  static create(resource: VideoResource) {
-    return new VideoTrackItem(resource)
-  }
-}
-
-export type TrackItem = VideoTrackItem

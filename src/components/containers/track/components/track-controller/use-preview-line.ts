@@ -11,7 +11,7 @@ import {
 import { storeToRefs } from 'pinia'
 import { getElementPosition } from '@/services/helpers/dom'
 import { useThrottleFn } from '@vueuse/core'
-import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { trackList } from '@/services/track-list/track-list'
 import { useTimelineStore } from '@/stores/timeline'
 import { TRACK_STICK_WIDTH } from '@/config'
 import { isNumber } from '@/services/helpers/general'
@@ -44,14 +44,14 @@ export const usePreviewLine = (
     let closestDiff: number | null = null
     isSticky.value = false
 
-    const maxFrame = timelineStore.frameToPixelWidth(trackLineList.getMaxFrame())
+    const maxFrame = timelineStore.frameToPixelWidth(trackList.getMaxFrame())
     if (maxFrame === 0 || x > maxFrame) {
       previewLineX.value = -1
       return
     }
 
     if (enableSticky) {
-      trackLineList.list.forEach((line) => {
+      trackList.list.forEach((line) => {
         line.trackList.forEach((trackItem) => {
           const start = timelineStore.frameToPixel(trackItem.startFrame)
           const end = timelineStore.frameToPixel(trackItem.endFrame)

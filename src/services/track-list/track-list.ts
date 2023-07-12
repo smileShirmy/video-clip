@@ -1,14 +1,16 @@
 import { ref, shallowReactive, watch } from 'vue'
-import { TrackLineType, type TrackLine, MainTrackLine } from '../track-line/track-line'
-import type { TrackItem } from '../track-item/track-item'
 import { useTrackStore } from '@/stores/track'
+import type { Track } from '../track'
+import { MainTrack } from '../track/main-track'
+import type { TrackItem } from '../track-item'
+import { TrackType } from '../track/base-track'
 
-class TrackLineList {
+class TrackList {
   static create() {
-    return new TrackLineList()
+    return new TrackList()
   }
 
-  private _list = shallowReactive<TrackLine[]>([MainTrackLine.create()])
+  private _list = shallowReactive<Track[]>([MainTrack.create()])
 
   private _selectedId = ref('')
 
@@ -24,7 +26,7 @@ class TrackLineList {
     return null
   }
 
-  get list() {
+  get list(): Track[] {
     return this._list
   }
 
@@ -35,8 +37,8 @@ class TrackLineList {
     return this.list.length === 1 && this.list[0].trackList.length === 0
   }
 
-  get mainTrackLine(): MainTrackLine {
-    return this.list.find((line) => line.type === TrackLineType.MAIN)!
+  get mainTrack(): MainTrack {
+    return this.list.find((track) => track.type === TrackType.MAIN) as MainTrack
   }
 
   get trackItemCount(): number {
@@ -47,7 +49,7 @@ class TrackLineList {
     watch(
       this.list,
       () => {
-        this.list.forEach((line) => (line.parentTrackLineList = this))
+        this.list.forEach((line) => (line.parentTrackList = this))
       },
       { immediate: true }
     )
@@ -66,7 +68,7 @@ class TrackLineList {
 
     const trackItem = this.selectedTrackItem
     trackItem && this.removeTrackItem(trackItem)
-    this.removeEmptyTrackLine()
+    this.removeEmptyTrack()
   }
 
   removeTrackItem(trackItem: TrackItem, isUpdateMaxFrameCount = true) {
@@ -88,25 +90,25 @@ class TrackLineList {
   /**
    * 移除没有 trackItem 的 trackLine（主轨道不移除）
    */
-  removeEmptyTrackLine() {
+  removeEmptyTrack() {
     const len = this.list.length - 1
     for (let i = len; i >= 0; i -= 1) {
       const trackLine = this.list[i]
-      if (trackLine.type !== TrackLineType.MAIN && trackLine.trackList.length === 0) {
+      if (trackLine.type !== TrackType.MAIN && trackLine.trackList.length === 0) {
         this.list.splice(i, 1)
       }
     }
   }
 
-  insert(trackLine: TrackLine, insertIndex: number) {
-    trackLine.parentTrackLineList = this
+  insert(trackLine: Track, insertIndex: number) {
+    trackLine.parentTrackList = this
     this.list.splice(insertIndex, 0, trackLine)
   }
 
   getSplitTrackItem(splitFrame: number): TrackItem | null {
-    const len = trackLineList.list.length
+    const len = trackList.list.length
     for (let i = len - 1; i >= 0; i -= 1) {
-      const line = trackLineList.list[i]
+      const line = trackList.list[i]
       for (let j = 0; j < line.trackList.length; j += 1) {
         const item = line.trackList[j]
         if (splitFrame > item.startFrame && splitFrame < item.endFrame) {
@@ -125,6 +127,6 @@ class TrackLineList {
   }
 }
 
-export type TrackLineListType = TrackLineList
+export type TrackListType = TrackList
 
-export const trackLineList = TrackLineList.create()
+export const trackList = TrackList.create()

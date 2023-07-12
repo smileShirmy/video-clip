@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { trackLineList } from '@/services/track-line-list/track-line-list'
+import { trackList } from '@/services/track-list/track-list'
 import ScaleSlider from './ScaleSlider.vue'
 import { useTrackStore } from '@/stores/track'
 
@@ -11,7 +11,7 @@ const trackStore = useTrackStore()
     <section class="control-bar-child">
       <div class="control-item">撤销 TODO</div>
       <div class="control-item">重做 TODO</div>
-      <div class="control-item" @click="trackLineList.removeSelected">删除</div>
+      <div class="control-item" @click="trackList.removeSelected">删除</div>
       <div class="control-item" @click="trackStore.split">分割</div>
     </section>
 
@@ -66,3 +66,4 @@ const trackStore = useTrackStore()
   }
 }
 </style>
+@/services/track-list/track-list

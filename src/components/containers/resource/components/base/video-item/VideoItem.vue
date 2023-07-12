@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { VideoTrackItem } from '@/services/track-item/track-item'
 import { draggable } from '@/services/draggable/draggable'
+import { VideoTrackItem } from '@/services/track-item/video-item'
 import { type VideoResource } from '@/types'
 import { ref } from 'vue'
 
@@ -46,3 +46,4 @@ function onDragStart(e: PointerEvent) {
   }
 }
 </style>
+@/services/track-item/base-track-item

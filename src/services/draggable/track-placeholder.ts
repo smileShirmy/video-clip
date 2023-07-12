@@ -1,7 +1,7 @@
 import { useTimelineStore } from '@/stores/timeline'
-import type { TrackItem } from '../track-item/track-item'
-import type { TrackLine } from '../track-line/track-line'
 import type { DragOffset, DragPosition } from './types'
+import type { TrackItem } from '../track-item'
+import type { Track } from '../track'
 
 export class TrackPlaceholder {
   top: number
@@ -10,7 +10,9 @@ export class TrackPlaceholder {
 
   frameCount: number
 
-  parentTrackLine: TrackLine | null = null
+  height: number
+
+  parentTrack: Track | null = null
 
   get endFrame() {
     return this.startFrame + this.frameCount
@@ -20,10 +22,11 @@ export class TrackPlaceholder {
     this.top = top
     this.startFrame = startFrame
     this.frameCount = frameCount
+    this.height = 60
   }
 
-  setParentTrackLine(trackLine: TrackLine) {
-    this.parentTrackLine = trackLine
+  setParentTrack(track: Track) {
+    this.parentTrack = track
   }
 
   static create(position: DragPosition, dragging: TrackItem, dragOffset: DragOffset) {

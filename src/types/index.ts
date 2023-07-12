@@ -20,17 +20,28 @@ export interface VideoResourceResponse {
   frameCount: number
 }
 
+export interface TextResourceResponse {
+  //
+}
+
 export enum ResourceType {
-  VIDEO = 'video'
+  VIDEO = 'video',
+  TEXT = 'text'
 }
 
 export interface VideoResource extends VideoResourceResponse {
   type: ResourceType.VIDEO
 }
 
+export interface TextResource extends TextResourceResponse {
+  type: ResourceType.TEXT
+  frameCount: number
+}
+
 /**
  * 轨道资源组件
  */
-export enum TrackComponentName {
-  TRACK_VIDEO = 'trackVideo'
+export enum TrackItemComponentName {
+  TRACK_ITEM_VIDEO = 'TrackItemVideo',
+  TRACK_ITEM_TEXT = 'TrackItemText'
 }
