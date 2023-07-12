@@ -54,16 +54,13 @@ onMounted(() => {
   if (refTrackContainer.value?.trackContainerRef) {
     trackContainerDom = refTrackContainer.value.trackContainerRef
   }
-
-  editorWrapperWidth = editorWrapperDom.value?.clientWidth ?? 0
 })
 
 const resizeTimelineWidth = useThrottleFn(trackStore.resizeTimelineWidth, 50)
 
 function onResize1(size: { afterSize: number }) {
-  if (!playerContainerDom || !attributeContainerDom) return
-
   const { afterSize: playerWorkplaceSize } = size
+
   // 按比例放大缩小
   let playerSize = playerWorkplaceSize * playerContainerRatio.value
   playerSize = Math.min(
@@ -77,12 +74,34 @@ function onResize1(size: { afterSize: number }) {
   resizeTimelineWidth()
 }
 
-function onMouseDown() {
-  trackStore.disableScroll = true
+function addWidthTransition() {
+  if (!editorWrapperDom.value) return
+
+  resourceContainerDom.classList.add('app-width-transition')
+  editorWrapperDom.value.classList.add('app-width-transition')
+  playerContainerDom.classList.add('app-width-transition')
+  attributeContainerDom.classList.add('app-width-transition')
 }
 
-function onMouseUp() {
+function removeWidthTransition() {
+  if (!editorWrapperDom.value) return
+
+  resourceContainerDom.classList.remove('app-width-transition')
+  editorWrapperDom.value.classList.remove('app-width-transition')
+  playerContainerDom.classList.remove('app-width-transition')
+  attributeContainerDom.classList.remove('app-width-transition')
+}
+
+function onResize1MouseDown() {
+  trackStore.disableScroll = true
+
+  removeWidthTransition()
+}
+
+function onResize1MouseUp() {
   trackStore.disableScroll = false
+
+  addWidthTransition()
 }
 
 function onResize2(size: { beforeSize: number; afterSize: number }) {
@@ -90,23 +109,33 @@ function onResize2(size: { beforeSize: number; afterSize: number }) {
   playerContainerRatio.value = playerSize / (playerSize + attributeSize)
 }
 
+function onResize2MouseDown() {
+  removeWidthTransition()
+}
+
+function onResize2MouseUp() {
+  addWidthTransition()
+}
+
 function resizeEditorWrapper() {
-  if (!editorWrapperDom.value || !playerWorkplaceDom.value) return
+  if (!editorWrapperDom.value) return
 
   editorWrapperDom.value.style.width = `${editorWrapperWidth}px`
-  playerWorkplaceDom.value.style.width = `${editorWrapperWidth}px`
   playerContainerDom.style.width = `${editorWrapperWidth * playerContainerRatio.value}px`
   attributeContainerDom.style.width = `${editorWrapperWidth * (1 - playerContainerRatio.value)}px`
-  trackContainerDom.style.width = `${editorWrapperWidth}px`
 }
 
 function onFoldResourceContainer(width: number) {
-  editorWrapperWidth += width
+  if (!editorWrapperDom.value) return
+
+  editorWrapperWidth = editorWrapperDom.value.clientWidth + width
   resizeEditorWrapper()
 }
 
 function onUnFoldResourceContainer(width: number) {
-  editorWrapperWidth -= width
+  if (!editorWrapperDom.value) return
+
+  editorWrapperWidth = editorWrapperDom.value.clientWidth - width
   resizeEditorWrapper()
 }
 </script>
@@ -126,10 +155,10 @@ function onUnFoldResourceContainer(width: number) {
       :minBefore="MIN_RESOURCE_CONTAINER_WIDTH"
       :minAfter="MIN_EDITOR_WRAPPER_WIDTH"
       @resize="onResize1"
-      @mouse-down="onMouseDown"
-      @mouse-up="onMouseUp"
+      @mouse-down="onResize1MouseDown"
+      @mouse-up="onResize1MouseUp"
     />
-    <div ref="editorWrapperDom" class="editor-wrapper">
+    <div ref="editorWrapperDom" class="editor-wrapper app-width-transition">
       <div ref="playerWorkplaceDom" class="player-workplace">
         <PlayerContainer ref="refPlayerContainer" />
         <ResizeLine
@@ -139,6 +168,8 @@ function onUnFoldResourceContainer(width: number) {
           :minBefore="MIN_PLAYER_CONTAINER_WIDTH"
           :minAfter="MIN_ATTRIBUTE_CONTAINER_WIDTH"
           @resize="onResize2"
+          @mouse-down="onResize2MouseDown"
+          @mouse-up="onResize2MouseUp"
         />
         <AttributeContainer ref="refAttributeContainer" />
       </div>

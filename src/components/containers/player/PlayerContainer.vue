@@ -9,7 +9,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="player-container" ref="playerContainer">PlayerContainer</div>
+  <div class="player-container app-width-transition" ref="playerContainer">PlayerContainer</div>
 </template>
 
 <style scoped lang="scss">

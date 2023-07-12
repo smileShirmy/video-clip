@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { ResourceComponentName } from '@/types'
 import type { MenuItem } from '@/types'
 import VideoResource from './components/video-resource/VideoResource.vue'
@@ -29,8 +29,7 @@ const resourceWrapper = ref<HTMLElement>()
 
 const isFold = ref(false)
 
-let resourceContainerWidth = 0
-let resourceWrapperWidth = 0
+let oldResourceWrapperWidth = 0
 
 const menu: MenuItem[] = [
   {
@@ -51,11 +50,6 @@ const menu: MenuItem[] = [
   }
 ]
 
-onMounted(() => {
-  resourceContainerWidth = resourceContainer.value?.clientWidth ?? 0
-  resourceWrapperWidth = resourceWrapper.value?.clientWidth ?? 0
-})
-
 function selectMenu(componentName: ResourceComponentName) {
   component.value = componentName
   if (isFold.value) {
@@ -66,9 +60,11 @@ function selectMenu(componentName: ResourceComponentName) {
 function fold() {
   if (!resourceContainer.value || !resourceWrapper.value) return
 
-  resourceContainerWidth -= resourceWrapperWidth
-  resourceContainer.value.style.width = `${resourceContainerWidth}px`
-  emit('fold', resourceWrapperWidth)
+  oldResourceWrapperWidth = resourceWrapper.value.clientWidth
+  resourceContainer.value.style.width = `${
+    resourceContainer.value.clientWidth - oldResourceWrapperWidth
+  }px`
+  emit('fold', oldResourceWrapperWidth)
 
   isFold.value = true
 }
@@ -76,9 +72,10 @@ function fold() {
 function unfold() {
   if (!resourceContainer.value || !resourceWrapper.value) return
 
-  resourceContainerWidth += resourceWrapperWidth
-  resourceContainer.value.style.width = `${resourceContainerWidth}px`
-  emit('unfold', resourceWrapperWidth)
+  resourceContainer.value.style.width = `${
+    resourceContainer.value.clientWidth + oldResourceWrapperWidth
+  }px`
+  emit('unfold', oldResourceWrapperWidth)
 
   isFold.value = false
 }
@@ -89,7 +86,7 @@ defineExpose({
 </script>
 
 <template>
-  <aside ref="resourceContainer" class="resource-container">
+  <aside ref="resourceContainer" class="resource-container app-width-transition">
     <ul class="menu-list">
       <li
         class="menu-item"
@@ -101,11 +98,14 @@ defineExpose({
         <span>{{ item.name }}</span>
       </li>
     </ul>
-    <div v-show="!isFold" class="resource-wrapper" ref="resourceWrapper" data-clear-selected>
-      <KeepAlive>
-        <component :is="component" />
-      </KeepAlive>
-    </div>
+
+    <Transition name="collapse">
+      <div v-show="!isFold" class="resource-wrapper" ref="resourceWrapper" data-clear-selected>
+        <KeepAlive>
+          <component :is="component" />
+        </KeepAlive>
+      </div>
+    </Transition>
 
     <div v-show="!isFold" class="fold-wrapper" @click="fold">
       <i class="fold-icon"></i>
@@ -160,7 +160,7 @@ defineExpose({
     align-items: center;
     width: 10px;
     height: 34px;
-    background-color: #37384b;
+    background-color: var(--app-bg-color-lighter);
     border-radius: 4px 0 0 4px;
     cursor: pointer;
 
@@ -173,7 +173,7 @@ defineExpose({
       border-top: 6px solid transparent;
       border-bottom: 6px solid transparent;
       border-left: 3px solid transparent;
-      border-right: 3px solid #7a7d8d;
+      border-right: 3px solid var(--app-color-white);
 
       &::after {
         content: '';
@@ -186,9 +186,20 @@ defineExpose({
         border-top: 6px solid transparent;
         border-bottom: 6px solid transparent;
         border-left: 3px solid transparent;
-        border-right: 3px solid #37384b;
+        border-right: 3px solid var(--app-bg-color-lighter);
       }
     }
+  }
+
+  .collapse-enter-active,
+  .collapse-leave-active {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .collapse-enter-from,
+  .collapse-leave-to {
+    transform: translateX(-40px);
+    opacity: 0;
   }
 }
 </style>

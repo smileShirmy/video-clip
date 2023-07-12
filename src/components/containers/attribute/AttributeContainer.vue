@@ -9,7 +9,9 @@ defineExpose({
 </script>
 
 <template>
-  <div class="attribute-container" ref="attributeContainer">AttributeContainer</div>
+  <div class="attribute-container app-width-transition" ref="attributeContainer">
+    AttributeContainer
+  </div>
 </template>
 
 <style scoped lang="scss">
