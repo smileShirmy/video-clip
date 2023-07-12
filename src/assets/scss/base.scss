@@ -8,3 +8,13 @@ body,
   color: var(--app-text-color-primary);
   overflow: hidden;
 }
+
+::-webkit-scrollbar {
+	width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--app-bg-color-lighter);
+	border-radius: 3px;
+}
