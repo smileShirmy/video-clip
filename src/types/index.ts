@@ -24,9 +24,14 @@ export interface TextResourceResponse {
   //
 }
 
+export interface StickerResourceResponse {
+  name: string
+}
+
 export enum ResourceType {
   VIDEO = 'video',
-  TEXT = 'text'
+  TEXT = 'text',
+  STICKER = 'sticker'
 }
 
 export interface VideoResource extends VideoResourceResponse {
@@ -38,10 +43,16 @@ export interface TextResource extends TextResourceResponse {
   frameCount: number
 }
 
+export interface StickerResource extends StickerResourceResponse {
+  type: ResourceType.STICKER
+  frameCount: number
+}
+
 /**
  * 轨道资源组件
  */
 export enum TrackItemComponentName {
   TRACK_ITEM_VIDEO = 'TrackItemVideo',
-  TRACK_ITEM_TEXT = 'TrackItemText'
+  TRACK_ITEM_TEXT = 'TrackItemText',
+  TRACK_ITEM_STICKER = 'TrackItemSticker'
 }

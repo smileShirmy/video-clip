@@ -3,7 +3,12 @@ import { useTrackStore } from '@/stores/track'
 import { getElementPosition } from '@/services/helpers/dom'
 import { computed, reactive, ref, type ComputedRef, type CSSProperties } from 'vue'
 import { trackList } from '../track-list/track-list'
-import { TRACK_LINE_INTERVAL, TRACK_STICK_WIDTH } from '@/config'
+import {
+  OTHER_TRACK_HEIGHT,
+  TRACK_LINE_INTERVAL,
+  TRACK_STICK_WIDTH,
+  VIDEO_TRACK_HEIGHT
+} from '@/config'
 import { isIntersectionOfTwoIntervals, isNumber, isString } from '../helpers/general'
 import {
   LinePosition,
@@ -20,7 +25,7 @@ import { VideoTrackItem } from '../track-item/video-item'
 import type { Track } from '../track'
 import { BaseTrack, TrackType } from '../track/base-track'
 import { VideoTrack } from '../track/video-track'
-import { MainTrack } from '../track/main-track'
+import { MainTrack, isMainTrackAllowItem } from '../track/main-track'
 
 const isOver = (y: number, top: number) => y < top
 
@@ -287,7 +292,7 @@ class Draggable {
 
         if (trackItem.id === this.dragging!.id) continue
 
-        if (isOnTrack || isUnderTrack) {
+        if (isIntersection === false && (isOnTrack || isUnderTrack)) {
           isIntersection = isIntersectionOfTwoIntervals(
             [trackPlaceholder.startFrame, trackPlaceholder.endFrame],
             [trackItem.startFrame, trackItem.endFrame]
@@ -389,7 +394,7 @@ class Draggable {
    * 根据当前拖拽点所在位置数据更新轨道拖拽过程中的状态
    */
   updateTrackStatus(position: TrackPosition) {
-    const dragging = this.dragging
+    const dragging = this.dragging!
     const trackStore = useTrackStore()
     let showVerticalLine = false
     let showHorizontalLine = false
@@ -437,7 +442,7 @@ class Draggable {
 
     // 轨道中没有任何资源
     if (trackList.isEmpty) {
-      if (this.dragging instanceof VideoTrackItem) {
+      if (isMainTrackAllowItem(dragging)) {
         // 如果在顶部空白区域则添加到顶部
         if (position.linePosition === LinePosition.OVER_LIST_TOP) {
           visibleHorizontalLine({
@@ -469,8 +474,7 @@ class Draggable {
     else if (position.linePosition === LinePosition.ON_TRACK_LINE) {
       // 在主轨道上
       if (position.track.type === TrackType.MAIN) {
-        // 如果是视频资源
-        if (dragging instanceof VideoTrackItem) {
+        if (isMainTrackAllowItem(dragging)) {
           visibleTrackPlaceholder({
             startFrame: trackStore.enableMagnetic
               ? position.track.getLastFrame(dragging)
@@ -525,7 +529,7 @@ class Draggable {
     }
     // 当前位置在 track list 下
     else {
-      if (dragging instanceof VideoTrackItem) {
+      if (isMainTrackAllowItem(dragging)) {
         visibleHorizontalLine({
           startFrame: trackStore.enableMagnetic ? 0 : undefined,
           insertTrackIndex: trackList.list.length,
@@ -609,8 +613,7 @@ class Draggable {
           const { parentTrack } = trackPlaceholder
           if (parentTrack) {
             if (parentTrack instanceof MainTrack) {
-              // 只有 videoTrackItem 才能放进主轨道
-              if (dragging instanceof VideoTrackItem) {
+              if (isMainTrackAllowItem(dragging)) {
                 parentTrack.addTrackItem(dragging)
               }
             } else {
@@ -623,7 +626,7 @@ class Draggable {
 
         if (insertTrackIndex !== null) {
           // 插入到底部时，需要把所有的 track 往上移动
-          if (dragging instanceof VideoTrackItem && insertTrackIndex === trackList.list.length) {
+          if (isMainTrackAllowItem(dragging) && insertTrackIndex === trackList.list.length) {
             // 在主轨道上面插入一条新的 videoTrack，并把主轨道的 trackItem 复制进去
             const lastTrack = trackList.list[trackList.list.length - 1]
             const lastTrackList = lastTrack.trackList
@@ -637,7 +640,7 @@ class Draggable {
           // 直接插入
           else {
             const track = VideoTrack.create({
-              height: dragging instanceof VideoTrackItem ? 60 : 24
+              height: dragging instanceof VideoTrackItem ? VIDEO_TRACK_HEIGHT : OTHER_TRACK_HEIGHT
             })
             trackList.insert(track, insertTrackIndex)
             track.addTrackItem(dragging)

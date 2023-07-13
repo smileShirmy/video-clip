@@ -6,6 +6,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import TextItem from '../track-item/TextItem.vue'
+import SickerItem from '../track-item/StickerItem.vue'
 import { TrackItemComponentName } from '@/types'
 import { trackList } from '@/services/track-list/track-list'
 import { TrackType } from '@/services/track/base-track'
@@ -18,7 +19,8 @@ import { onMounted } from 'vue'
 defineOptions({
   components: {
     [TrackItemComponentName.TRACK_ITEM_VIDEO]: VideoItem,
-    [TrackItemComponentName.TRACK_ITEM_TEXT]: TextItem
+    [TrackItemComponentName.TRACK_ITEM_TEXT]: TextItem,
+    [TrackItemComponentName.TRACK_ITEM_STICKER]: SickerItem
   }
 })
 
