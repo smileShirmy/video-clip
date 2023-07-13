@@ -15,7 +15,6 @@ import {
   MIN_TRACK_CONTAINER_HEIGHT
 } from '@/config'
 import { useTrackStore } from '@/stores/track'
-import { useThrottleFn } from '@vueuse/core'
 
 const trackStore = useTrackStore()
 
@@ -56,8 +55,6 @@ onMounted(() => {
   }
 })
 
-const resizeTimelineWidth = useThrottleFn(trackStore.resizeTimelineWidth, 50)
-
 function onResize1(size: { afterSize: number }) {
   const { afterSize: playerWorkplaceSize } = size
 
@@ -70,8 +67,6 @@ function onResize1(size: { afterSize: number }) {
   const attributeSize = playerWorkplaceSize - playerSize
   playerContainerDom.style.width = `${playerSize}px`
   attributeContainerDom.style.width = `${attributeSize}px`
-
-  resizeTimelineWidth()
 }
 
 function addWidthTransition() {

@@ -65,12 +65,9 @@ export const useTrackStore = defineStore('track', () => {
     timelineStore.updateTimeline(scale.value)
   }
 
-  function resizeTimelineWidth() {
-    const width = getTimelineWidth()
-    if (timelineStore.timelineWrapperWidth !== width) {
-      timelineStore.timelineWrapperWidth = width
-      timelineStore.updateTimeline(scale.value)
-    }
+  function resizeTimelineWidth(width: number) {
+    timelineStore.timelineWrapperWidth = width
+    timelineStore.updateTimeline(scale.value)
   }
 
   /**

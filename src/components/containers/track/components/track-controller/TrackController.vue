@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { ComputedRef, CSSProperties } from 'vue'
 import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
@@ -12,6 +12,8 @@ import { TrackType } from '@/services/track/base-track'
 import { usePreviewLine } from './use-preview-line'
 import { useSeekLine } from './use-seek-line'
 import { draggable } from '@/services/draggable/draggable'
+import { useResizeObserver } from '@vueuse/core'
+import { onMounted } from 'vue'
 
 defineOptions({
   components: {
@@ -22,6 +24,8 @@ defineOptions({
 
 const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
+
+const trackControllerRef = ref<HTMLDivElement | null>(null)
 
 const {
   trackListRef,
@@ -40,10 +44,17 @@ useSeekLine(timelineResourceRef, previewLineX)
 const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${timelineStore.timelineWidth}px`
 }))
+
+onMounted(() => {
+  useResizeObserver(trackControllerRef.value, ([{ contentRect }]) => {
+    trackStore.resizeTimelineWidth(contentRect.width - 80)
+  })
+})
 </script>
 
 <template>
   <div
+    ref="trackControllerRef"
     class="track-controller"
     :class="{
       'overflow-hidden': trackStore.disableScroll
@@ -192,4 +203,3 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
   }
 }
 </style>
-./use-seekLine @/services/track/base-line @/services/track-list/track-list
