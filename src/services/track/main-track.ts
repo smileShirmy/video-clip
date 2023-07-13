@@ -1,10 +1,11 @@
+import { VIDEO_TRACK_HEIGHT } from '@/config'
 import type { VideoTrackItem } from '../track-item/video-item'
 import { BaseTrack, TrackType } from './base-track'
 
 export class MainTrack extends BaseTrack<VideoTrackItem> {
   type = TrackType.MAIN
 
-  height = 60
+  height = VIDEO_TRACK_HEIGHT
 
   constructor() {
     super()

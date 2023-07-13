@@ -1,4 +1,5 @@
 import { draggable } from '@/services/draggable/draggable'
+import { findParent } from '@/services/helpers/dom'
 import { isString } from '@/services/helpers/general'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
@@ -15,7 +16,8 @@ export const useSeekLine = (
     if (draggable.resizing || draggable.dragging) return
 
     const target = e.target
-    if (target instanceof HTMLElement && isString(target.dataset.trackItem)) return
+    if (target instanceof HTMLElement && findParent(target, (el) => isString(el.dataset.trackItem)))
+      return
 
     if (trackStore.showPreviewLine && previewLineX.value > -1) {
       trackStore.seekLineFrame = timeLienStore.pixelToFrame(previewLineX.value)

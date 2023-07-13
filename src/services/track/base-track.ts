@@ -3,6 +3,8 @@ import { isArray, isString, uuid } from '../helpers/general'
 import { trackList, type TrackListType } from '../track-list/track-list'
 import { useTrackStore } from '@/stores/track'
 import type { TrackItem } from '../track-item'
+import { TrackItemComponentName } from '@/types'
+import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
 
 export enum TrackType {
   MAIN = 'main',
@@ -15,7 +17,7 @@ export abstract class BaseTrack<T extends TrackItem> {
 
   parentTrackList: TrackListType | null = null
 
-  abstract readonly height: number
+  abstract height: number
 
   abstract readonly type: TrackType
 
@@ -100,6 +102,15 @@ export abstract class BaseTrack<T extends TrackItem> {
     }
   }
 
+  updateTrackHeight() {
+    if (this.type === TrackType.MAIN) return
+
+    const hasVideo = this.trackList.some(
+      (item) => item.component === TrackItemComponentName.TRACK_ITEM_VIDEO
+    )
+    this.height = hasVideo ? VIDEO_TRACK_HEIGHT : OTHER_TRACK_HEIGHT
+  }
+
   getTrackItem(item: string | TrackItem): TrackItem | null {
     const id = isString(item) ? item : item.id
     const target = this._trackList.find((item) => item.id === id)
@@ -124,6 +135,8 @@ export abstract class BaseTrack<T extends TrackItem> {
       trackList,
       () => {
         trackList.forEach((item) => (item.parentTrack = this))
+
+        this.updateTrackHeight()
       },
       { immediate: true }
     )

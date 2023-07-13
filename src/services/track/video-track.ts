@@ -1,3 +1,4 @@
+import { VIDEO_TRACK_HEIGHT } from '@/config'
 import type { TextTrackItem } from '../track-item/text-item'
 import type { VideoTrackItem } from '../track-item/video-item'
 import { BaseTrack, TrackType } from './base-track'
@@ -14,7 +15,7 @@ export class VideoTrack extends BaseTrack<VideoTrackItem | TextTrackItem> {
   constructor(options: VideoTrackOptions = {}) {
     super()
 
-    const { height = 60 } = options
+    const { height = VIDEO_TRACK_HEIGHT } = options
     this.height = height
     this.bindParentTrack(this._trackList)
   }

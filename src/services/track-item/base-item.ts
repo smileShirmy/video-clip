@@ -75,6 +75,9 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMaxFrame() {
+    if (this.component !== TrackItemComponentName.TRACK_ITEM_VIDEO) {
+      return Infinity
+    }
     if (!this.parentTrack) return this.maxFrame
 
     const { trackList } = this.parentTrack
@@ -92,6 +95,9 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMinFrame() {
+    if (this.component !== TrackItemComponentName.TRACK_ITEM_VIDEO) {
+      return 0
+    }
     if (!this.parentTrack) return this.maxFrame
 
     const { trackList } = this.parentTrack

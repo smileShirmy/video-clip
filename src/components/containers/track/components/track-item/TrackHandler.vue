@@ -9,6 +9,7 @@ import { onClickOutside } from '@vueuse/core'
 import { isString } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
 import type { TrackItem } from '@/services/track-item'
+import { TrackItemComponentName } from '@/types'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -47,6 +48,13 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
     width: `${width}%`,
     left: leftHandlerStyle.value.left
   }
+})
+
+const showOverlay = computed(() => {
+  return (
+    props.data.component !== TrackItemComponentName.TRACK_ITEM_VIDEO &&
+    props.data.id !== trackList.selectedId
+  )
 })
 
 const dragSliderEnd = () => {
@@ -149,7 +157,7 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     data-track-item
     ref="trackItemRef"
     class="track-item"
-    :class="{ selected: props.data.id === trackList.selectedId }"
+    :class="{ overlay: showOverlay }"
     :style="trackItemStyle"
     @pointerdown="onDragStart"
   >
@@ -168,9 +176,19 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     @mousedown="onRightHandlerDown"
     @touchstart="onRightHandlerDown"
   ></div>
+
+  <div
+    v-if="props.data.id === trackList.selectedId"
+    :style="trackItemStyle"
+    class="track-item-selected"
+  ></div>
 </template>
 
 <lang scoped lang="scss">
+.tack-item-wrapper {
+  box-shadow: 0 0 0 1px var(--app-color-white) inset;
+}
+
 .track-handler {
   position: absolute;
   top: 0;
@@ -193,8 +211,19 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   background-color: #666;
   opacity: 1 !important;
 
-  &.selected {
-    box-shadow: 0 0 0 1px var(--app-color-white) inset;
+  &.overlay {
+    filter: brightness(0.8);
   }
+}
+
+.track-item-selected {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  border: 1px solid var(--app-color-white);
+  pointer-events: none;
+  z-index: 1;
 }
 </lang>

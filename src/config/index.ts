@@ -29,3 +29,7 @@ export const MIN_TRACK_CONTAINER_HEIGHT = 210
 export const ADAPTIVE_RATIO = 1.5
 
 export const INIT_MAX_FRAME_COUNT = 3000
+
+export const VIDEO_TRACK_HEIGHT = 60
+
+export const OTHER_TRACK_HEIGHT = 24
