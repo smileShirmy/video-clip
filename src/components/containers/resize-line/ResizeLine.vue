@@ -26,7 +26,13 @@ const props = defineProps({
   },
   // 是否水平分隔线
   horizontal: {
-    type: Boolean
+    type: Boolean,
+    default: false
+  },
+  // 是否禁用
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -35,6 +41,9 @@ const emit = defineEmits<{
   (e: 'mouse-down'): void
   (e: 'mouse-up'): void
 }>()
+
+let beforeSize = 0
+let afterSize = 0
 
 let containerRect: DOMRect | null = null
 
@@ -59,7 +68,7 @@ function bindEvents() {
 }
 
 function onMouseDown(event: MouseEvent) {
-  if (!props.container) return
+  if (props.disabled || !props.container) return
 
   containerRect = props.container.getBoundingClientRect()
   window.addEventListener('mousemove', onMouseMove)
@@ -87,10 +96,11 @@ function onMouseMove(event: MouseEvent) {
   const resizeLineSize = props.horizontal
     ? resizeLine.value.clientHeight
     : resizeLine.value.clientWidth
-  let beforeSize = props.horizontal
+  beforeSize = props.horizontal
     ? event.clientY - containerRect.top
     : event.clientX - containerRect.left // 前面容器的大小 === 鼠标相对于容器的位置
-  let afterSize = 0 // 后面容器的大小
+
+  // 限制前后最小宽度
   const maxBefore = containerSize - props.minAfter - resizeLineSize
   beforeSize = Math.min(Math.max(beforeSize, props.minBefore), maxBefore)
   afterSize = containerSize - beforeSize
@@ -109,7 +119,11 @@ function onMouseUp(event: MouseEvent) {
 </script>
 
 <template>
-  <div ref="resizeLine" class="resize-line" :class="{ horizontal: props.horizontal }"></div>
+  <div
+    ref="resizeLine"
+    class="resize-line"
+    :class="{ horizontal: props.horizontal, disabled: props.disabled }"
+  ></div>
 </template>
 
 <style scoped lang="scss">
@@ -119,15 +133,22 @@ function onMouseUp(event: MouseEvent) {
   width: 1px;
   height: 100%;
   background-color: var(--app-bg-color-blank);
+  z-index: 2;
 
   &::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -2px;
+    left: -1.5px;
     width: 4px;
     height: 100%;
     cursor: col-resize;
+  }
+
+  &.disabled {
+    &::after {
+      cursor: auto;
+    }
   }
 
   &.horizontal {
@@ -137,11 +158,17 @@ function onMouseUp(event: MouseEvent) {
     &::after {
       content: '';
       position: absolute;
-      top: -2px;
+      top: -1.5px;
       left: 0;
       width: 100%;
       height: 4px;
       cursor: row-resize;
+    }
+
+    &.disabled {
+      &::after {
+        cursor: auto;
+      }
     }
   }
 }

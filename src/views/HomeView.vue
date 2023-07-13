@@ -40,6 +40,9 @@ let trackContainerDom: HTMLElement
 
 let editorWrapperWidth = 0
 
+const disabledResize1 = ref(false)
+const disabledResize2 = ref(false)
+
 onMounted(() => {
   if (refResourceContainer.value?.resourceContainer) {
     resourceContainerDom = refResourceContainer.value.resourceContainer
@@ -58,15 +61,20 @@ onMounted(() => {
 function onResize1(size: { afterSize: number }) {
   const { afterSize: playerWorkplaceSize } = size
 
-  // 按比例放大缩小
-  let playerSize = playerWorkplaceSize * playerContainerRatio.value
-  playerSize = Math.min(
-    Math.max(playerSize, MIN_PLAYER_CONTAINER_WIDTH),
-    playerWorkplaceSize - MIN_ATTRIBUTE_CONTAINER_WIDTH
-  )
-  const attributeSize = playerWorkplaceSize - playerSize
-  playerContainerDom.style.width = `${playerSize}px`
-  attributeContainerDom.style.width = `${attributeSize}px`
+  if (disabledResize2.value) {
+    // attribute收起时宽度不变化
+    playerContainerDom.style.width = `${playerWorkplaceSize - attributeContainerDom.clientWidth}px`
+  } else {
+    // 按比例放大缩小
+    let playerSize = playerWorkplaceSize * playerContainerRatio.value
+    playerSize = Math.min(
+      Math.max(playerSize, MIN_PLAYER_CONTAINER_WIDTH),
+      playerWorkplaceSize - MIN_ATTRIBUTE_CONTAINER_WIDTH
+    )
+    const attributeSize = playerWorkplaceSize - playerSize
+    playerContainerDom.style.width = `${playerSize}px`
+    attributeContainerDom.style.width = `${attributeSize}px`
+  }
 }
 
 function addWidthTransition() {
@@ -116,22 +124,45 @@ function resizeEditorWrapper() {
   if (!editorWrapperDom.value) return
 
   editorWrapperDom.value.style.width = `${editorWrapperWidth}px`
-  playerContainerDom.style.width = `${editorWrapperWidth * playerContainerRatio.value}px`
-  attributeContainerDom.style.width = `${editorWrapperWidth * (1 - playerContainerRatio.value)}px`
+  if (disabledResize2.value) {
+    // attribute收起时宽度不变化
+    playerContainerDom.style.width = `${editorWrapperWidth - attributeContainerDom.clientWidth}px`
+  } else {
+    playerContainerDom.style.width = `${editorWrapperWidth * playerContainerRatio.value}px`
+    attributeContainerDom.style.width = `${editorWrapperWidth * (1 - playerContainerRatio.value)}px`
+  }
 }
 
-function onFoldResourceContainer(width: number) {
+function onFoldResourceContainer(changedWidth: number) {
   if (!editorWrapperDom.value) return
 
-  editorWrapperWidth = editorWrapperDom.value.clientWidth + width
+  editorWrapperWidth = editorWrapperDom.value.clientWidth + changedWidth
   resizeEditorWrapper()
+  disabledResize1.value = true
 }
 
-function onUnFoldResourceContainer(width: number) {
+function onUnFoldResourceContainer(changedWidth: number) {
   if (!editorWrapperDom.value) return
 
-  editorWrapperWidth = editorWrapperDom.value.clientWidth - width
+  editorWrapperWidth = editorWrapperDom.value.clientWidth - changedWidth
   resizeEditorWrapper()
+  disabledResize1.value = false
+}
+
+function onFoldAttributeContainer(changedWidth: number) {
+  const playerContainerWidth = playerContainerDom.clientWidth + changedWidth
+  playerContainerDom.style.width = `${playerContainerWidth}px`
+  disabledResize2.value = true
+}
+
+function onUnFoldAttributeContainer(changedWidth: number) {
+  if (!playerWorkplaceDom.value) return
+
+  const playerContainerWidth = playerContainerDom.clientWidth - changedWidth
+  playerContainerDom.style.width = `${playerContainerWidth}px`
+  playerContainerRatio.value = playerContainerWidth / playerWorkplaceDom.value.clientWidth // 重新计算playerContainer占比
+
+  disabledResize2.value = false
 }
 </script>
 
@@ -149,6 +180,7 @@ function onUnFoldResourceContainer(width: number) {
       :after="editorWrapperDom"
       :minBefore="MIN_RESOURCE_CONTAINER_WIDTH"
       :minAfter="MIN_EDITOR_WRAPPER_WIDTH"
+      :disabled="disabledResize1"
       @resize="onResize1"
       @mouse-down="onResize1MouseDown"
       @mouse-up="onResize1MouseUp"
@@ -162,11 +194,16 @@ function onUnFoldResourceContainer(width: number) {
           :after="attributeContainerDom"
           :minBefore="MIN_PLAYER_CONTAINER_WIDTH"
           :minAfter="MIN_ATTRIBUTE_CONTAINER_WIDTH"
+          :disabled="disabledResize2"
           @resize="onResize2"
           @mouse-down="onResize2MouseDown"
           @mouse-up="onResize2MouseUp"
         />
-        <AttributeContainer ref="refAttributeContainer" />
+        <AttributeContainer
+          ref="refAttributeContainer"
+          @fold="onFoldAttributeContainer"
+          @unfold="onUnFoldAttributeContainer"
+        />
       </div>
       <ResizeLine
         :container="editorWrapperDom"

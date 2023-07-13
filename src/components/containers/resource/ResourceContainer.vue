@@ -17,8 +17,8 @@ defineOptions({
 })
 
 const emit = defineEmits<{
-  (e: 'fold', width: number): void
-  (e: 'unfold', width: number): void
+  (e: 'fold', changedWidth: number): void
+  (e: 'unfold', changedWidth: number): void
 }>()
 
 const component = ref<ResourceComponentName | ''>(ResourceComponentName.TEXT_RESOURCE)
@@ -29,7 +29,7 @@ const resourceWrapper = ref<HTMLElement>()
 
 const isFold = ref(false)
 
-let oldResourceWrapperWidth = 0
+let changedWidth = 0
 
 const menu: MenuItem[] = [
   {
@@ -60,11 +60,9 @@ function selectMenu(componentName: ResourceComponentName) {
 function fold() {
   if (!resourceContainer.value || !resourceWrapper.value) return
 
-  oldResourceWrapperWidth = resourceWrapper.value.clientWidth
-  resourceContainer.value.style.width = `${
-    resourceContainer.value.clientWidth - oldResourceWrapperWidth
-  }px`
-  emit('fold', oldResourceWrapperWidth)
+  changedWidth = resourceWrapper.value.clientWidth
+  resourceContainer.value.style.width = `${resourceContainer.value.clientWidth - changedWidth}px`
+  emit('fold', changedWidth)
 
   isFold.value = true
 }
@@ -72,10 +70,8 @@ function fold() {
 function unfold() {
   if (!resourceContainer.value || !resourceWrapper.value) return
 
-  resourceContainer.value.style.width = `${
-    resourceContainer.value.clientWidth + oldResourceWrapperWidth
-  }px`
-  emit('unfold', oldResourceWrapperWidth)
+  resourceContainer.value.style.width = `${resourceContainer.value.clientWidth + changedWidth}px`
+  emit('unfold', changedWidth)
 
   isFold.value = false
 }
