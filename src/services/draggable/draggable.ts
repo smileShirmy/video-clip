@@ -18,7 +18,7 @@ import { warn } from '../helpers/warn'
 import type { TrackItem } from '../track-item'
 import { VideoTrackItem } from '../track-item/video-item'
 import type { Track } from '../track'
-import { TrackType } from '../track/base-track'
+import { BaseTrack, TrackType } from '../track/base-track'
 import { VideoTrack } from '../track/video-track'
 import { MainTrack } from '../track/main-track'
 
@@ -200,7 +200,7 @@ class Draggable {
     const trackStore = useTrackStore()
     const timelineStore = useTimelineStore()
 
-    // 如果不是移动状态并且不在可拖放区域
+    // 如果不在可拖放区域
     if (!this.isInTrackContent(e)) {
       return null
     }
@@ -398,14 +398,35 @@ class Draggable {
 
     const trackPlaceholder = position.trackPlaceholder
 
-    const visibleHorizontalLine = () => {
+    const visibleHorizontalLine = (options: {
+      insertTrackIndex: number
+      top: number
+      startFrame?: number
+    }) => {
       showHorizontalLine = true
       showTrackPlaceholder = false
+      insertTrackIndex = options.insertTrackIndex
+      if (isNumber(options.startFrame)) {
+        trackPlaceholder.startFrame = options.startFrame
+      }
+      this.updateHorizontalLine(options.top)
     }
 
-    const visibleTrackPlaceholder = () => {
+    const visibleTrackPlaceholder = (options: {
+      top: number
+      startFrame?: number
+      parentTrack?: Track
+    }) => {
+      const { startFrame, top, parentTrack } = options
       showHorizontalLine = false
       showTrackPlaceholder = true
+      trackPlaceholder.top = top
+      if (isNumber(startFrame)) {
+        trackPlaceholder.startFrame = startFrame
+      }
+      if (parentTrack instanceof BaseTrack) {
+        position.trackPlaceholder.setParentTrack(parentTrack)
+      }
     }
 
     // 如果 stickyFrame 不为空则是产生了自动吸附
@@ -414,67 +435,68 @@ class Draggable {
       showVerticalLine = true
     }
 
-    // 插入到顶部
-    const addToBlankTop = () => {
-      insertTrackIndex = 0
-      this.updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-      visibleHorizontalLine()
-    }
-
     // 轨道中没有任何资源
     if (trackList.isEmpty) {
       if (this.dragging instanceof VideoTrackItem) {
         // 如果在顶部空白区域则添加到顶部
         if (position.linePosition === LinePosition.OVER_LIST_TOP) {
-          addToBlankTop()
+          visibleHorizontalLine({
+            insertTrackIndex: 0,
+            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+          })
         } else {
-          trackPlaceholder.top = position.mainTrackTop
-          if (trackStore.enableMagnetic) {
-            trackPlaceholder.startFrame = 0
-          }
-          position.trackPlaceholder.setParentTrack(trackList.mainTrack)
-          visibleTrackPlaceholder()
+          visibleTrackPlaceholder({
+            top: position.mainTrackTop,
+            startFrame: trackStore.enableMagnetic ? 0 : undefined,
+            parentTrack: trackList.mainTrack
+          })
         }
       } else {
-        addToBlankTop()
+        visibleHorizontalLine({
+          insertTrackIndex: 0,
+          top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+        })
       }
     }
     // 当前位置在顶部空白区域
     else if (position.linePosition === LinePosition.OVER_LIST_TOP) {
-      insertTrackIndex = 0
-      this.updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-      visibleHorizontalLine()
+      visibleHorizontalLine({
+        insertTrackIndex: 0,
+        top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+      })
     }
     // 当前位置在某条 track 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE) {
       // 在主轨道上
       if (position.track.type === TrackType.MAIN) {
+        // 如果是视频资源
         if (dragging instanceof VideoTrackItem) {
-          // 开启了自动磁吸
-          if (trackStore.enableMagnetic) {
-            trackPlaceholder.startFrame = position.track.getLastFrame(dragging!)
-            trackPlaceholder.top = position.trackTop
-            visibleTrackPlaceholder()
-          } else {
-            addToBlankTop()
-          }
-        }
-        // 其他类型资源则添加到主轨道上方
-        else {
-          insertTrackIndex = position.trackIndex - 1
-          this.updateHorizontalLine(position.trackTop - TRACK_LINE_INTERVAL / 2)
-          visibleHorizontalLine()
+          visibleTrackPlaceholder({
+            startFrame: trackStore.enableMagnetic
+              ? position.track.getLastFrame(dragging)
+              : undefined,
+            top: position.trackTop
+          })
+        } else {
+          // 其他类型资源则添加到主轨道上方
+          visibleHorizontalLine({
+            insertTrackIndex: position.trackIndex - 1,
+            top: position.trackTop - TRACK_LINE_INTERVAL / 2
+          })
         }
       }
       // 不在主轨道上
       else {
+        // 存在冲突，直接添加到顶部
         if (position.isIntersection) {
-          insertTrackIndex = 0
-          this.updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-          visibleHorizontalLine()
+          visibleHorizontalLine({
+            insertTrackIndex: 0,
+            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+          })
         } else {
-          trackPlaceholder.top = position.trackTop
-          visibleTrackPlaceholder()
+          visibleTrackPlaceholder({
+            top: position.trackTop
+          })
         }
       }
     }
@@ -482,38 +504,40 @@ class Draggable {
     else if (position.linePosition === LinePosition.ON_TRACK_LINE_INTERVAL) {
       // 如果是移动 trackItem 状态
       if (this.moving) {
-        insertTrackIndex = position.intervalIndex
-        this.updateHorizontalLine(position.intervalTop + TRACK_LINE_INTERVAL / 2)
-        visibleHorizontalLine()
+        visibleHorizontalLine({
+          insertTrackIndex: position.intervalIndex,
+          top: position.intervalTop + TRACK_LINE_INTERVAL / 2
+        })
       }
-      // 新插入 trackItem 状态则是插入到上方 track 中，如果有冲突则插入到顶部
+      // 新插入 trackItem 状态则是插入到上方 track 中，如果有冲突则插入到顶部，否则插入上放的轨道
       else {
         if (position.isIntersection) {
-          insertTrackIndex = position.intervalIndex - 2
-          this.updateHorizontalLine(position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2)
-          visibleHorizontalLine()
+          visibleHorizontalLine({
+            insertTrackIndex: position.intervalIndex - 2,
+            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+          })
         } else {
-          insertTrackIndex = position.intervalIndex - 1
-          trackPlaceholder.top = position.overTrackTop
-          visibleTrackPlaceholder()
+          visibleTrackPlaceholder({
+            top: position.overTrackTop
+          })
         }
       }
     }
     // 当前位置在 track list 下
     else {
       if (dragging instanceof VideoTrackItem) {
-        if (trackStore.enableMagnetic) {
-          trackPlaceholder.startFrame = 0
-        }
-        insertTrackIndex = trackList.list.length
-        this.updateHorizontalLine(position.blankBottomTop + TRACK_LINE_INTERVAL / 2)
-        visibleHorizontalLine()
+        visibleHorizontalLine({
+          startFrame: trackStore.enableMagnetic ? 0 : undefined,
+          insertTrackIndex: trackList.list.length,
+          top: position.blankBottomTop + TRACK_LINE_INTERVAL / 2
+        })
       }
       // 如果是其他资源则插入到主轨道上方
       else {
-        insertTrackIndex = position.mainTrackIndex
-        this.updateHorizontalLine(position.mainTrackTop - TRACK_LINE_INTERVAL / 2)
-        visibleHorizontalLine()
+        visibleHorizontalLine({
+          insertTrackIndex: position.mainTrackIndex,
+          top: position.mainTrackTop - TRACK_LINE_INTERVAL / 2
+        })
       }
     }
 
