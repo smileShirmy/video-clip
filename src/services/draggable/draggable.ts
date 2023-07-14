@@ -3,12 +3,7 @@ import { useTrackStore } from '@/stores/track'
 import { getElementPosition } from '@/services/helpers/dom'
 import { computed, reactive, ref, type ComputedRef, type CSSProperties } from 'vue'
 import { trackList } from '../track-list/track-list'
-import {
-  OTHER_TRACK_HEIGHT,
-  TRACK_LINE_INTERVAL,
-  TRACK_STICK_WIDTH,
-  VIDEO_TRACK_HEIGHT
-} from '@/config'
+import { OTHER_TRACK_HEIGHT, TRACK_INTERVAL, TRACK_STICK_WIDTH, VIDEO_TRACK_HEIGHT } from '@/config'
 import { isIntersectionOfTwoIntervals, isNumber, isString } from '../helpers/general'
 import {
   LinePosition,
@@ -21,11 +16,18 @@ import {
 import { TrackPlaceholder } from './track-placeholder'
 import { warn } from '../helpers/warn'
 import type { TrackItem } from '../track-item'
-import { VideoTrackItem } from '../track-item/video-track-item'
-import type { Track } from '../track'
+import { type Track } from '../track'
 import { BaseTrack, TrackType } from '../track/base-track'
 import { VideoTrack } from '../track/video-track'
-import { MainTrack, isMainTrackAllowItem } from '../track/main-track'
+import { TrackItemComponentName } from '@/types'
+import { isMainTrackAllowItem } from '../track/helper'
+import { DragVideo } from './drag-video'
+
+/**
+ * 思路
+ *
+ * 在第一次拖动时实例化一个 draggable 类（根据拖动的目标类型分为 其他资源、视频资源、音频资源）处理拖动，并且都继承一个抽象类
+ */
 
 const isOver = (y: number, top: number) => y < top
 
@@ -181,7 +183,7 @@ class Draggable {
     const { top } = getElementPosition(trackRef, this.trackContentRef.value!)
     const bottomTop = top + track.height
     const isOnTrack = y >= top && y <= bottomTop
-    const isUnderTrack = y >= bottomTop && y <= bottomTop + TRACK_LINE_INTERVAL
+    const isUnderTrack = y >= bottomTop && y <= bottomTop + TRACK_INTERVAL
 
     return {
       index,
@@ -229,6 +231,7 @@ class Draggable {
     let isIntersection = false
 
     let mainTrackTop = 0
+    let mainTrackBottom = 0
     let mainTrackIndex = 0
 
     let blankTopBottomTop = 0
@@ -246,6 +249,7 @@ class Draggable {
 
       if (track.type === TrackType.MAIN) {
         mainTrackTop = top
+        mainTrackBottom = bottomTop
         mainTrackIndex = index
       }
 
@@ -270,7 +274,7 @@ class Draggable {
 
       // 在某条轨道下方
       if (isUnderTrack) {
-        linePositionStatus = LinePosition.ON_TRACK_LINE_INTERVAL
+        linePositionStatus = LinePosition.ON_TRACK_INTERVAL
         overIntervalTrack = track
         intervalIndex = index + 1
         overTrackTop = top
@@ -349,6 +353,7 @@ class Draggable {
       blankTopBottomTop,
       blankBottomTop,
       mainTrackTop,
+      mainTrackBottom,
       trackPlaceholder,
       stickyFrame,
       mainTrackIndex
@@ -370,9 +375,9 @@ class Draggable {
         isIntersection,
         trackTop: onTrackTop!
       }
-    } else if (linePositionStatus === LinePosition.ON_TRACK_LINE_INTERVAL) {
+    } else if (linePositionStatus === LinePosition.ON_TRACK_INTERVAL) {
       position = {
-        linePosition: LinePosition.ON_TRACK_LINE_INTERVAL,
+        linePosition: LinePosition.ON_TRACK_INTERVAL,
         ...base,
         overIntervalTrack: overIntervalTrack!,
         isIntersection,
@@ -442,33 +447,47 @@ class Draggable {
 
     // 轨道中没有任何资源
     if (trackList.isEmpty) {
-      if (isMainTrackAllowItem(dragging)) {
-        // 如果在顶部空白区域则添加到顶部
-        if (position.linePosition === LinePosition.OVER_LIST_TOP) {
+      if (dragging.component === TrackItemComponentName.TRACK_ITEM_AUDIO) {
+        visibleHorizontalLine({
+          insertTrackIndex: trackList.list.length,
+          top: position.mainTrackBottom + TRACK_INTERVAL / 2
+        })
+      } else {
+        if (isMainTrackAllowItem(dragging)) {
+          // 如果在顶部空白区域则添加到顶部
+          if (position.linePosition === LinePosition.OVER_LIST_TOP) {
+            visibleHorizontalLine({
+              insertTrackIndex: 0,
+              top: position.blankTopBottomTop - TRACK_INTERVAL / 2
+            })
+          } else {
+            visibleTrackPlaceholder({
+              top: position.mainTrackTop,
+              startFrame: trackStore.enableMagnetic ? 0 : undefined,
+              parentTrack: trackList.mainTrack
+            })
+          }
+        } else {
           visibleHorizontalLine({
             insertTrackIndex: 0,
-            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
-          })
-        } else {
-          visibleTrackPlaceholder({
-            top: position.mainTrackTop,
-            startFrame: trackStore.enableMagnetic ? 0 : undefined,
-            parentTrack: trackList.mainTrack
+            top: position.blankTopBottomTop - TRACK_INTERVAL / 2
           })
         }
-      } else {
-        visibleHorizontalLine({
-          insertTrackIndex: 0,
-          top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
-        })
       }
     }
     // 当前位置在顶部空白区域
     else if (position.linePosition === LinePosition.OVER_LIST_TOP) {
-      visibleHorizontalLine({
-        insertTrackIndex: 0,
-        top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
-      })
+      if (dragging.component === TrackItemComponentName.TRACK_ITEM_AUDIO) {
+        visibleHorizontalLine({
+          insertTrackIndex: trackList.list.length,
+          top: position.mainTrackBottom + TRACK_INTERVAL / 2
+        })
+      } else {
+        visibleHorizontalLine({
+          insertTrackIndex: 0,
+          top: position.blankTopBottomTop - TRACK_INTERVAL / 2
+        })
+      }
     }
     // 当前位置在某条 track 上
     else if (position.linePosition === LinePosition.ON_TRACK_LINE) {
@@ -485,7 +504,7 @@ class Draggable {
           // 其他类型资源则添加到主轨道上方
           visibleHorizontalLine({
             insertTrackIndex: position.trackIndex - 1,
-            top: position.trackTop - TRACK_LINE_INTERVAL / 2
+            top: position.trackTop - TRACK_INTERVAL / 2
           })
         }
       }
@@ -495,7 +514,7 @@ class Draggable {
         if (position.isIntersection) {
           visibleHorizontalLine({
             insertTrackIndex: 0,
-            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+            top: position.blankTopBottomTop - TRACK_INTERVAL / 2
           })
         } else {
           visibleTrackPlaceholder({
@@ -505,12 +524,12 @@ class Draggable {
       }
     }
     // 当前位置在 track 的 “间隔” 上
-    else if (position.linePosition === LinePosition.ON_TRACK_LINE_INTERVAL) {
+    else if (position.linePosition === LinePosition.ON_TRACK_INTERVAL) {
       // 如果是移动 trackItem 状态
       if (this.moving) {
         visibleHorizontalLine({
           insertTrackIndex: position.intervalIndex,
-          top: position.intervalTop + TRACK_LINE_INTERVAL / 2
+          top: position.intervalTop + TRACK_INTERVAL / 2
         })
       }
       // 新插入 trackItem 状态则是插入到上方 track 中，如果有冲突则插入到顶部，否则插入上放的轨道
@@ -518,7 +537,7 @@ class Draggable {
         if (position.isIntersection) {
           visibleHorizontalLine({
             insertTrackIndex: position.intervalIndex - 2,
-            top: position.blankTopBottomTop - TRACK_LINE_INTERVAL / 2
+            top: position.blankTopBottomTop - TRACK_INTERVAL / 2
           })
         } else {
           visibleTrackPlaceholder({
@@ -533,14 +552,14 @@ class Draggable {
         visibleHorizontalLine({
           startFrame: trackStore.enableMagnetic ? 0 : undefined,
           insertTrackIndex: trackList.list.length,
-          top: position.blankBottomTop + TRACK_LINE_INTERVAL / 2
+          top: position.blankBottomTop + TRACK_INTERVAL / 2
         })
       }
       // 如果是其他资源则插入到主轨道上方
       else {
         visibleHorizontalLine({
           insertTrackIndex: position.mainTrackIndex,
-          top: position.mainTrackTop - TRACK_LINE_INTERVAL / 2
+          top: position.mainTrackTop - TRACK_INTERVAL / 2
         })
       }
     }
@@ -612,15 +631,12 @@ class Draggable {
         if (showTrackPlaceholder) {
           const { parentTrack } = trackPlaceholder
           if (parentTrack) {
-            if (parentTrack instanceof MainTrack) {
-              if (isMainTrackAllowItem(dragging)) {
-                parentTrack.addTrackItem(dragging)
-              }
-            } else {
-              parentTrack.addTrackItem(dragging)
+            const allow = parentTrack.addTrackItem(dragging)
+            if (!allow) {
+              warn(`${dragging.component} 不能放到 ${parentTrack.type} 中`)
             }
           } else {
-            warn('没有设置 parentTrack ?')
+            warn('没有设置 parentTrack')
           }
         }
 
@@ -640,7 +656,10 @@ class Draggable {
           // 直接插入
           else {
             const track = VideoTrack.create({
-              height: dragging instanceof VideoTrackItem ? VIDEO_TRACK_HEIGHT : OTHER_TRACK_HEIGHT
+              height:
+                dragging.component === TrackItemComponentName.TRACK_ITEM_VIDEO
+                  ? VIDEO_TRACK_HEIGHT
+                  : OTHER_TRACK_HEIGHT
             })
             trackList.insert(track, insertTrackIndex)
             track.addTrackItem(dragging)
@@ -671,7 +690,7 @@ class Draggable {
   onDragStart(
     e: PointerEvent | MouseEvent,
     dragTarget: HTMLElement,
-    dragging: TrackItem,
+    dragTrackItem: TrackItem,
     movingId: string | null = null,
     dragOffset: DragOffset = { offsetX: 0, offsetY: 0 }
   ) {
@@ -682,13 +701,23 @@ class Draggable {
     this.dragOffset = dragOffset
 
     this.dragStartStore.dragTarget = dragTarget
-    this.dragStartStore.dragging = dragging
+    this.dragStartStore.dragging = dragTrackItem
     this.dragStartStore.movingId = movingId
 
     trackStore.disableScroll = true
     trackStore.showPreviewLine = false
 
-    this.addListener()
+    if (dragTrackItem.component === TrackItemComponentName.TRACK_ITEM_VIDEO) {
+      new DragVideo({
+        dragTarget,
+        dragTrackItem,
+        movingId,
+        dragOffset,
+        timelineResourceRef: this.timelineResourceRef.value!,
+        trackListRef: this.trackListRef.value!,
+        trackContentRef: this.trackContentRef.value!
+      })
+    }
   }
 
   appendToBody(target: HTMLElement) {

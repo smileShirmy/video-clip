@@ -18,7 +18,7 @@ export interface DragOffset {
 export enum LinePosition {
   OVER_LIST_TOP = 'overListTop',
   ON_TRACK_LINE = 'onTrack',
-  ON_TRACK_LINE_INTERVAL = 'onTrackInterval',
+  ON_TRACK_INTERVAL = 'onTrackInterval',
   UNDER_LIST_BOTTOM = 'underListBottom'
 }
 
@@ -32,6 +32,7 @@ export interface BaseTrackPosition {
   blankTopBottomTop: number
   blankBottomTop: number
   mainTrackTop: number
+  mainTrackBottom: number
   mainTrackIndex: number
   trackPlaceholder: TrackPlaceholder
   stickyFrame: number | null
@@ -50,7 +51,7 @@ export interface OverTrack extends BaseTrackPosition {
 }
 
 export interface OnTrackInterval extends BaseTrackPosition {
-  linePosition: LinePosition.ON_TRACK_LINE_INTERVAL
+  linePosition: LinePosition.ON_TRACK_INTERVAL
   isIntersection: boolean
   overIntervalTrack: Track
   intervalTop: number

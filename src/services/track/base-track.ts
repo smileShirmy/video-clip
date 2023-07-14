@@ -1,4 +1,4 @@
-import { shallowReactive, warn, watch } from 'vue'
+import { shallowReactive, warn } from 'vue'
 import { isArray, isString, uuid } from '../helpers/general'
 import { trackList, type TrackListType } from '../track-list/track-list'
 import { useTrackStore } from '@/stores/track'
@@ -9,7 +9,7 @@ import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
 export enum TrackType {
   MAIN = 'main',
   VIDEO = 'video',
-  OTHER = 'other'
+  AUDIO = 'audio'
 }
 
 export abstract class BaseTrack<T extends TrackItem> {
@@ -26,6 +26,8 @@ export abstract class BaseTrack<T extends TrackItem> {
   get trackList() {
     return this._trackList
   }
+
+  abstract bindParentTrack(): void
 
   getLastFrame(excludeTrackItem?: TrackItem) {
     return this._trackList.reduce((pre, cur) => {
@@ -62,11 +64,13 @@ export abstract class BaseTrack<T extends TrackItem> {
     this._trackList.push(trackItem)
   }
 
+  abstract addTrackItem(trackItem: TrackItem | TrackItem[]): boolean
+
   /**
-   * 添加 trackItem
+   * 添加 trackItem（子类实现 addTrackItem 并调用该方法）
    * 添加之前需要移除相同 id 的 trackItem，由此来实现移动
    */
-  addTrackItem(trackItem: T | T[]) {
+  protected baseAddTrackItem(trackItem: T | T[]) {
     const beforeTrackItemCount = trackList.trackItemCount
 
     const list = isArray(trackItem) ? trackItem : [trackItem]
@@ -125,20 +129,5 @@ export abstract class BaseTrack<T extends TrackItem> {
 
     const trackStore = useTrackStore()
     trackStore.updateMaxFrameCount()
-  }
-
-  /**
-   * 绑定所属 trackLine
-   */
-  bindParentTrack(trackList: T[]) {
-    watch(
-      trackList,
-      () => {
-        trackList.forEach((item) => (item.parentTrack = this))
-
-        this.updateTrackHeight()
-      },
-      { immediate: true }
-    )
   }
 }

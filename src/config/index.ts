@@ -11,7 +11,7 @@ export const TRACK_STICK_WIDTH = 12
 /**
  * trackLine 的间距
  */
-export const TRACK_LINE_INTERVAL = 8
+export const TRACK_INTERVAL = 8
 
 /**
  * 布局最小宽度
