@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TrackItemComponentName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
-import type { TextTrackItem } from '@/services/track-item/text-item'
+import type { TextTrackItem } from '@/services/track-item/text-track-item'
 
 defineOptions({
   name: TrackItemComponentName.TRACK_ITEM_TEXT

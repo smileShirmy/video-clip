@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { draggable } from '@/services/draggable/draggable'
-import { TextTrackItem } from '@/services/track-item/text-item'
+import { TextTrackItem } from '@/services/track-item/text-track-item'
 import { type TextResource } from '@/types'
 import { ref } from 'vue'
 

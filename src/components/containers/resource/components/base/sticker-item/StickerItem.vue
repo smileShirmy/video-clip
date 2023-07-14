@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { draggable } from '@/services/draggable/draggable'
-import { StickerTrackItem } from '@/services/track-item/sticker-item'
+import { StickerTrackItem } from '@/services/track-item/sticker-track-item'
 import { type StickerResource } from '@/types'
 import { ref } from 'vue'
 

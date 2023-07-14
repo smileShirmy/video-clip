@@ -21,7 +21,7 @@ import {
 import { TrackPlaceholder } from './track-placeholder'
 import { warn } from '../helpers/warn'
 import type { TrackItem } from '../track-item'
-import { VideoTrackItem } from '../track-item/video-item'
+import { VideoTrackItem } from '../track-item/video-track-item'
 import type { Track } from '../track'
 import { BaseTrack, TrackType } from '../track/base-track'
 import { VideoTrack } from '../track/video-track'

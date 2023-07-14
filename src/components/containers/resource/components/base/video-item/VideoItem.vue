@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { draggable } from '@/services/draggable/draggable'
-import { VideoTrackItem } from '@/services/track-item/video-item'
+import { VideoTrackItem } from '@/services/track-item/video-track-item'
 import { type VideoResource } from '@/types'
 import { ref } from 'vue'
 

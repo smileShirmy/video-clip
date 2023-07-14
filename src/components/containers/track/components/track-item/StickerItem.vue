@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TrackItemComponentName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
-import type { StickerTrackItem } from '@/services/track-item/sticker-item'
+import type { StickerTrackItem } from '@/services/track-item/sticker-track-item'
 
 defineOptions({
   name: TrackItemComponentName.TRACK_ITEM_STICKER

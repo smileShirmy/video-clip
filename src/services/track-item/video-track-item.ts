@@ -1,5 +1,5 @@
 import { TrackItemComponentName, type VideoResource } from '@/types'
-import { BaseTrackItem } from './base-item'
+import { BaseTrackItem } from './base-track-item'
 import type { MainTrack } from '../track/main-track'
 import type { VideoTrack } from '../track/video-track'
 

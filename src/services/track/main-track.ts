@@ -1,6 +1,6 @@
 import { VIDEO_TRACK_HEIGHT } from '@/config'
-import type { VideoTrackItem } from '../track-item/video-item'
-import type { StickerTrackItem } from '../track-item/sticker-item'
+import type { VideoTrackItem } from '../track-item/video-track-item'
+import type { StickerTrackItem } from '../track-item/sticker-track-item'
 import { BaseTrack, TrackType } from './base-track'
 import type { TrackItem } from '../track-item'
 import { TrackItemComponentName } from '@/types'

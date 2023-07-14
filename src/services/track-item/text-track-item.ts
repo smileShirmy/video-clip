@@ -1,5 +1,5 @@
 import { TrackItemComponentName, type TextResource } from '@/types'
-import { BaseTrackItem } from './base-item'
+import { BaseTrackItem } from './base-track-item'
 import { ref } from 'vue'
 import type { VideoTrack } from '../track/video-track'
 
