@@ -82,6 +82,11 @@ function normalizeConfig(config: TimelineRenderConfig = {}) {
   }
 }
 
+export type TimelineStore = Omit<
+  ReturnType<typeof useTimelineStore>,
+  keyof ReturnType<typeof defineStore>
+>
+
 export const useTimelineStore = defineStore('timeline', () => {
   // 基础配置
   const config = normalizeConfig()

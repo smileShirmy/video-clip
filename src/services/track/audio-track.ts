@@ -1,18 +1,17 @@
-import { VIDEO_TRACK_HEIGHT } from '@/config'
-import type { VideoTrackItem } from '../track-item/video-track-item'
-import type { StickerTrackItem } from '../track-item/sticker-track-item'
+import { OTHER_TRACK_HEIGHT } from '@/config'
 import { BaseTrack, TrackType } from './base-track'
+import type { AudioTrackItem } from '../track-item/audio-track-item'
 import { watch } from 'vue'
 import type { TrackItem } from '../track-item'
-import { isMainTrackAllowItem, isMainTrackAllowItems } from './helper'
 import { isArray } from '../helpers/general'
+import { isAudioTrackAllowItem, isAudioTrackAllowItems } from './helper'
 
-export type MainTrackAllowItem = VideoTrackItem | StickerTrackItem
+export type AudioTrackAllowItem = AudioTrackItem
 
-export class MainTrack extends BaseTrack<MainTrackAllowItem> {
-  type = TrackType.MAIN
+export class AudioTrack extends BaseTrack<AudioTrackItem> {
+  type = TrackType.AUDIO
 
-  height = VIDEO_TRACK_HEIGHT
+  height = OTHER_TRACK_HEIGHT
 
   constructor() {
     super()
@@ -23,11 +22,11 @@ export class MainTrack extends BaseTrack<MainTrackAllowItem> {
   addTrackItem(trackItem: TrackItem | TrackItem[]): boolean {
     let allow = false
     if (isArray(trackItem)) {
-      if (isMainTrackAllowItems(trackItem)) {
+      if (isAudioTrackAllowItems(trackItem)) {
         this.baseAddTrackItem(trackItem)
         allow = true
       }
-    } else if (isMainTrackAllowItem(trackItem)) {
+    } else if (isAudioTrackAllowItem(trackItem)) {
       this.baseAddTrackItem(trackItem)
       allow = true
     }
@@ -45,6 +44,6 @@ export class MainTrack extends BaseTrack<MainTrackAllowItem> {
   }
 
   static create() {
-    return new MainTrack()
+    return new AudioTrack()
   }
 }

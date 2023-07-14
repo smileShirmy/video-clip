@@ -1,4 +1,4 @@
-import { TrackItemComponentName, type VideoResource } from '@/types'
+import { TrackItemName, type VideoResource } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import type { MainTrack } from '../track/main-track'
 import type { VideoTrack } from '../track/video-track'
@@ -8,7 +8,7 @@ export class VideoTrackItem extends BaseTrackItem<
   VideoTrackItem,
   MainTrack | VideoTrack
 > {
-  readonly component = TrackItemComponentName.TRACK_ITEM_VIDEO
+  readonly component = TrackItemName.TRACK_ITEM_VIDEO
 
   resource: VideoResource
 

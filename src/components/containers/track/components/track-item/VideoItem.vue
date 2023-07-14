@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { TrackItemComponentName } from '@/types'
+import { TrackItemName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
 import type { VideoTrackItem } from '@/services/track-item/video-track-item'
 
 defineOptions({
-  name: TrackItemComponentName.TRACK_ITEM_VIDEO
+  name: TrackItemName.TRACK_ITEM_VIDEO
 })
 
 const props = defineProps<{

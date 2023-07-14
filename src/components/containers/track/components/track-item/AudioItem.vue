@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { TrackItemName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
-import type { TextTrackItem } from '@/services/track-item/text-track-item'
+import type { AudioTrackItem } from '@/services/track-item/audio-track-item'
 
 defineOptions({
-  name: TrackItemName.TRACK_ITEM_TEXT
+  name: TrackItemName.TRACK_ITEM_AUDIO
 })
 
 const props = defineProps<{
-  data: TextTrackItem
+  data: AudioTrackItem
 }>()
 </script>
 
 <template>
   <TrackHandler :data="props.data">
-    <div class="text-track-item">
-      {{ props.data.text }}
+    <div class="audio-track-item">
+      {{ props.data.resource.name }}
     </div>
   </TrackHandler>
 </template>
 
 <style scoped lang="scss">
-.text-track-item {
+.audio-track-item {
   box-sizing: border-box;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  background-color: #dda26b;
+  background-color: var(--app-color-black);
   height: 100%;
   color: var(--app-color-white);
   font-size: var(--app-font-size-small);

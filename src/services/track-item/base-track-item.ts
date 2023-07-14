@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { uuid } from '../helpers/general'
-import { TrackItemComponentName } from '@/types'
+import { TrackItemName } from '@/types'
 import type { TrackItem } from '.'
 import type { Track } from '../track'
 
@@ -9,7 +9,7 @@ export abstract class BaseTrackItem<
   T extends TrackItem,
   P extends Track
 > {
-  abstract readonly component: TrackItemComponentName
+  abstract readonly component: TrackItemName
 
   abstract resource: R
 
@@ -75,7 +75,7 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMaxFrame() {
-    if (this.component !== TrackItemComponentName.TRACK_ITEM_VIDEO) {
+    if (this.component !== TrackItemName.TRACK_ITEM_VIDEO) {
       return Infinity
     }
     if (!this.parentTrack) return this.maxFrame
@@ -95,7 +95,7 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMinFrame() {
-    if (this.component !== TrackItemComponentName.TRACK_ITEM_VIDEO) {
+    if (this.component !== TrackItemName.TRACK_ITEM_VIDEO) {
       return 0
     }
     if (!this.parentTrack) return this.maxFrame

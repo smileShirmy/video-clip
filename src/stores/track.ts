@@ -5,6 +5,11 @@ import { watchThrottled } from '@vueuse/core'
 import { trackList } from '@/services/track-list/track-list'
 import { ADAPTIVE_RATIO, INIT_MAX_FRAME_COUNT } from '@/config'
 
+export type TrackStore = Omit<
+  ReturnType<typeof useTrackStore>,
+  keyof ReturnType<typeof defineStore>
+>
+
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
 

@@ -1,6 +1,7 @@
+import type { TimelineStore } from '@/stores/timeline'
 import type { Track } from '../track'
-import type { TrackItem } from '../track-item'
-import type { TrackPlaceholder } from './track-placeholder'
+import type { TrackType } from '../track/base-track'
+import type { TrackStore } from '@/stores/track'
 
 export interface DragPosition {
   targetTop: number // 目标元素距离顶部的距离
@@ -14,52 +15,82 @@ export interface DragOffset {
   offsetY: number
 }
 
-// Y 轴方向上所处的位置
-export enum LinePosition {
-  OVER_LIST_TOP = 'overListTop',
-  ON_TRACK_LINE = 'onTrack',
-  ON_TRACK_LINE_INTERVAL = 'onTrackInterval',
-  UNDER_LIST_BOTTOM = 'underListBottom'
+export enum DraggingState {
+  ADD_TO_CURRENT_TRACK_STATE = 'addToCurrentTrackState',
+  ADD_TO_NEW_TRACK_STATE = 'addToNewTrackState'
 }
 
-export interface DragStartStore {
-  dragTarget: HTMLElement | null
-  dragging: TrackItem | null
-  movingId: string | null
+export interface AddToNewTrackState {
+  state: DraggingState.ADD_TO_NEW_TRACK_STATE
+  top: number
+  insertTrackIndex: number
+  startFrame: number
 }
 
-export interface BaseTrackPosition {
-  blankTopBottomTop: number
-  blankBottomTop: number
-  mainTrackTop: number
-  mainTrackIndex: number
-  trackPlaceholder: TrackPlaceholder
-  stickyFrame: number | null
+export interface AddToCurrentTrackState {
+  state: DraggingState.ADD_TO_CURRENT_TRACK_STATE
+  top: number
+  addToTrack: Track
+  startFrame: number
+  widthFrame: number
 }
 
-export interface OverListTop extends BaseTrackPosition {
-  linePosition: LinePosition.OVER_LIST_TOP
+export type DraggingStateData = AddToNewTrackState | AddToCurrentTrackState
+
+export enum TrackDataType {
+  BLANK_TOP = 'blankTopHandler',
+  TRACK = 'trackHandler',
+  TRACK_INTERVAL = 'trackIntervalHandler',
+  BLANK_BOTTOM = 'blankBottomHandler'
 }
 
-export interface OverTrack extends BaseTrackPosition {
-  linePosition: LinePosition.ON_TRACK_LINE
+export interface BaseTrackData {
+  top: number
+  bottomTop: number
+}
+
+export interface BlankTopData extends BaseTrackData {
+  type: TrackDataType.BLANK_TOP
+  bottomTop: number
+  overBottomIntervalTop: number
+}
+
+export interface TrackData extends BaseTrackData {
+  type: TrackDataType.TRACK
   track: Track
-  trackIndex: number
-  isIntersection: boolean
-  trackTop: number
+  trackType: TrackType
+  trackRef: HTMLElement
+  index: number
+  overIntervalMiddleTop: number
+  underIntervalMiddleTop: number
 }
 
-export interface OnTrackInterval extends BaseTrackPosition {
-  linePosition: LinePosition.ON_TRACK_LINE_INTERVAL
-  isIntersection: boolean
-  overIntervalTrack: Track
-  intervalTop: number
-  intervalIndex: number
-  overTrackTop: number
+export interface TrackIntervalData extends BaseTrackData {
+  type: TrackDataType.TRACK_INTERVAL
+  overTrack: Track
+  overTrackType: TrackType
+  overTrackRef: HTMLElement
+  overTrackIndex: number
+  middleTop: number
 }
 
-export interface UnderListBottom extends BaseTrackPosition {
-  linePosition: LinePosition.UNDER_LIST_BOTTOM
+export interface BlankBottomData extends BaseTrackData {
+  type: TrackDataType.BLANK_BOTTOM
+  top: number
 }
 
-export type TrackPosition = OverListTop | OverTrack | OnTrackInterval | UnderListBottom
+export type TrackDataItem = BlankTopData | TrackData | TrackIntervalData | BlankBottomData
+
+export interface DragOptions<T> {
+  dragTarget: HTMLElement
+  dragTrackItem: T
+  movingId: string | null
+  dragOffset: DragOffset
+  timelineResourceRef: HTMLElement
+  trackListRef: HTMLDivElement[]
+  trackContentRef: HTMLDivElement
+  timelineStore: TimelineStore
+  trackStore: TrackStore
+  onStateChange: (state: DraggingStateData | null) => void
+  onDragEnd: () => void
+}

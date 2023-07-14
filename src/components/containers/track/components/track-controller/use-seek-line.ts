@@ -6,14 +6,14 @@ import { useTrackStore } from '@/stores/track'
 import { onMounted, type Ref } from 'vue'
 
 export const useSeekLine = (
-  timelineResourceRef: Ref<HTMLDivElement | undefined>,
+  timelineResourceRef: Ref<HTMLDivElement | null>,
   previewLineX: Ref<number>
 ) => {
   const trackStore = useTrackStore()
   const timeLienStore = useTimelineStore()
 
   function onPointerup(e: PointerEvent) {
-    if (draggable.resizing || draggable.dragging) return
+    if (draggable.resizing || draggable.draggingState !== null) return
 
     const target = e.target
     if (target instanceof HTMLElement && findParent(target, (el) => isString(el.dataset.trackItem)))

@@ -9,7 +9,7 @@ import { onClickOutside } from '@vueuse/core'
 import { isString } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
 import type { TrackItem } from '@/services/track-item'
-import { TrackItemComponentName } from '@/types'
+import { TrackItemName } from '@/types'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -52,7 +52,7 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 
 const showOverlay = computed(() => {
   return (
-    props.data.component !== TrackItemComponentName.TRACK_ITEM_VIDEO &&
+    props.data.component !== TrackItemName.TRACK_ITEM_VIDEO &&
     props.data.id !== trackList.selectedId
   )
 })

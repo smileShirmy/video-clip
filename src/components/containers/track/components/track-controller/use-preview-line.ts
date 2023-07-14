@@ -18,8 +18,8 @@ import { isNumber } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
 
 export const usePreviewLine = (
-  trackContentRef: Ref<HTMLDivElement | undefined>,
-  timelineResourceRef: Ref<HTMLDivElement | undefined>
+  trackContentRef: Ref<HTMLDivElement | null>,
+  timelineResourceRef: Ref<HTMLDivElement | null>
 ) => {
   const trackStore = useTrackStore()
   const timelineStore = useTimelineStore()
@@ -84,7 +84,7 @@ export const usePreviewLine = (
   }
 
   function onMouseenter() {
-    if (enablePreviewLine.value && !draggable.dragging) {
+    if (enablePreviewLine.value && draggable.draggingState === null) {
       showPreviewLine.value = true
     }
   }

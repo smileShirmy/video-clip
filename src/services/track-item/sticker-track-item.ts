@@ -1,9 +1,9 @@
-import { TrackItemComponentName, type StickerResource } from '@/types'
+import { TrackItemName, type StickerResource } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import type { VideoTrack } from '../track/video-track'
 
 export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrackItem, VideoTrack> {
-  readonly component = TrackItemComponentName.TRACK_ITEM_STICKER
+  readonly component = TrackItemName.TRACK_ITEM_STICKER
 
   resource: StickerResource
 

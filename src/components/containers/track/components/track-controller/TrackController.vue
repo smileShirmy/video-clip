@@ -7,7 +7,7 @@ import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import TextItem from '../track-item/TextItem.vue'
 import SickerItem from '../track-item/StickerItem.vue'
-import { TrackItemComponentName } from '@/types'
+import { TrackItemName } from '@/types'
 import { trackList } from '@/services/track-list/track-list'
 import { TrackType } from '@/services/track/base-track'
 import { usePreviewLine } from './use-preview-line'
@@ -15,12 +15,13 @@ import { useSeekLine } from './use-seek-line'
 import { draggable } from '@/services/draggable/draggable'
 import { useResizeObserver } from '@vueuse/core'
 import { onMounted } from 'vue'
+import { DraggingState } from '@/services/draggable/types'
 
 defineOptions({
   components: {
-    [TrackItemComponentName.TRACK_ITEM_VIDEO]: VideoItem,
-    [TrackItemComponentName.TRACK_ITEM_TEXT]: TextItem,
-    [TrackItemComponentName.TRACK_ITEM_STICKER]: SickerItem
+    [TrackItemName.TRACK_ITEM_VIDEO]: VideoItem,
+    [TrackItemName.TRACK_ITEM_TEXT]: TextItem,
+    [TrackItemName.TRACK_ITEM_STICKER]: SickerItem
   }
 })
 
@@ -28,16 +29,12 @@ const trackStore = useTrackStore()
 const timelineStore = useTimelineStore()
 
 const trackControllerRef = ref<HTMLDivElement | null>(null)
+const trackListRef = ref<HTMLDivElement[] | null>(null)
+const trackContentRef = ref<HTMLDivElement | null>(null)
+const trackPlaceholderRef = ref<HTMLDivElement | null>(null)
+const timelineResourceRef = ref<HTMLDivElement | null>(null)
 
-const {
-  trackListRef,
-  trackContentRef,
-  trackPlaceholderRef,
-  timelineResourceRef,
-  verticalLineStyle,
-  horizontalLineStyle,
-  trackPlaceholderStyle
-} = draggable.setup()
+const { verticalLineStyle, horizontalLineStyle, trackPlaceholderStyle } = draggable.setup()
 
 const { previewLineStyle, previewLineX } = usePreviewLine(trackContentRef, timelineResourceRef)
 
@@ -50,6 +47,13 @@ const trackContentWidthStyle: ComputedRef<CSSProperties> = computed(() => ({
 onMounted(() => {
   useResizeObserver(trackControllerRef.value, ([{ contentRect }]) => {
     trackStore.resizeTimelineWidth(contentRect.width - 80)
+  })
+
+  draggable.initElementRef({
+    trackListRef: trackListRef.value!,
+    trackContentRef: trackContentRef.value!,
+    trackPlaceholderRef: trackPlaceholderRef.value!,
+    timelineResourceRef: timelineResourceRef.value!
   })
 })
 </script>
@@ -86,14 +90,14 @@ onMounted(() => {
         </ul>
 
         <div
-          v-show="trackStore.showTrackPlaceholder"
+          v-show="draggable.draggingState.value === DraggingState.ADD_TO_CURRENT_TRACK_STATE"
           class="track-placeholder"
           ref="trackPlaceholderRef"
           :style="trackPlaceholderStyle"
         ></div>
 
         <div
-          v-show="trackStore.showHorizontalLine"
+          v-show="draggable.draggingState.value === DraggingState.ADD_TO_NEW_TRACK_STATE"
           class="horizontal-line"
           :style="horizontalLineStyle"
         ></div>
