@@ -43,9 +43,9 @@ export class VideoTrack extends BaseTrack<VideoTrackAllowItem> {
 
   bindParentTrack() {
     watch(
-      this.trackList,
+      this.trackItemList,
       () => {
-        this.trackList.forEach((item) => (item.parentTrack = this))
+        this.trackItemList.forEach((item) => (item.parentTrack = this))
       },
       { immediate: true }
     )

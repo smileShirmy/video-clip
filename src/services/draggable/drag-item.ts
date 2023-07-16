@@ -140,7 +140,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
       const track = trackList.list[index]
       const bottomTop = top + track.height
 
-      this.cacheCompareStickyFrame(track.trackList)
+      this.cacheCompareStickyFrame(track.trackItemList)
 
       const trackData: TrackData = {
         type: TrackDataType.TRACK,

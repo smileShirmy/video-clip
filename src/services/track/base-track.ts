@@ -21,14 +21,14 @@ export abstract class BaseTrack<T extends TrackItem> {
 
   abstract readonly type: TrackType
 
-  protected readonly _trackList = shallowReactive<T[]>([])
+  protected readonly _trackItemList = shallowReactive<T[]>([])
 
-  get trackList() {
-    return this._trackList
+  get trackItemList() {
+    return this._trackItemList
   }
 
   get hasVideo() {
-    return this.trackList.some(
+    return this._trackItemList.some(
       (trackItem) => trackItem.component === TrackItemName.TRACK_ITEM_VIDEO
     )
   }
@@ -36,7 +36,7 @@ export abstract class BaseTrack<T extends TrackItem> {
   abstract bindParentTrack(): void
 
   getLastFrame(excludeTrackItem?: TrackItem) {
-    return this._trackList.reduce((pre, cur) => {
+    return this._trackItemList.reduce((pre, cur) => {
       if (excludeTrackItem && excludeTrackItem.id === cur.id) return pre
       return cur.endFrame > pre ? cur.endFrame : pre
     }, 0)
@@ -49,11 +49,11 @@ export abstract class BaseTrack<T extends TrackItem> {
     const id = isString(item) ? item : item.id
     let removed = false
 
-    const len = this._trackList.length - 1
+    const len = this._trackItemList.length - 1
     for (let i = len; i >= 0; i -= 1) {
-      const trackItem = this._trackList[i]
+      const trackItem = this._trackItemList[i]
       if (trackItem.id === id) {
-        this._trackList.splice(i, 1)
+        this._trackItemList.splice(i, 1)
         removed = true
       }
     }
@@ -67,7 +67,7 @@ export abstract class BaseTrack<T extends TrackItem> {
   }
 
   addTrackItemWithNoEffect(trackItem: T) {
-    this._trackList.push(trackItem)
+    this._trackItemList.push(trackItem)
   }
 
   abstract addTrackItem(trackItem: TrackItem | TrackItem[]): boolean
@@ -85,7 +85,7 @@ export abstract class BaseTrack<T extends TrackItem> {
         // 添加之前先移除 trackLine 中相同的 trackItem
         const removed = this.parentTrackList.removeTrackItem(trackItem, false)
 
-        this._trackList.push(trackItem)
+        this._trackItemList.push(trackItem)
 
         // 如果之前没有相同的 trackItem，说明这是一个全新的 trackItem
         if (!removed) {
@@ -120,7 +120,7 @@ export abstract class BaseTrack<T extends TrackItem> {
 
   getTrackItem(item: string | TrackItem): TrackItem | null {
     const id = isString(item) ? item : item.id
-    const target = this._trackList.find((item) => item.id === id)
+    const target = this._trackItemList.find((item) => item.id === id)
     return target ?? null
   }
 
@@ -128,7 +128,7 @@ export abstract class BaseTrack<T extends TrackItem> {
    * 清空当前 trackLine 的 trackList
    */
   clearTrackList() {
-    this._trackList.splice(0, this._trackList.length)
+    this._trackItemList.splice(0, this._trackItemList.length)
 
     const trackStore = useTrackStore()
     trackStore.updateMaxFrameCount()

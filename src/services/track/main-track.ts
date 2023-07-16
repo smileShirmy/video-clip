@@ -36,9 +36,9 @@ export class MainTrack extends BaseTrack<MainTrackAllowItem> {
 
   bindParentTrack() {
     watch(
-      this.trackList,
+      this.trackItemList,
       () => {
-        this.trackList.forEach((item) => (item.parentTrack = this))
+        this.trackItemList.forEach((item) => (item.parentTrack = this))
       },
       { immediate: true }
     )

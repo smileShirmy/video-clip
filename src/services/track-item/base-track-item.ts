@@ -80,8 +80,8 @@ export abstract class BaseTrackItem<
     }
     if (!this.parentTrack) return this.maxFrame
 
-    const { trackList } = this.parentTrack
-    const frames = (trackList as T[]).reduce((pre: number[], cur) => {
+    const { trackItemList } = this.parentTrack
+    const frames = (trackItemList as T[]).reduce((pre: number[], cur) => {
       if (
         cur.id !== this.id &&
         cur.startFrame <= this.maxFrame &&
@@ -100,8 +100,8 @@ export abstract class BaseTrackItem<
     }
     if (!this.parentTrack) return this.maxFrame
 
-    const { trackList } = this.parentTrack
-    const frames = (trackList as T[]).reduce((pre: number[], cur) => {
+    const { trackItemList } = this.parentTrack
+    const frames = (trackItemList as T[]).reduce((pre: number[], cur) => {
       if (cur.id !== this.id && cur.endFrame >= this.minFrame && cur.endFrame <= this.startFrame) {
         return pre.concat([cur.endFrame])
       }

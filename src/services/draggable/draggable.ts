@@ -73,6 +73,10 @@ class Draggable {
     }
   }
 
+  /**
+   * 拖拽方法(新增资源到轨道/移动轨道资源)
+   * 如果是移动资源才需要传 movingId 和 dragOffset
+   */
   onDragStart(
     e: PointerEvent | MouseEvent,
     dragTarget: HTMLElement,
@@ -105,6 +109,9 @@ class Draggable {
     }
   }
 
+  /**
+   * 更新添加到当前轨道占位符的属性
+   */
   setAddToCurrentTrackState(stateData: AddToCurrentTrackState) {
     this.trackPlaceholderRect.top = stateData.top
     this.trackPlaceholderRect.startFrame = stateData.startFrame
@@ -112,10 +119,18 @@ class Draggable {
     this.trackPlaceholderRect.height = stateData.addToTrack.height
   }
 
+  /**
+   * 更新插入到新轨道指示线的高度
+   */
   setAddToNewTrackState(stateData: AddToNewTrackState) {
     this.horizontalLineTop.value = stateData.top
   }
 
+  /**
+   * @NOTICE 当拖拽发生时才触发
+   *
+   * 更新拖拽状态(添加资源到新轨道/添加资源到当前轨道)
+   */
   onStateChange = (movingId: string | null) => {
     return (stateData: DraggingStateData | null) => {
       if (stateData === null) {

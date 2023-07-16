@@ -83,7 +83,7 @@ onMounted(() => {
             :style="{ height: `${track.height}px` }"
             :class="{ 'is-main': track.type === TrackType.MAIN }"
           >
-            <template v-for="item in track.trackList" :key="item.id">
+            <template v-for="item in track.trackItemList" :key="item.id">
               <component :is="item.component" :data="item"></component>
             </template>
           </li>

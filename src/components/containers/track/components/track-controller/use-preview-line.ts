@@ -52,7 +52,7 @@ export const usePreviewLine = (
 
     if (enableSticky) {
       trackList.list.forEach((line) => {
-        line.trackList.forEach((trackItem) => {
+        line.trackItemList.forEach((trackItem) => {
           const start = timelineStore.frameToPixel(trackItem.startFrame)
           const end = timelineStore.frameToPixel(trackItem.endFrame)
 

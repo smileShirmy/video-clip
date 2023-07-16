@@ -34,7 +34,7 @@ class TrackList {
    * 轨道中不存在任何资源
    */
   get isEmpty() {
-    return this.list.length === 1 && this.list[0].trackList.length === 0
+    return this.list.length === 1 && this.list[0].trackItemList.length === 0
   }
 
   get mainTrack(): MainTrack {
@@ -42,7 +42,7 @@ class TrackList {
   }
 
   get trackItemCount(): number {
-    return this.list.reduce((pre, cur) => pre + cur.trackList.length, 0)
+    return this.list.reduce((pre, cur) => pre + cur.trackItemList.length, 0)
   }
 
   constructor() {
@@ -88,31 +88,34 @@ class TrackList {
   }
 
   /**
-   * 移除没有 trackItem 的 trackLine（主轨道不移除）
+   * 移除没有资源的轨道（主轨道不移除）
    */
   removeEmptyTrack() {
     const len = this.list.length - 1
     for (let i = len; i >= 0; i -= 1) {
-      const trackLine = this.list[i]
-      if (trackLine.type !== TrackType.MAIN && trackLine.trackList.length === 0) {
+      const track = this.list[i]
+      if (track.type !== TrackType.MAIN && track.trackItemList.length === 0) {
         this.list.splice(i, 1)
       }
     }
   }
 
-  insert(trackLine: Track, insertIndex: number) {
-    trackLine.parentTrackList = this
-    this.list.splice(insertIndex, 0, trackLine)
+  insert(track: Track, insertIndex: number) {
+    track.parentTrackList = this
+    this.list.splice(insertIndex, 0, track)
   }
 
+  /**
+   * 从下往上找到分割的资源
+   */
   getSplitTrackItem(splitFrame: number): TrackItem | null {
     const len = trackList.list.length
     for (let i = len - 1; i >= 0; i -= 1) {
-      const line = trackList.list[i]
-      for (let j = 0; j < line.trackList.length; j += 1) {
-        const item = line.trackList[j]
+      const { trackItemList } = trackList.list[i]
+      for (let j = 0; j < trackItemList.length; j += 1) {
+        const item = trackItemList[j]
         if (splitFrame > item.startFrame && splitFrame < item.endFrame) {
-          return line.trackList[j]
+          return trackItemList[j]
         }
       }
     }

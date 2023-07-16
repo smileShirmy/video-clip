@@ -151,7 +151,7 @@ export class DragVideo extends DragItem<VideoTrackItem> {
     let allowIndex = -1
     // 从下往上遍历
     for (let i = startIndex; i >= endIndex; i -= 1) {
-      const trackItemList = this.onTrackDataList[i].track.trackList
+      const trackItemList = this.onTrackDataList[i].track.trackItemList
       if (isIntersection(trackItemList) === false) {
         allowIndex = i
         break
@@ -259,7 +259,7 @@ export class DragVideo extends DragItem<VideoTrackItem> {
         height: this.mainTrackData.track.hasVideo ? VIDEO_TRACK_HEIGHT : OTHER_TRACK_HEIGHT
       })
       trackList.insert(track, insertTrackIndex - 1)
-      track.addTrackItem(this.mainTrackData.track.trackList)
+      track.addTrackItem(this.mainTrackData.track.trackItemList)
 
       // 清空主轨道并且把当前拖拽的资源放入主轨道
       this.mainTrackData.track.clearTrackList()
