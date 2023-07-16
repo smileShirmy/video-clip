@@ -1,4 +1,3 @@
-import { VideoTrackItem } from '../track-item/video-track-item'
 import { trackList } from '../track-list/track-list'
 import {
   TrackDataType,
@@ -18,12 +17,15 @@ import type { TrackItem } from '../track-item'
 import { VideoTrack } from '../track/video-track'
 import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
 import { DragItem } from './drag-item'
+import type { AudioTrackItem } from '../track-item/audio-track-item'
 
-export class DragVideo extends DragItem<VideoTrackItem> {
+type DragTrackItem = Exclude<TrackItem, AudioTrackItem>
+
+export class DragCommon extends DragItem<DragTrackItem> {
   trackDataList: TrackDataItem[] = []
   onTrackDataList: TrackData[] = []
 
-  constructor(options: DragOptions<VideoTrackItem>) {
+  constructor(options: DragOptions<DragTrackItem>) {
     super(options)
 
     this.initTrackDataList()

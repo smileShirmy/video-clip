@@ -4,7 +4,7 @@ import { computed, reactive, ref, type ComputedRef, type CSSProperties } from 'v
 import { type DragOffset } from './types'
 import type { TrackItem } from '../track-item'
 import { TrackItemName } from '@/types'
-import { DragVideo } from './drag-video'
+import { DragCommon } from './drag-common'
 import {
   DraggingState,
   type AddToCurrentTrackState,
@@ -108,11 +108,8 @@ class Draggable {
 
     if (dragTrackItem.component === TrackItemName.TRACK_ITEM_AUDIO) {
       new DragAudio({ ...options, dragTrackItem })
-    }
-    // TODO: DragVideo 改成 DragCommon 里面对 TEXT 类型特殊处理不让放到主轨道, 插入新轨道的高度需要根据情况调整
-
-    if (dragTrackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
-      new DragVideo({ ...options, dragTrackItem })
+    } else {
+      new DragCommon({ ...options, dragTrackItem })
     }
   }
 
