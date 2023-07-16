@@ -18,7 +18,7 @@ function onDragStart(e: PointerEvent) {
 </script>
 
 <template>
-  <div ref="resourceItemRef" class="audio-item-container" @pointerdown="onDragStart"></div>
+  <div ref="resourceItemRef" class="audio-item-container" @pointerdown="onDragStart">音频资源</div>
 </template>
 
 <style scoped lang="scss">

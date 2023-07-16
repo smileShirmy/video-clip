@@ -22,6 +22,8 @@ import { TrackType } from '../track/base-track'
 import type { TimelineStore } from '@/stores/timeline'
 import type { TrackStore } from '@/stores/track'
 
+export const INTERVAL_MIDDLE_OFFSET = (TRACK_INTERVAL - 1) / 2
+
 export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   readonly dragTarget: HTMLElement
   readonly dragTrackItem: T
@@ -37,6 +39,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
 
   protected baseTrackDataList: TrackDataItem[] = []
   protected mainTrackData!: TrackData
+  protected mainTrackIntervalData!: TrackIntervalData
   abstract trackDataList: TrackDataItem[]
 
   private stickyFrameCache: { frame: number; pixel: number }[] = []
@@ -138,7 +141,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
       const { top } = getElementPosition(trackRef, this.trackContentRef)
       const index = Number(trackRef.dataset.index)
       const track = trackList.list[index]
-      const bottomTop = top + track.height
+      const bottomTop = top + track.height - 1
 
       this.cacheCompareStickyFrame(track.trackItemList)
 
@@ -150,27 +153,29 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
         trackType: track.type,
         trackRef,
         index,
-        overIntervalMiddleTop: top - TRACK_INTERVAL / 2,
-        underIntervalMiddleTop: bottomTop + TRACK_INTERVAL / 2
+        overIntervalMiddleTop: top - INTERVAL_MIDDLE_OFFSET - 1,
+        underIntervalMiddleTop: bottomTop + INTERVAL_MIDDLE_OFFSET + 1
       }
 
       baseTrackDataList.push(trackData)
 
       const intervalTop = bottomTop + 1
-      const intervalBottomTop = intervalTop + TRACK_INTERVAL
-      baseTrackDataList.push({
+      const intervalBottomTop = intervalTop + TRACK_INTERVAL - 1
+      const trackIntervalData: TrackIntervalData = {
         type: TrackDataType.TRACK_INTERVAL,
         top: intervalTop,
-        middleTop: bottomTop + TRACK_INTERVAL / 2,
+        middleTop: intervalTop + INTERVAL_MIDDLE_OFFSET,
         bottomTop: intervalBottomTop,
         overTrack: track,
         overTrackType: track.type,
         overTrackRef: trackRef,
         overTrackIndex: index
-      })
+      }
+      baseTrackDataList.push(trackIntervalData)
 
       if (track.type === TrackType.MAIN) {
         this.mainTrackData = trackData
+        this.mainTrackIntervalData = trackIntervalData
       }
 
       if (index === 0) {
@@ -178,7 +183,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
           type: TrackDataType.BLANK_TOP,
           top: position.top,
           bottomTop: top - 1,
-          overBottomIntervalTop: top - 1 - TRACK_INTERVAL / 2
+          overBottomIntervalTop: top - 1 - INTERVAL_MIDDLE_OFFSET
         })
       }
 
@@ -187,7 +192,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
         baseTrackDataList.push({
           type: TrackDataType.BLANK_BOTTOM,
           top: intervalBottomTop + 1,
-          bottomTop: position.top + height
+          bottomTop: position.top + height - 1
         })
       }
     }

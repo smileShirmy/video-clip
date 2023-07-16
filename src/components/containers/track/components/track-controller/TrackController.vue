@@ -6,6 +6,7 @@ import { useTimelineStore } from '@/stores/timeline'
 import TimelineRuler from './TimelineRuler.vue'
 import VideoItem from '../track-item/VideoItem.vue'
 import TextItem from '../track-item/TextItem.vue'
+import AudioItem from '../track-item/AudioItem.vue'
 import SickerItem from '../track-item/StickerItem.vue'
 import { TrackItemName } from '@/types'
 import { trackList } from '@/services/track-list/track-list'
@@ -19,6 +20,7 @@ import { DraggingState } from '@/services/draggable/types'
 
 defineOptions({
   components: {
+    [TrackItemName.TRACK_ITEM_AUDIO]: AudioItem,
     [TrackItemName.TRACK_ITEM_VIDEO]: VideoItem,
     [TrackItemName.TRACK_ITEM_TEXT]: TextItem,
     [TrackItemName.TRACK_ITEM_STICKER]: SickerItem

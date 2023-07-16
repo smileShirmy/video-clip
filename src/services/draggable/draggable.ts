@@ -11,6 +11,7 @@ import {
   type DraggingStateData,
   type AddToNewTrackState
 } from './types'
+import { DragAudio } from './drag-audio'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -92,20 +93,26 @@ class Draggable {
     trackStore.disableScroll = true
     trackStore.showPreviewLine = false
 
+    const options = {
+      dragTarget,
+      movingId,
+      dragOffset,
+      timelineResourceRef: this.timelineResourceRef!,
+      trackListRef: this.trackListRef!,
+      trackContentRef: this.trackContentRef!,
+      timelineStore,
+      trackStore,
+      onStateChange: this.onStateChange(movingId),
+      onDragEnd: this.onDragEnd
+    }
+
+    if (dragTrackItem.component === TrackItemName.TRACK_ITEM_AUDIO) {
+      new DragAudio({ ...options, dragTrackItem })
+    }
+    // TODO: DragVideo 改成 DragCommon 里面对 TEXT 类型特殊处理不让放到主轨道, 插入新轨道的高度需要根据情况调整
+
     if (dragTrackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
-      new DragVideo({
-        dragTarget,
-        dragTrackItem,
-        movingId,
-        dragOffset,
-        timelineResourceRef: this.timelineResourceRef!,
-        trackListRef: this.trackListRef!,
-        trackContentRef: this.trackContentRef!,
-        timelineStore,
-        trackStore,
-        onStateChange: this.onStateChange(movingId),
-        onDragEnd: this.onDragEnd
-      })
+      new DragVideo({ ...options, dragTrackItem })
     }
   }
 
