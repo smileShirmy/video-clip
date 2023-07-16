@@ -25,6 +25,7 @@ export interface AddToNewTrackState {
   top: number
   insertTrackIndex: number
   startFrame: number
+  isSticky?: boolean
 }
 
 export interface AddToCurrentTrackState {
@@ -33,6 +34,10 @@ export interface AddToCurrentTrackState {
   addToTrack: Track
   startFrame: number
   widthFrame: number
+  stickyInfo: {
+    isStartSticky: boolean
+    stickyFrame: number
+  } | null
 }
 
 export type DraggingStateData = AddToNewTrackState | AddToCurrentTrackState

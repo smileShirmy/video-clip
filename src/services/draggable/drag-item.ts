@@ -1,6 +1,6 @@
-import { TRACK_INTERVAL } from '@/config'
+import { TRACK_INTERVAL, TRACK_STICK_WIDTH } from '@/config'
 import { getElementPosition } from '../helpers/dom'
-import { isString } from '../helpers/general'
+import { isNumber, isString } from '../helpers/general'
 import type { TrackItem } from '../track-item'
 import { trackList } from '../track-list/track-list'
 import {
@@ -39,7 +39,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   protected mainTrackData!: TrackData
   abstract trackDataList: TrackDataItem[]
 
-  allTrackItem: TrackItem[] = []
+  private stickyFrameCache: { frame: number; pixel: number }[] = []
 
   protected addTrackStartFrame = 0
   protected stateData: DraggingStateData | null = null
@@ -106,9 +106,26 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
     return y >= compareTop
   }
 
-  isSticky() {
-    for (const trackItem of this.allTrackItem) {
+  cacheCompareStickyFrame(trackItemList: TrackItem[]) {
+    const { frameToPixel } = this.timelineStore
+    this.stickyFrameCache.push({
+      pixel: 0,
+      frame: 0
+    })
+
+    for (const trackItem of trackItemList) {
       if (trackItem.id === this.dragTrackItem.id) continue
+
+      this.stickyFrameCache.push(
+        {
+          pixel: frameToPixel(trackItem.startFrame),
+          frame: trackItem.startFrame
+        },
+        {
+          pixel: frameToPixel(trackItem.endFrame),
+          frame: trackItem.endFrame
+        }
+      )
     }
   }
 
@@ -122,7 +139,8 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
       const index = Number(trackRef.dataset.index)
       const track = trackList.list[index]
       const bottomTop = top + track.height
-      this.allTrackItem = this.allTrackItem.concat(track.trackList)
+
+      this.cacheCompareStickyFrame(track.trackList)
 
       const trackData: TrackData = {
         type: TrackDataType.TRACK,
@@ -229,19 +247,116 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
     return this.timelineStore.pixelToFrame(x - this.dragOffset.offsetX)
   }
 
+  /**
+   * 获取产生吸附的帧
+   *
+   * @param {number} frame 当前鼠标所在位置上的帧
+   * @returns {number | null} 如果存在满足吸附条件的则返回 number 如果不满足则返回 null
+   */
+  protected getStickyStartFrame(frame: number): number | null {
+    if (!this.trackStore.enableSticky) return null
+
+    const { frameToPixel } = this.timelineStore
+    const x = frameToPixel(frame)
+    let stickyFrame: number | null = null
+    let closestDiff: number | null = null
+
+    for (const { frame, pixel } of this.stickyFrameCache) {
+      const diff = Math.abs(x - pixel)
+      if (diff < TRACK_STICK_WIDTH) {
+        if (closestDiff === null || diff < closestDiff) {
+          closestDiff = diff
+          stickyFrame = frame
+        }
+      }
+    }
+
+    return stickyFrame
+  }
+
+  /**
+   * 获取产生吸附的帧(根据范围判断,可能开始产生吸附也可能结束产生吸附)
+   *
+   * @param {number} startFrame
+   * @param {number} endFrame
+   * @returns 没有产生吸附时返回 null isStartSticky 表示开始帧产生吸附
+   */
+  protected getStickyStartFrameWidthInterval(
+    startFrame: number,
+    endFrame: number
+  ): { isStartSticky: boolean; stickyFrame: number } | null {
+    if (!this.trackStore.enableSticky) return null
+
+    const { frameToPixel } = this.timelineStore
+    const startX = frameToPixel(startFrame)
+    const endX = frameToPixel(endFrame)
+    let stickyFrame: number | null = null
+    let closestDiff: number | null = null
+    let isStartSticky = false
+
+    for (const { frame, pixel } of this.stickyFrameCache) {
+      const startDiff = Math.abs(startX - pixel)
+      if (startDiff < TRACK_STICK_WIDTH) {
+        if (closestDiff === null || startDiff < closestDiff) {
+          closestDiff = startDiff
+          stickyFrame = frame
+          isStartSticky = true
+        }
+      }
+
+      const endDiff = Math.abs(endX - pixel)
+      if (endDiff < TRACK_STICK_WIDTH) {
+        if (closestDiff === null || endDiff < closestDiff) {
+          closestDiff = startDiff
+          stickyFrame = frame
+          isStartSticky = false
+        }
+      }
+    }
+
+    return isNumber(stickyFrame)
+      ? {
+          isStartSticky,
+          stickyFrame
+        }
+      : null
+  }
+
+  /**
+   * 设置添加资源到一个新的轨道的状态
+   */
   protected setAddToNewTrackState(stateData: Omit<AddToNewTrackState, 'state'>) {
+    const stickyFrame = this.getStickyStartFrame(stateData.startFrame)
     const data: AddToNewTrackState = {
       state: DraggingState.ADD_TO_NEW_TRACK_STATE,
-      ...stateData
+      isSticky: isNumber(stickyFrame),
+      ...stateData,
+      startFrame: isNumber(stickyFrame) ? stickyFrame : stateData.startFrame
     }
     this.stateData = data
     this.onStateChange(data)
   }
 
-  protected setAddToCurrentTrackState(stateData: Omit<AddToCurrentTrackState, 'state'>) {
+  /**
+   * 设置添加资源到当前轨道的状态
+   */
+  protected setAddToCurrentTrackState(
+    stateData: Omit<AddToCurrentTrackState, 'state' | 'stickyInfo'>
+  ) {
+    let { startFrame } = stateData
+    const { widthFrame } = stateData
+
+    const stickyInfo = this.getStickyStartFrameWidthInterval(startFrame, startFrame + widthFrame)
+    if (stickyInfo) {
+      const { isStartSticky, stickyFrame } = stickyInfo
+      startFrame = isStartSticky ? stickyFrame : stickyFrame - widthFrame
+    }
+
     const data: AddToCurrentTrackState = {
       state: DraggingState.ADD_TO_CURRENT_TRACK_STATE,
-      ...stateData
+      ...stateData,
+      startFrame,
+      stickyInfo
     }
 
     this.stateData = data
