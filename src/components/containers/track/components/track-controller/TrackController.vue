@@ -36,7 +36,7 @@ const trackContentRef = ref<HTMLDivElement | null>(null)
 const trackPlaceholderRef = ref<HTMLDivElement | null>(null)
 const timelineResourceRef = ref<HTMLDivElement | null>(null)
 
-const { verticalLineStyle, horizontalLineStyle, trackPlaceholderStyle } = draggable.setup()
+const { stickyLineStyle, horizontalLineStyle, trackPlaceholderStyle } = draggable.setup()
 
 const { previewLineStyle, previewLineX } = usePreviewLine(trackContentRef, timelineResourceRef)
 
@@ -104,9 +104,9 @@ onMounted(() => {
           :style="horizontalLineStyle"
         ></div>
         <div
-          v-show="trackStore.showVerticalLine"
-          class="vertical-line"
-          :style="verticalLineStyle"
+          v-show="draggable.stickyFrame.value !== null"
+          class="sticky-line"
+          :style="stickyLineStyle"
         ></div>
 
         <div
@@ -172,7 +172,7 @@ onMounted(() => {
     pointer-events: none;
   }
 
-  .vertical-line {
+  .sticky-line {
     position: absolute;
     top: 0;
     bottom: 0;

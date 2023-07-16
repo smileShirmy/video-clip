@@ -13,6 +13,7 @@ import {
 } from './types'
 import { DragAudio } from './drag-audio'
 import { DragText } from './drag-text'
+import { isNumber } from '../helpers/general'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -20,7 +21,7 @@ class Draggable {
   trackPlaceholderRef: HTMLDivElement | null = null
   timelineResourceRef: HTMLDivElement | null = null
 
-  verticalLineFrame = ref(0)
+  stickyFrame = ref<number | null>(0)
   horizontalLineTop = ref(0)
 
   resizing = false
@@ -55,8 +56,10 @@ class Draggable {
       top: `${this.horizontalLineTop.value}px`
     }))
 
-    const verticalLineStyle: ComputedRef<CSSProperties> = computed(() => ({
-      left: timelineStore.frameToPercentWithUnit(this.verticalLineFrame.value)
+    const stickyLineStyle: ComputedRef<CSSProperties> = computed(() => ({
+      left: isNumber(this.stickyFrame.value)
+        ? timelineStore.frameToPercentWithUnit(this.stickyFrame.value)
+        : 0
     }))
 
     const trackPlaceholderStyle: ComputedRef<CSSProperties> = computed(() => {
@@ -70,7 +73,7 @@ class Draggable {
 
     return {
       horizontalLineStyle,
-      verticalLineStyle,
+      stickyLineStyle,
       trackPlaceholderStyle
     }
   }
@@ -124,6 +127,12 @@ class Draggable {
     this.trackPlaceholderRect.startFrame = stateData.startFrame
     this.trackPlaceholderRect.widthFrame = stateData.widthFrame
     this.trackPlaceholderRect.height = stateData.addToTrack.height
+
+    if (stateData.stickyInfo) {
+      this.stickyFrame.value = stateData.stickyInfo.stickyFrame
+    } else {
+      this.stickyFrame.value = null
+    }
   }
 
   /**
@@ -131,6 +140,12 @@ class Draggable {
    */
   setAddToNewTrackState(stateData: AddToNewTrackState) {
     this.horizontalLineTop.value = stateData.top
+
+    if (stateData.isSticky) {
+      this.stickyFrame.value = stateData.startFrame
+    } else {
+      this.stickyFrame.value = null
+    }
   }
 
   /**
@@ -143,6 +158,7 @@ class Draggable {
       if (stateData === null) {
         this.movingId.value = null
         this.draggingState.value = null
+        this.stickyFrame.value = null
         return
       }
 
