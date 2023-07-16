@@ -63,6 +63,8 @@ export abstract class BaseTrack<T extends TrackItem> {
       trackStore.updateMaxFrameCount()
     }
 
+    this.updateTrackHeight()
+
     return removed
   }
 
@@ -110,6 +112,8 @@ export abstract class BaseTrack<T extends TrackItem> {
         trackStore.updateMaxFrameCount()
       }
     }
+
+    this.updateTrackHeight()
   }
 
   updateTrackHeight() {
@@ -132,5 +136,6 @@ export abstract class BaseTrack<T extends TrackItem> {
 
     const trackStore = useTrackStore()
     trackStore.updateMaxFrameCount()
+    this.updateTrackHeight()
   }
 }

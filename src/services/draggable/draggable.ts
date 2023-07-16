@@ -12,6 +12,7 @@ import {
   type AddToNewTrackState
 } from './types'
 import { DragAudio } from './drag-audio'
+import { DragText } from './drag-text'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -108,6 +109,8 @@ class Draggable {
 
     if (dragTrackItem.component === TrackItemName.TRACK_ITEM_AUDIO) {
       new DragAudio({ ...options, dragTrackItem })
+    } else if (dragTrackItem.component === TrackItemName.TRACK_ITEM_TEXT) {
+      new DragText({ ...options, dragTrackItem })
     } else {
       new DragCommon({ ...options, dragTrackItem })
     }
