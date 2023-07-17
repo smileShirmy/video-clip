@@ -13,7 +13,7 @@ export const useSeekLine = (
   const timeLienStore = useTimelineStore()
 
   function onPointerup(e: PointerEvent) {
-    if (draggable.resizing || draggable.draggingState !== null) return
+    if (draggable.resizing || draggable.draggingState.value !== null) return
 
     const target = e.target
     if (target instanceof HTMLElement && findParent(target, (el) => isString(el.dataset.trackItem)))

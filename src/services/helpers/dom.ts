@@ -24,10 +24,10 @@ export function getElementPosition(
   }
 }
 
-export function findParent(el: HTMLElement, position: (el: HTMLElement) => boolean) {
+export function findParent(el: HTMLElement, condition: (el: HTMLElement) => boolean) {
   let cur: HTMLElement | null = el
   do {
-    if (cur && position(cur)) return true
+    if (cur && condition(cur)) return true
 
     cur = cur.parentElement
   } while (cur !== null)
