@@ -84,7 +84,7 @@ export const usePreviewLine = (
   }
 
   function onMouseenter() {
-    if (enablePreviewLine.value && draggable.draggingState === null) {
+    if (enablePreviewLine.value && draggable.draggingState.value === null) {
       showPreviewLine.value = true
     }
   }
