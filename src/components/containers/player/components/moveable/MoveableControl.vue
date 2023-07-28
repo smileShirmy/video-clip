@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, type ComputedRef, type CSSProperties, computed } from 'vue'
-import { useScalable } from './use-scalable'
-
-// 参考资料 https://juejin.cn/post/7109020859490107423?searchId=202307211103117ABA13490ACDBE8E3FD5
+import { ref, type ShallowReactive } from 'vue'
+import { useRotatable } from './use-rotatable'
 
 export interface MoveableAttribute {
   top: number
@@ -10,61 +8,47 @@ export interface MoveableAttribute {
   width: number
   height: number
   scale: number
+  rotate: number
 }
+
+const centerCoordinate = {
+  x: 0,
+  y: 0
+}
+
+// const scaleCoordinate = {
+//   nw: { x: 0, y: 0 },
+//   ne: { x: 0, y: 0 },
+//   sw: { x: 0, y: 0 },
+//   se: { x: 0, y: 0 }
+// }
+
+// const rotateCoordinate = {
+//   x: 0,
+//   y: 0
+// }
 
 const visible = ref(false)
 
-const scale = ref(1)
+const { onRotate } = useRotatable()
 
-let width = 100
-let height = 100
-let top = 0
-let left = 0
-
-const sceneRect = {
-  top: 0,
-  left: 0
-}
-
-const { onScale } = useScalable(scale, sceneRect, {
-  top,
-  left,
-  width,
-  height
-})
-
-const moveableControlBoxStyle: ComputedRef<CSSProperties> = computed(() => {
-  return {
-    width: '100px',
-    height: '100px',
-    transform: `translate(0, 0)`
-  }
-})
-
-function setAttribute(targetAttribute: MoveableAttribute) {
-  scale.value = targetAttribute.scale
-
-  top = targetAttribute.top
-  left = targetAttribute.left
-  width = targetAttribute.width
-  height = targetAttribute.height
-}
-
-function setSceneRect(sceneContainerRef: HTMLDivElement) {
+function setCenterCoordinate(
+  targetAttribute: ShallowReactive<MoveableAttribute>,
+  sceneContainerRef: HTMLDivElement
+) {
   const { top, left } = sceneContainerRef.getBoundingClientRect()
-  sceneRect.top = top
-  sceneRect.left = left
+  centerCoordinate.x = left + targetAttribute.left + targetAttribute.width / 2
+  centerCoordinate.y = top + targetAttribute.top + targetAttribute.height / 2
 }
 
 function show(
   moveTarget: HTMLDivElement,
-  targetAttribute: MoveableAttribute,
+  targetAttribute: ShallowReactive<MoveableAttribute>,
   sceneContainerRef: HTMLDivElement
 ) {
-  setAttribute(targetAttribute)
-  setSceneRect(sceneContainerRef)
-
   visible.value = true
+
+  setCenterCoordinate(targetAttribute, sceneContainerRef)
 }
 
 defineExpose({
@@ -73,11 +57,13 @@ defineExpose({
 </script>
 
 <template>
-  <div v-if="visible" class="moveable-control-box" :style="moveableControlBoxStyle">
-    <div class="moveable-control moveable-nw" @pointerdown="onScale"></div>
-    <div class="moveable-control moveable-ne" @pointerdown="onScale"></div>
-    <div class="moveable-control moveable-sw" @pointerdown="onScale"></div>
-    <div class="moveable-control moveable-se" @pointerdown="onScale"></div>
+  <div v-if="visible" class="moveable-control-box">
+    <!-- 暂时先用绝对定位控制，后面改成直接用宽高限制 -->
+    <div class="moveable-control moveable-nw"></div>
+    <div class="moveable-control moveable-ne"></div>
+    <div class="moveable-control moveable-sw"></div>
+    <div class="moveable-control moveable-se"></div>
+    <div class="moveable-control moveable-rotation" @pointerdown="onRotate"></div>
   </div>
 </template>
 
@@ -87,6 +73,8 @@ defineExpose({
   position: absolute;
   top: 0;
   left: 0;
+  width: 100; // 暂时写死
+  height: 100; // 暂时写死
   will-change: transform;
   outline: 1px solid transparent;
   border: 1px solid var(--app-color-white);
@@ -122,6 +110,12 @@ defineExpose({
       right: 0;
       transform: translate(50%, 50%);
     }
+
+    &.moveable-rotation {
+      left: 50%;
+      transform: translate(-50%, 50%);
+      bottom: 0;
+    }
   }
 
   .moveable-item {
@@ -129,4 +123,3 @@ defineExpose({
   }
 }
 </style>
-./use-scaleable

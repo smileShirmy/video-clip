@@ -14,7 +14,8 @@ const item: ShallowReactive<MoveableAttribute> = shallowReactive({
   left: 0,
   width: 100,
   height: 100,
-  scale: 1
+  scale: 1,
+  rotate: 0
 })
 
 const itemList = [item]
@@ -46,7 +47,7 @@ defineExpose({
           left: `${item.left}px`,
           width: `${item.width}px`,
           height: `${item.height}px`,
-          transform: `scale(${item.scale})`
+          transform: `scale(${item.scale}) rotate(${item.rotate}deg)`
         }"
         @click="select($event, item)"
       ></div>
