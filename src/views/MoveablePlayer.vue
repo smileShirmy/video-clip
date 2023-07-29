@@ -56,6 +56,7 @@ function onRotate({ drag }: any) {
   }
 
   .scene {
+    position: relative;
     flex-shrink: 0;
     width: 500px;
     height: 500px;
@@ -63,9 +64,12 @@ function onRotate({ drag }: any) {
   }
 
   .target {
+    position: absolute;
     display: inline-block;
     background-color: red;
     color: #fff;
+    top: 100px;
+    left: 100px;
     width: 100px;
     height: 100px;
   }

@@ -3,11 +3,14 @@ import { ref } from 'vue'
 import MoveableControl, { type MoveableAttribute } from './components/moveable/MoveableControl.vue'
 import type { ShallowReactive } from 'vue'
 import { shallowReactive } from 'vue'
+import { onMounted } from 'vue'
 
 const playerContainer = ref<HTMLElement>()
 const sceneContainerRef = ref<HTMLDivElement | null>(null)
 
 const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
+
+const moveableItemRef = ref<HTMLDivElement[]>([])
 
 const item: ShallowReactive<MoveableAttribute> = shallowReactive({
   top: 0,
@@ -20,15 +23,21 @@ const item: ShallowReactive<MoveableAttribute> = shallowReactive({
 
 const itemList = [item]
 
-function select(event: MouseEvent, attribute: MoveableAttribute) {
+function select(event: MouseEvent) {
   if (
     moveableControlRef.value &&
     event.target instanceof HTMLDivElement &&
     sceneContainerRef.value instanceof HTMLDivElement
   ) {
-    moveableControlRef.value.show(event.target, attribute, sceneContainerRef.value)
+    moveableControlRef.value.show(event.target, sceneContainerRef.value)
   }
 }
+
+onMounted(() => {
+  if (moveableControlRef.value && sceneContainerRef.value) {
+    moveableControlRef.value.show(moveableItemRef.value[0], sceneContainerRef.value)
+  }
+})
 
 defineExpose({
   playerContainer
@@ -41,15 +50,14 @@ defineExpose({
       <div
         v-for="(item, i) in itemList"
         :key="i"
+        ref="moveableItemRef"
         class="moveable-item"
         :style="{
-          top: `${item.top}px`,
-          left: `${item.left}px`,
           width: `${item.width}px`,
           height: `${item.height}px`,
-          transform: `scale(${item.scale}) rotate(${item.rotate}deg)`
+          transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
         }"
-        @click="select($event, item)"
+        @click="select"
       ></div>
 
       <MoveableControl ref="moveableControlRef" />
@@ -70,6 +78,11 @@ defineExpose({
     width: 700px;
     height: 300px;
     background-color: var(--app-color-black);
+
+    .moveable-item {
+      top: 0;
+      left: 0;
+    }
   }
 }
 </style>
