@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, type ComputedRef, type CSSProperties } from 'vue'
 import { useRotatable } from './use-rotatable'
+import { useScalable } from './use-scalable'
 import { reactive } from 'vue'
 import { computed } from 'vue'
 import { getRotatedPoint } from './helper'
@@ -15,6 +16,15 @@ export interface MoveableAttribute {
 }
 
 const rotate = ref(0)
+const scale = ref(1)
+
+let halfWidth = 0
+let halfHeight = 0
+let notScaleHalfWidth = 0
+let notScaleHalfHeight = 0
+
+// 未缩放时边线到垂直中线的距离
+let notScalableDistance = ref(0)
 
 const moveTargetRect = {
   top: 0,
@@ -35,11 +45,45 @@ const centerBoxCoordinate = reactive({
   y: 0
 })
 
-const notRotatedNw = { x: 0, y: 0 }
-const notRotatedNe = { x: 0, y: 0 }
-const notRotatedSw = { x: 0, y: 0 }
-const notRotatedSe = { x: 0, y: 0 }
-const notRotatedRotation = { x: 0, y: 0 }
+const notRotatedNw = computed(() => {
+  const { x: centerX, y: centerY } = centerSceneCoordinate.value
+  return {
+    x: centerX - notScaleHalfWidth * scale.value,
+    y: centerY - notScaleHalfHeight * scale.value
+  }
+})
+
+const notRotatedNe = computed(() => {
+  const { x: centerX, y: centerY } = centerSceneCoordinate.value
+  return {
+    x: centerX + notScaleHalfWidth * scale.value,
+    y: centerY - notScaleHalfHeight * scale.value
+  }
+})
+
+const notRotatedSw = computed(() => {
+  const { x: centerX, y: centerY } = centerSceneCoordinate.value
+  return {
+    x: centerX - notScaleHalfWidth * scale.value,
+    y: centerY + notScaleHalfHeight * scale.value
+  }
+})
+
+const notRotatedSe = computed(() => {
+  const { x: centerX, y: centerY } = centerSceneCoordinate.value
+  return {
+    x: centerX + notScaleHalfWidth * scale.value,
+    y: centerY + notScaleHalfHeight * scale.value
+  }
+})
+
+const notRotatedRotation = computed(() => {
+  const { x: centerX, y: centerY } = centerSceneCoordinate.value
+  return {
+    x: centerX,
+    y: centerY + notScaleHalfHeight * scale.value + 20
+  }
+})
 
 const centerViewportCoordinate = computed(() => ({
   x: centerBoxCoordinate.x + moveTargetRect.left,
@@ -51,38 +95,56 @@ const centerSceneCoordinate = computed(() => ({
   y: centerViewportCoordinate.value.y - sceneContainerRect.top
 }))
 
+const rotatedNw = computed(() =>
+  getRotatedPoint(notRotatedNw.value, centerBoxCoordinate, rotate.value)
+)
+
+const rotatedNe = computed(() =>
+  getRotatedPoint(notRotatedNe.value, centerBoxCoordinate, rotate.value)
+)
+
+const rotatedSw = computed(() =>
+  getRotatedPoint(notRotatedSw.value, centerBoxCoordinate, rotate.value)
+)
+
+const rotatedSe = computed(() =>
+  getRotatedPoint(notRotatedSe.value, centerBoxCoordinate, rotate.value)
+)
+
+const rotatedRotation = computed(() =>
+  getRotatedPoint(notRotatedRotation.value, centerBoxCoordinate, rotate.value)
+)
+
 const nwStyle: ComputedRef<CSSProperties> = computed(() => {
-  const { x, y } = getRotatedPoint(notRotatedNw, centerBoxCoordinate, rotate.value)
+  const { x, y } = rotatedNw.value
   return {
     transform: `translate(${x}px, ${y}px)`
   }
 })
 
 const neStyle: ComputedRef<CSSProperties> = computed(() => {
-  const { x, y } = getRotatedPoint(notRotatedNe, centerBoxCoordinate, rotate.value)
-
+  const { x, y } = rotatedNe.value
   return {
     transform: `translate(${x}px, ${y}px)`
   }
 })
 
 const swStyle: ComputedRef<CSSProperties> = computed(() => {
-  const { x, y } = getRotatedPoint(notRotatedSw, centerBoxCoordinate, rotate.value)
-
+  const { x, y } = rotatedSw.value
   return {
     transform: `translate(${x}px, ${y}px)`
   }
 })
 
 const seStyle: ComputedRef<CSSProperties> = computed(() => {
-  const { x, y } = getRotatedPoint(notRotatedSe, centerBoxCoordinate, rotate.value)
-
+  const { x, y } = rotatedSe.value
   return {
     transform: `translate(${x}px, ${y}px)`
   }
 })
+
 const rotationStyle: ComputedRef<CSSProperties> = computed(() => {
-  const { x, y } = getRotatedPoint(notRotatedRotation, centerBoxCoordinate, rotate.value)
+  const { x, y } = rotatedRotation.value
   return {
     transform: `translate(${x}px, ${y}px)`
   }
@@ -114,8 +176,19 @@ function initRotate(moveTarget: HTMLDivElement) {
   }
 }
 
+function initScale(moveTarget: HTMLDivElement) {
+  const match = moveTarget.style.transform.match(/scale\((?<scale>\d+(\.\d+)?)\)/)
+  if (match && match.groups?.scale) {
+    scale.value = Number(match.groups.scale)
+  }
+
+  notScalableDistance.value = halfWidth / scale.value
+  notScaleHalfWidth = halfWidth / scale.value
+  notScaleHalfHeight = halfHeight / scale.value
+}
+
 /**
- * 获取未旋转前各点的坐标（TODO: 需要把缩放考虑进去）
+ * 获取未旋转前各点的坐标
  */
 function initVertexCoordinate(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(
@@ -126,19 +199,8 @@ function initVertexCoordinate(moveTarget: HTMLDivElement) {
     const y = Number(match.groups.y)
     const { x: centerX, y: centerY } = centerSceneCoordinate.value
 
-    const halfWidth = centerX - x
-    const halfHeight = centerY - y
-
-    notRotatedNw.x = centerX - halfWidth
-    notRotatedNw.y = centerY - halfHeight
-    notRotatedNe.x = centerX + halfWidth
-    notRotatedNe.y = centerX - halfHeight
-    notRotatedSw.x = centerX - halfWidth
-    notRotatedSw.y = centerY + halfHeight
-    notRotatedSe.x = centerX + halfWidth
-    notRotatedSe.y = centerY + halfHeight
-    notRotatedRotation.x = centerX
-    notRotatedRotation.y = centerY + halfHeight + 20
+    halfWidth = centerX - x
+    halfHeight = centerY - y
   }
 }
 
@@ -151,10 +213,13 @@ function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
   initRect(moveTarget, sceneContainerRef)
   initBoxCenterCoordinate()
   initVertexCoordinate(moveTarget)
+  initScale(moveTarget)
   initRotate(moveTarget)
 }
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate)
+
+const { onScale } = useScalable(centerViewportCoordinate, scale, rotate, notScalableDistance)
 
 defineExpose({
   show
@@ -164,10 +229,10 @@ defineExpose({
 <template>
   <div v-if="visible" class="moveable-control-box">
     <!-- 暂时先用绝对定位控制，后面改成直接用宽高限制 -->
-    <div class="moveable-control" :style="nwStyle"></div>
-    <div class="moveable-control" :style="neStyle"></div>
-    <div class="moveable-control" :style="swStyle"></div>
-    <div class="moveable-control" :style="seStyle"></div>
+    <div class="moveable-control" :style="nwStyle" @pointerdown="onScale"></div>
+    <div class="moveable-control" :style="neStyle" @pointerdown="onScale"></div>
+    <div class="moveable-control" :style="swStyle" @pointerdown="onScale"></div>
+    <div class="moveable-control" :style="seStyle" @pointerdown="onScale"></div>
     <div class="moveable-control" :style="rotationStyle" @pointerdown="onRotate"></div>
   </div>
 </template>

@@ -11,7 +11,7 @@ export const useRotatable = (
     dragging = true
   }
 
-  function updateDegree(event: PointerEvent) {
+  function updateRotate(event: PointerEvent) {
     const { clientX, clientY } = event
     const { x, y } = centerViewportCoordinate.value
     const degree = getDegree(
@@ -29,15 +29,18 @@ export const useRotatable = (
 
   function onDragging(event: PointerEvent) {
     if (dragging) {
-      updateDegree(event)
+      updateRotate(event)
     }
   }
 
   function onDragEnd(event: PointerEvent) {
     setTimeout(() => {
       dragging = false
-      updateDegree(event)
-    })
+      updateRotate(event)
+    }, 0)
+
+    window.removeEventListener('pointermove', onDragging)
+    window.removeEventListener('pointerup', onDragEnd)
   }
 
   function onRotate(event: PointerEvent) {

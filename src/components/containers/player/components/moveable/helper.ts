@@ -63,3 +63,26 @@ export function getDegree(
 
   return degree
 }
+
+/**
+ * 获取某点到直线的距离
+ *
+ * @param {x: number, y: number} point 旋转前的坐标
+ * @param {x: number, y: number} center 旋转中心点
+ * @returns {number} 旋转的角度
+ */
+export function getDistance(
+  point: { x: number; y: number },
+  center: { x: number; y: number },
+  rotate: number
+): number {
+  const k = Math.cos(degreeToRadian(rotate))
+  if (k === 1) {
+    return Math.abs(point.x - center.x)
+  }
+  if (k === 0) {
+    return Math.abs(point.y - center.y)
+  }
+  const b = center.y - k * center.x
+  return Math.abs(k * point.x - point.y + b) / Math.hypot(1, k * k)
+}
