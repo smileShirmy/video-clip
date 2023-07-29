@@ -33,6 +33,18 @@ function select(event: MouseEvent) {
   }
 }
 
+function onRotate(rotate: number) {
+  //
+}
+
+function onScale(scale: number) {
+  //
+}
+
+function onTranslate(translate: { x: number; y: number }) {
+  //
+}
+
 onMounted(() => {
   if (moveableControlRef.value && sceneContainerRef.value) {
     moveableControlRef.value.show(moveableItemRef.value[0], sceneContainerRef.value)
@@ -60,7 +72,12 @@ defineExpose({
         @click="select"
       ></div>
 
-      <MoveableControl ref="moveableControlRef" />
+      <MoveableControl
+        ref="moveableControlRef"
+        @rotate="onRotate"
+        @scale="onScale"
+        @translate="onTranslate"
+      />
     </div>
   </div>
 </template>

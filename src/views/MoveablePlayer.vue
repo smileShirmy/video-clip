@@ -5,15 +5,15 @@ import Moveable from 'vue3-moveable'
 const target = ref()
 
 function onDrag({ transform }: any) {
-  target.value!.style.transform = transform
+  // target.value!.style.transform = transform
 }
 
 function onScale({ drag }: any) {
-  target.value!.style.transform = drag.transform
+  // target.value!.style.transform = drag.transform
 }
 
 function onRotate({ drag }: any) {
-  target.value!.style.transform = drag.transform
+  // target.value!.style.transform = drag.transform
 }
 </script>
 

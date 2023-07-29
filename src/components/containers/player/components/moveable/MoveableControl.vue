@@ -2,9 +2,11 @@
 import { ref, type ComputedRef, type CSSProperties } from 'vue'
 import { useRotatable } from './use-rotatable'
 import { useScalable } from './use-scalable'
-import { reactive } from 'vue'
+import { useMoveable } from './use-moveable'
 import { computed } from 'vue'
 import { getRotatedPoint } from './helper'
+import { shallowReactive } from 'vue'
+import { watch } from 'vue'
 
 export interface MoveableAttribute {
   top: number
@@ -15,8 +17,30 @@ export interface MoveableAttribute {
   rotate: number
 }
 
+const emit = defineEmits<{
+  (e: 'rotate', rotate: number): void
+  (e: 'scale', scale: number): void
+  (e: 'translate', translate: { x: number; y: number }): void
+}>()
+
 const rotate = ref(0)
 const scale = ref(1)
+const translate = shallowReactive({
+  x: 0,
+  y: 0
+})
+
+watch(rotate, () => {
+  emit('rotate', rotate.value)
+})
+
+watch(scale, () => {
+  emit('scale', scale.value)
+})
+
+watch(translate, () => {
+  emit('translate', translate)
+})
 
 let halfWidth = 0
 let halfHeight = 0
@@ -40,7 +64,7 @@ const sceneContainerRect = {
   height: 0
 }
 
-const centerBoxCoordinate = reactive({
+const centerBoxCoordinate = shallowReactive({
   x: 0,
   y: 0
 })
@@ -150,11 +174,13 @@ const rotationStyle: ComputedRef<CSSProperties> = computed(() => {
   }
 })
 
+// 获取中心点坐标
 function initBoxCenterCoordinate() {
   centerBoxCoordinate.x = moveTargetRect.width / 2
   centerBoxCoordinate.y = moveTargetRect.height / 2
 }
 
+// 获取当前目标的 DOMRect 状态
 function initRect(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
   const moveRect = moveTarget.getBoundingClientRect()
   moveTargetRect.width = moveRect.width
@@ -190,31 +216,40 @@ function initScale(moveTarget: HTMLDivElement) {
 /**
  * 获取未旋转前各点的坐标
  */
-function initVertexCoordinate(moveTarget: HTMLDivElement) {
+function initTranslatePosition(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(
     /translate\((?<x>\d+(\.\d+)?)px, (?<y>\d+(\.\d+)?)px\)/
   )
   if (match && match.groups?.x && match.groups?.y) {
-    const x = Number(match.groups.x)
-    const y = Number(match.groups.y)
+    translate.x = Number(match.groups.x)
+    translate.y = Number(match.groups.y)
+
     const { x: centerX, y: centerY } = centerSceneCoordinate.value
 
-    halfWidth = centerX - x
-    halfHeight = centerY - y
+    halfWidth = centerX - translate.x
+    halfHeight = centerY - translate.y
   }
 }
 
 const visible = ref(false)
 
+const { onMove } = useMoveable(translate, centerBoxCoordinate)
+
+/**
+ * 改成同步有必要吗？这样需要每次反映到 DOM 上都要实时获取当前操作目标的属性，应该没啥必要
+ * 初始值的获取在 dragStart 时才获取？
+ */
 function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
   visible.value = true
 
   // 这个顺序不能随意调换
   initRect(moveTarget, sceneContainerRef)
   initBoxCenterCoordinate()
-  initVertexCoordinate(moveTarget)
+  initTranslatePosition(moveTarget)
   initScale(moveTarget)
   initRotate(moveTarget)
+
+  onMove(moveTarget)
 }
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate)
@@ -243,8 +278,6 @@ defineExpose({
   position: absolute;
   top: 0;
   left: 0;
-  width: 100; // 暂时写死
-  height: 100; // 暂时写死
   will-change: transform;
   outline: 1px solid transparent;
 
