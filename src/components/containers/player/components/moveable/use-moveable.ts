@@ -2,15 +2,15 @@ import type { ShallowReactive } from 'vue'
 
 export const useMoveable = (
   translate: ShallowReactive<{ x: number; y: number }>,
-  centerBoxCoordinate: ShallowReactive<{ x: number; y: number }>
+  moveTargetRect: ShallowReactive<{ top: number; left: number; width: number; height: number }>
 ) => {
   let dragging = false
   let startX = 0
   let startY = 0
   let startTranslateX = 0
   let startTranslateY = 0
-  let startCenterX = 0
-  let startCenterY = 0
+  let startRectLeft = 0
+  let startRectTop = 0
 
   function onDragStart(event: PointerEvent) {
     dragging = true
@@ -18,8 +18,9 @@ export const useMoveable = (
     startY = event.clientY
     startTranslateX = translate.x
     startTranslateY = translate.y
-    startCenterX = centerBoxCoordinate.x
-    startCenterY = centerBoxCoordinate.y
+
+    startRectLeft = moveTargetRect.left
+    startRectTop = moveTargetRect.top
   }
 
   function updatePosition(event: PointerEvent) {
@@ -29,8 +30,8 @@ export const useMoveable = (
     translate.x = startTranslateX + diffX
     translate.y = startTranslateY + diffY
 
-    centerBoxCoordinate.x = startCenterX + diffX
-    centerBoxCoordinate.y = startCenterY + diffY
+    moveTargetRect.left = startRectLeft + diffX
+    moveTargetRect.top = startRectTop + diffY
   }
 
   function onDragging(event: PointerEvent) {

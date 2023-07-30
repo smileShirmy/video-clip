@@ -23,31 +23,43 @@ const item: ShallowReactive<MoveableAttribute> = shallowReactive({
 
 const itemList = [item]
 
-function select(event: MouseEvent) {
-  if (
-    moveableControlRef.value &&
-    event.target instanceof HTMLDivElement &&
-    sceneContainerRef.value instanceof HTMLDivElement
-  ) {
-    moveableControlRef.value.show(event.target, sceneContainerRef.value)
-  }
+let selected: ShallowReactive<MoveableAttribute> | null = null
+
+function select(event: MouseEvent, item: ShallowReactive<MoveableAttribute>) {
+  // TODO: 暂时注释，这里调用 show 之后参数不准确
+  // if (
+  //   moveableControlRef.value &&
+  //   event.target instanceof HTMLDivElement &&
+  //   sceneContainerRef.value instanceof HTMLDivElement
+  // ) {
+  //   moveableControlRef.value.show(event.target, sceneContainerRef.value)
+  //   selected = item
+  // }
 }
 
 function onRotate(rotate: number) {
-  //
+  if (selected) {
+    selected.rotate = rotate
+  }
 }
 
 function onScale(scale: number) {
-  //
+  if (selected) {
+    selected.scale = scale
+  }
 }
 
 function onTranslate(translate: { x: number; y: number }) {
-  //
+  if (selected) {
+    selected.top = translate.y
+    selected.left = translate.x
+  }
 }
 
 onMounted(() => {
   if (moveableControlRef.value && sceneContainerRef.value) {
     moveableControlRef.value.show(moveableItemRef.value[0], sceneContainerRef.value)
+    selected = itemList[0]
   }
 })
 
@@ -69,7 +81,7 @@ defineExpose({
           height: `${item.height}px`,
           transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
         }"
-        @click="select"
+        @click="select($event, item)"
       ></div>
 
       <MoveableControl
@@ -99,6 +111,7 @@ defineExpose({
     .moveable-item {
       top: 0;
       left: 0;
+      background-color: burlywood;
     }
   }
 }

@@ -50,12 +50,12 @@ let notScaleHalfHeight = 0
 // 未缩放时边线到垂直中线的距离
 let notScalableDistance = ref(0)
 
-const moveTargetRect = {
+const moveTargetRect = shallowReactive({
   top: 0,
   left: 0,
   width: 0,
   height: 0
-}
+})
 
 const sceneContainerRect = {
   top: 0,
@@ -120,23 +120,23 @@ const centerSceneCoordinate = computed(() => ({
 }))
 
 const rotatedNw = computed(() =>
-  getRotatedPoint(notRotatedNw.value, centerBoxCoordinate, rotate.value)
+  getRotatedPoint(notRotatedNw.value, centerSceneCoordinate.value, rotate.value)
 )
 
 const rotatedNe = computed(() =>
-  getRotatedPoint(notRotatedNe.value, centerBoxCoordinate, rotate.value)
+  getRotatedPoint(notRotatedNe.value, centerSceneCoordinate.value, rotate.value)
 )
 
 const rotatedSw = computed(() =>
-  getRotatedPoint(notRotatedSw.value, centerBoxCoordinate, rotate.value)
+  getRotatedPoint(notRotatedSw.value, centerSceneCoordinate.value, rotate.value)
 )
 
 const rotatedSe = computed(() =>
-  getRotatedPoint(notRotatedSe.value, centerBoxCoordinate, rotate.value)
+  getRotatedPoint(notRotatedSe.value, centerSceneCoordinate.value, rotate.value)
 )
 
 const rotatedRotation = computed(() =>
-  getRotatedPoint(notRotatedRotation.value, centerBoxCoordinate, rotate.value)
+  getRotatedPoint(notRotatedRotation.value, centerSceneCoordinate.value, rotate.value)
 )
 
 const nwStyle: ComputedRef<CSSProperties> = computed(() => {
@@ -233,7 +233,7 @@ function initTranslatePosition(moveTarget: HTMLDivElement) {
 
 const visible = ref(false)
 
-const { onMove } = useMoveable(translate, centerBoxCoordinate)
+const { onMove } = useMoveable(translate, moveTargetRect)
 
 /**
  * 改成同步有必要吗？这样需要每次反映到 DOM 上都要实时获取当前操作目标的属性，应该没啥必要
