@@ -8,6 +8,21 @@ export const useScalable = (
   notScalableDistance: Ref<number>
 ) => {
   let dragging = false
+  let sideTag = false
+
+  function inOnSide(event: PointerEvent) {
+    const { clientX: x, clientY: y } = event
+    const { x: x1, y: y1 } = centerViewportCoordinate.value
+    const { x: x2, y: y2 } = viewPortRotatedRotation.value
+    if (x1 === x2) {
+      return x < x1
+    } else if (y1 === y2) {
+      return y < y1
+    }
+
+    const tmpX = ((x1 - x2) / (y1 - y2)) * (y - y2) + x2
+    return tmpX > x
+  }
 
   function updateScale(event: PointerEvent) {
     const { clientX, clientY } = event
@@ -20,10 +35,13 @@ export const useScalable = (
       [centerViewportCoordinate.value, viewPortRotatedRotation.value]
     )
 
-    scale.value = distance / notScalableDistance.value
+    if (inOnSide(event) === sideTag) {
+      scale.value = distance / notScalableDistance.value
+    }
   }
 
-  function onDragStart() {
+  function onDragStart(event: PointerEvent) {
+    sideTag = inOnSide(event)
     dragging = true
   }
 
@@ -46,7 +64,7 @@ export const useScalable = (
   function onScale(event: PointerEvent) {
     event.preventDefault()
     event.stopPropagation()
-    onDragStart()
+    onDragStart(event)
 
     window.addEventListener('pointermove', onDragging)
     window.addEventListener('pointerup', onDragEnd)

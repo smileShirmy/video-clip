@@ -109,6 +109,7 @@ defineExpose({
     background-color: var(--app-color-black);
 
     .moveable-item {
+      display: inline-block;
       top: 0;
       left: 0;
       background-color: burlywood;
