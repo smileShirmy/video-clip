@@ -239,7 +239,7 @@ const { onMove } = useMoveable(translate, moveTargetRect)
  * 改成同步有必要吗？这样需要每次反映到 DOM 上都要实时获取当前操作目标的属性，应该没啥必要
  * 初始值的获取在 dragStart 时才获取？
  */
-function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
+function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement, event: PointerEvent) {
   visible.value = true
 
   // 这个顺序不能随意调换
@@ -249,7 +249,7 @@ function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
   initScale(moveTarget)
   initRotate(moveTarget)
 
-  onMove(moveTarget)
+  onMove(event)
 }
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate)

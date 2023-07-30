@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import MoveableControl, { type MoveableAttribute } from './components/moveable/MoveableControl.vue'
 import type { ShallowReactive } from 'vue'
 import { shallowReactive } from 'vue'
-import { onMounted } from 'vue'
 
 const playerContainer = ref<HTMLElement>()
 const sceneContainerRef = ref<HTMLDivElement | null>(null)
@@ -25,16 +24,15 @@ const itemList = [item]
 
 let selected: ShallowReactive<MoveableAttribute> | null = null
 
-function select(event: MouseEvent, item: ShallowReactive<MoveableAttribute>) {
-  // TODO: 暂时注释，这里调用 show 之后参数不准确
-  // if (
-  //   moveableControlRef.value &&
-  //   event.target instanceof HTMLDivElement &&
-  //   sceneContainerRef.value instanceof HTMLDivElement
-  // ) {
-  //   moveableControlRef.value.show(event.target, sceneContainerRef.value)
-  //   selected = item
-  // }
+function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
+  if (
+    moveableControlRef.value &&
+    event.target instanceof HTMLDivElement &&
+    sceneContainerRef.value instanceof HTMLDivElement
+  ) {
+    moveableControlRef.value.show(event.target, sceneContainerRef.value, event)
+    selected = item
+  }
 }
 
 function onRotate(rotate: number) {
@@ -56,13 +54,6 @@ function onTranslate(translate: { x: number; y: number }) {
   }
 }
 
-onMounted(() => {
-  if (moveableControlRef.value && sceneContainerRef.value) {
-    moveableControlRef.value.show(moveableItemRef.value[0], sceneContainerRef.value)
-    selected = itemList[0]
-  }
-})
-
 defineExpose({
   playerContainer
 })
@@ -81,7 +72,7 @@ defineExpose({
           height: `${item.height}px`,
           transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
         }"
-        @click="select($event, item)"
+        @pointerdown="select($event, item)"
       ></div>
 
       <MoveableControl

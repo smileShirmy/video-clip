@@ -50,7 +50,7 @@ export const useMoveable = (
     window.removeEventListener('pointerup', onDragEnd)
   }
 
-  function onPointerDown(event: PointerEvent) {
+  function onMove(event: PointerEvent) {
     event.preventDefault()
     event.stopPropagation()
     onDragStart(event)
@@ -58,12 +58,6 @@ export const useMoveable = (
     window.addEventListener('pointermove', onDragging)
     window.addEventListener('pointerup', onDragEnd)
   }
-
-  function onMove(moveTarget: HTMLDivElement) {
-    moveTarget.addEventListener('pointerdown', onPointerDown)
-  }
-
-  // TODO: moveTarget.removeEventListener()
 
   return {
     onMove
