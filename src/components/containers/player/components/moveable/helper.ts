@@ -66,34 +66,21 @@ export function getDegree(
 
 /**
  * 获取某点到直线的距离
- *
- * @param {x: number, y: number} point 旋转前的坐标
- * @param {x: number, y: number} center 旋转中心点
- * @returns {number} 旋转的角度
  */
 export function getDistance(
   point: { x: number; y: number },
-  center: { x: number; y: number },
-  rotate: number
+  linePoint: [{ x: number; y: number }, { x: number; y: number }]
 ): number {
-  let k = 1
-  if (rotate === 0 || rotate === 180) {
-    return Math.abs(point.x - center.x)
-  } else if (rotate === 90 || rotate === 270) {
-    return Math.abs(point.y - center.y)
-  }
-  if (rotate < 90) {
-    k = Math.tan(degreeToRadian(90 - rotate))
-  } else if (rotate < 180) {
-    k = -Math.tan(degreeToRadian(rotate - 90))
-  } else if (rotate < 270) {
-    k = Math.tan(degreeToRadian(270 - rotate))
-  } else if (rotate < 360) {
-    k = -Math.tan(degreeToRadian(360 - rotate))
+  const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = linePoint
+  const { x, y } = point
+  if (x1 === x2) {
+    return Math.abs(x - x1)
+  } else if (y1 === y2) {
+    return Math.abs(y - y1)
   }
 
-  // TODO:
-
-  const b = center.y - k * center.x
-  return Math.abs(k * point.x - point.y + b) / Math.hypot(1, k * k)
+  return (
+    Math.abs((y1 - y2) * x + (x2 - x1) * y + x1 * y2 - y1 * x2) /
+    Math.sqrt((y1 - y2) * (y1 - y2) + (x1 - x2) * (x1 - x2))
+  )
 }

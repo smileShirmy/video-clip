@@ -3,8 +3,8 @@ import { getDistance } from './helper'
 
 export const useScalable = (
   centerViewportCoordinate: ComputedRef<{ x: number; y: number }>,
+  viewPortRotatedRotation: ComputedRef<{ x: number; y: number }>,
   scale: Ref<number>,
-  rotate: Ref<number>,
   notScalableDistance: Ref<number>
 ) => {
   let dragging = false
@@ -17,8 +17,7 @@ export const useScalable = (
         x: clientX,
         y: clientY
       },
-      centerViewportCoordinate.value,
-      rotate.value
+      [centerViewportCoordinate.value, viewPortRotatedRotation.value]
     )
 
     scale.value = distance / notScalableDistance.value

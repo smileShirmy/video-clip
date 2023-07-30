@@ -254,7 +254,16 @@ function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate)
 
-const { onScale } = useScalable(centerViewportCoordinate, scale, rotate, notScalableDistance)
+const viewPortRotatedRotation = computed(() => ({
+  x: rotatedRotation.value.x + sceneContainerRect.left,
+  y: rotatedRotation.value.y + sceneContainerRect.top
+}))
+const { onScale } = useScalable(
+  centerViewportCoordinate,
+  viewPortRotatedRotation,
+  scale,
+  notScalableDistance
+)
 
 defineExpose({
   show
