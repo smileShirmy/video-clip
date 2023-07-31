@@ -5,7 +5,8 @@ export const useScalable = (
   centerViewportCoordinate: ComputedRef<{ x: number; y: number }>,
   viewPortRotatedRotation: ComputedRef<{ x: number; y: number }>,
   scale: Ref<number>,
-  notScalableDistance: Ref<number>
+  notScalableDistance: Ref<number>,
+  inOperation: Ref<boolean>
 ) => {
   let dragging = false
   let sideTag = false
@@ -43,6 +44,7 @@ export const useScalable = (
   function onDragStart(event: PointerEvent) {
     sideTag = inOnSide(event)
     dragging = true
+    inOperation.value = true
   }
 
   function onDragging(event: PointerEvent) {
@@ -54,6 +56,7 @@ export const useScalable = (
   function onDragEnd(event: PointerEvent) {
     setTimeout(() => {
       dragging = false
+      inOperation.value = false
       updateScale(event)
     }, 0)
 

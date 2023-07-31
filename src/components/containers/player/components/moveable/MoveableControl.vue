@@ -23,6 +23,7 @@ const emit = defineEmits<{
   (e: 'translate', translate: { x: number; y: number }): void
 }>()
 
+const inOperation = ref(false)
 const rotate = ref(0)
 const scale = ref(1)
 const translate = shallowReactive({
@@ -42,8 +43,6 @@ watch(translate, () => {
   emit('translate', translate)
 })
 
-let halfWidth = 0
-let halfHeight = 0
 let notScaleHalfWidth = 0
 let notScaleHalfHeight = 0
 
@@ -64,6 +63,9 @@ const sceneContainerRect = {
   height: 0
 }
 
+const halfLineWidth = computed(() => notScaleHalfWidth * scale.value)
+const halfLineHeight = computed(() => notScaleHalfHeight * scale.value)
+
 const centerBoxCoordinate = shallowReactive({
   x: 0,
   y: 0
@@ -72,32 +74,32 @@ const centerBoxCoordinate = shallowReactive({
 const notRotatedNw = computed(() => {
   const { x: centerX, y: centerY } = centerSceneCoordinate.value
   return {
-    x: centerX - notScaleHalfWidth * scale.value,
-    y: centerY - notScaleHalfHeight * scale.value
+    x: centerX - halfLineWidth.value,
+    y: centerY - halfLineHeight.value
   }
 })
 
 const notRotatedNe = computed(() => {
   const { x: centerX, y: centerY } = centerSceneCoordinate.value
   return {
-    x: centerX + notScaleHalfWidth * scale.value,
-    y: centerY - notScaleHalfHeight * scale.value
+    x: centerX + halfLineWidth.value,
+    y: centerY - halfLineHeight.value
   }
 })
 
 const notRotatedSw = computed(() => {
   const { x: centerX, y: centerY } = centerSceneCoordinate.value
   return {
-    x: centerX - notScaleHalfWidth * scale.value,
-    y: centerY + notScaleHalfHeight * scale.value
+    x: centerX - halfLineWidth.value,
+    y: centerY + halfLineHeight.value
   }
 })
 
 const notRotatedSe = computed(() => {
   const { x: centerX, y: centerY } = centerSceneCoordinate.value
   return {
-    x: centerX + notScaleHalfWidth * scale.value,
-    y: centerY + notScaleHalfHeight * scale.value
+    x: centerX + halfLineWidth.value,
+    y: centerY + halfLineHeight.value
   }
 })
 
@@ -105,7 +107,7 @@ const notRotatedRotation = computed(() => {
   const { x: centerX, y: centerY } = centerSceneCoordinate.value
   return {
     x: centerX,
-    y: centerY + notScaleHalfHeight * scale.value + 20
+    y: centerY + halfLineHeight.value + 20
   }
 })
 
@@ -142,28 +144,28 @@ const rotatedRotation = computed(() =>
 const nwStyle: ComputedRef<CSSProperties> = computed(() => {
   const { x, y } = rotatedNw.value
   return {
-    transform: `translate(${x}px, ${y}px)`
+    transform: `translate(${x}px, ${y}px) rotate(${rotate.value}deg)`
   }
 })
 
 const neStyle: ComputedRef<CSSProperties> = computed(() => {
   const { x, y } = rotatedNe.value
   return {
-    transform: `translate(${x}px, ${y}px)`
+    transform: `translate(${x}px, ${y}px) rotate(${rotate.value}deg)`
   }
 })
 
 const swStyle: ComputedRef<CSSProperties> = computed(() => {
   const { x, y } = rotatedSw.value
   return {
-    transform: `translate(${x}px, ${y}px)`
+    transform: `translate(${x}px, ${y}px) rotate(${rotate.value}deg)`
   }
 })
 
 const seStyle: ComputedRef<CSSProperties> = computed(() => {
   const { x, y } = rotatedSe.value
   return {
-    transform: `translate(${x}px, ${y}px)`
+    transform: `translate(${x}px, ${y}px) rotate(${rotate.value}deg)`
   }
 })
 
@@ -207,15 +209,8 @@ function initScale(moveTarget: HTMLDivElement) {
   if (match && match.groups?.scale) {
     scale.value = Number(match.groups.scale)
   }
-
-  notScalableDistance.value = halfWidth / scale.value
-  notScaleHalfWidth = halfWidth / scale.value
-  notScaleHalfHeight = halfHeight / scale.value
 }
 
-/**
- * 获取未旋转前各点的坐标
- */
 function initTranslatePosition(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(
     /translate\((?<x>\d+(\.\d+)?)px, (?<y>\d+(\.\d+)?)px\)/
@@ -224,35 +219,47 @@ function initTranslatePosition(moveTarget: HTMLDivElement) {
     translate.x = Number(match.groups.x)
     translate.y = Number(match.groups.y)
 
+    // 根据目标元素相对于舞台的中心坐标，可以获取到未进任何缩放和旋转前的宽和高
     const { x: centerX, y: centerY } = centerSceneCoordinate.value
 
-    halfWidth = centerX - translate.x
-    halfHeight = centerY - translate.y
+    notScalableDistance.value = centerX - translate.x
+    notScaleHalfWidth = centerX - translate.x
+    notScaleHalfHeight = centerY - translate.y
   }
 }
 
 const visible = ref(false)
 
-const { onMove } = useMoveable(translate, moveTargetRect)
+const { onMove } = useMoveable(translate, moveTargetRect, inOperation)
 
 /**
  * 改成同步有必要吗？这样需要每次反映到 DOM 上都要实时获取当前操作目标的属性，应该没啥必要
- * 初始值的获取在 dragStart 时才获取？
  */
 function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement, event: PointerEvent) {
   visible.value = true
 
-  // 这个顺序不能随意调换
+  /**
+   * 这个顺序不能随意调换
+   */
+  // 获取操作对象和舞台的宽高及位置
   initRect(moveTarget, sceneContainerRef)
+  // 获取操作目标相对于其左上角的中心点位置
   initBoxCenterCoordinate()
-  initTranslatePosition(moveTarget)
+  // 获取放大倍数
   initScale(moveTarget)
+  // 获取目标元素移动后的位置
+  initTranslatePosition(moveTarget)
+  // 获取旋转角度
   initRotate(moveTarget)
 
   onMove(event)
 }
 
-const { onRotate } = useRotatable(centerViewportCoordinate, rotate)
+function hide() {
+  visible.value = false
+}
+
+const { onRotate } = useRotatable(centerViewportCoordinate, rotate, inOperation)
 
 const viewPortRotatedRotation = computed(() => ({
   x: rotatedRotation.value.x + sceneContainerRect.left,
@@ -262,21 +269,31 @@ const { onScale } = useScalable(
   centerViewportCoordinate,
   viewPortRotatedRotation,
   scale,
-  notScalableDistance
+  notScalableDistance,
+  inOperation
 )
 
 defineExpose({
-  show
+  show,
+  hide,
+  inOperation
 })
 </script>
 
 <template>
-  <div v-if="visible" class="moveable-control-box">
-    <!-- 暂时先用绝对定位控制，后面改成直接用宽高限制 -->
-    <div class="moveable-control" :style="nwStyle" @pointerdown="onScale"></div>
-    <div class="moveable-control" :style="neStyle" @pointerdown="onScale"></div>
-    <div class="moveable-control" :style="swStyle" @pointerdown="onScale"></div>
-    <div class="moveable-control" :style="seStyle" @pointerdown="onScale"></div>
+  <div v-if="visible" data-moveable class="moveable-control-box">
+    <div class="moveable-control" :style="nwStyle" @pointerdown="onScale">
+      <div class="moveable-line nw-line" :style="{ width: `${halfLineWidth * 2}px` }"></div>
+    </div>
+    <div class="moveable-control" :style="neStyle" @pointerdown="onScale">
+      <div class="moveable-line ne-line" :style="{ height: `${halfLineHeight * 2}px` }"></div>
+    </div>
+    <div class="moveable-control" :style="swStyle" @pointerdown="onScale">
+      <div class="moveable-line sw-line" :style="{ height: `${halfLineHeight * 2}px` }"></div>
+    </div>
+    <div class="moveable-control" :style="seStyle" @pointerdown="onScale">
+      <div class="moveable-line se-line" :style="{ width: `${halfLineWidth * 2}px` }"></div>
+    </div>
     <div class="moveable-control" :style="rotationStyle" @pointerdown="onRotate"></div>
   </div>
 </template>
@@ -299,6 +316,36 @@ defineExpose({
     margin-left: -5px;
     border-radius: 50%;
     background-color: var(--app-color-white);
+
+    .moveable-line {
+      box-sizing: border-box;
+      position: absolute;
+      background-color: var(--app-color-white);
+
+      &.nw-line {
+        top: 4px;
+        left: 4px;
+        border-bottom: 1px solid var(--app-color-white);
+      }
+
+      &.ne-line {
+        top: 4px;
+        right: 4px;
+        border-left: 1px solid var(--app-color-white);
+      }
+
+      &.sw-line {
+        bottom: 4px;
+        left: 4px;
+        border-right: 1px solid var(--app-color-white);
+      }
+
+      &.se-line {
+        bottom: 4px;
+        right: 4px;
+        border-top: 1px solid var(--app-color-white);
+      }
+    }
   }
 
   .moveable-item {

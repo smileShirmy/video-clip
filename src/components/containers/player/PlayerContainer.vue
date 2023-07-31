@@ -3,6 +3,10 @@ import { ref } from 'vue'
 import MoveableControl, { type MoveableAttribute } from './components/moveable/MoveableControl.vue'
 import type { ShallowReactive } from 'vue'
 import { shallowReactive } from 'vue'
+import { vOnClickOutside } from '@/services/directives/click-outside'
+import { isString } from '@/services/helpers/general'
+import { watch } from 'vue'
+import { findParent } from '@/services/helpers/dom'
 
 const playerContainer = ref<HTMLElement>()
 const sceneContainerRef = ref<HTMLDivElement | null>(null)
@@ -11,7 +15,7 @@ const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
 
 const moveableItemRef = ref<HTMLDivElement[]>([])
 
-const item: ShallowReactive<MoveableAttribute> = shallowReactive({
+const item1: ShallowReactive<MoveableAttribute> = shallowReactive({
   top: 0,
   left: 0,
   width: 100,
@@ -20,9 +24,24 @@ const item: ShallowReactive<MoveableAttribute> = shallowReactive({
   rotate: 0
 })
 
-const itemList = [item]
+const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
+  top: 0,
+  left: 0,
+  width: 100,
+  height: 100,
+  scale: 1,
+  rotate: 0
+})
 
-let selected: ShallowReactive<MoveableAttribute> | null = null
+const itemList = [item1, item2]
+
+const selected = ref<ShallowReactive<MoveableAttribute> | null>(null)
+
+watch(selected, (item) => {
+  if (item === null && moveableControlRef.value) {
+    moveableControlRef.value.hide()
+  }
+})
 
 function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
   if (
@@ -31,26 +50,45 @@ function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
     sceneContainerRef.value instanceof HTMLDivElement
   ) {
     moveableControlRef.value.show(event.target, sceneContainerRef.value, event)
-    selected = item
+    selected.value = item
   }
 }
 
+function onClickOutside(event: PointerEvent) {
+  const target = event.target
+
+  if (target instanceof HTMLElement) {
+    if (findParent(target, (el) => isString(el.dataset.moveableItem))) {
+      return
+    }
+    if (findParent(target, (el) => isString(el.dataset.moveable))) {
+      return
+    }
+  }
+
+  if (moveableControlRef.value && moveableControlRef.value.inOperation) {
+    return
+  }
+
+  selected.value = null
+}
+
 function onRotate(rotate: number) {
-  if (selected) {
-    selected.rotate = rotate
+  if (selected.value) {
+    selected.value.rotate = rotate
   }
 }
 
 function onScale(scale: number) {
-  if (selected) {
-    selected.scale = scale
+  if (selected.value) {
+    selected.value.scale = scale
   }
 }
 
 function onTranslate(translate: { x: number; y: number }) {
-  if (selected) {
-    selected.top = translate.y
-    selected.left = translate.x
+  if (selected.value) {
+    selected.value.top = translate.y
+    selected.value.left = translate.x
   }
 }
 
@@ -72,6 +110,8 @@ defineExpose({
           height: `${item.height}px`,
           transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
         }"
+        data-moveable-item
+        v-on-click-outside="onClickOutside"
         @pointerdown="select($event, item)"
       ></div>
 
@@ -96,14 +136,22 @@ defineExpose({
   .scene-container {
     position: relative;
     width: 700px;
-    height: 300px;
+    height: 393.75px;
     background-color: var(--app-color-black);
 
     .moveable-item {
+      position: absolute;
       display: inline-block;
       top: 0;
       left: 0;
-      background-color: burlywood;
+
+      &:first-child {
+        background-color: cadetblue;
+      }
+
+      &:nth-child(2) {
+        background-color: darkolivegreen;
+      }
     }
   }
 }

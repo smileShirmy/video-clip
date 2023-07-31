@@ -3,12 +3,14 @@ import { getDegree } from './helper'
 
 export const useRotatable = (
   centerViewportCoordinate: ComputedRef<{ x: number; y: number }>,
-  rotate: Ref<number>
+  rotate: Ref<number>,
+  inOperation: Ref<boolean>
 ) => {
   let dragging = false
 
   function onDragStart() {
     dragging = true
+    inOperation.value = true
   }
 
   function updateRotate(event: PointerEvent) {
@@ -36,6 +38,7 @@ export const useRotatable = (
   function onDragEnd(event: PointerEvent) {
     setTimeout(() => {
       dragging = false
+      inOperation.value = false
       updateRotate(event)
     }, 0)
 
