@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MoveableControl, { type MoveableAttribute } from './components/moveable/MoveableControl.vue'
-import type { ShallowReactive } from 'vue'
+import type { CSSProperties, ComputedRef, ShallowReactive } from 'vue'
 import { shallowReactive } from 'vue'
 import { vOnClickOutside } from '@/services/directives/click-outside'
 import { isString } from '@/services/helpers/general'
 import { watch } from 'vue'
 import { findParent } from '@/services/helpers/dom'
+import { onMounted } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
+import { computed } from 'vue'
 
 const playerContainer = ref<HTMLElement>()
 const sceneContainerRef = ref<HTMLDivElement | null>(null)
@@ -35,7 +38,18 @@ const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
 
 const itemList = [item1, item2]
 
+const SCENE_PADDING = 10
+const WIDTH_HEIGHT_RATIO = 16 / 9
+
+const sceneWidth = ref(0)
+const sceneHeight = ref(0)
+
 const selected = ref<ShallowReactive<MoveableAttribute> | null>(null)
+
+const sceneContainerStyle: ComputedRef<CSSProperties> = computed(() => ({
+  width: `${sceneWidth.value - SCENE_PADDING}px`,
+  height: `${sceneHeight.value - SCENE_PADDING}px`
+}))
 
 watch(selected, (item) => {
   if (item === null && moveableControlRef.value) {
@@ -92,6 +106,20 @@ function onTranslate(translate: { x: number; y: number }) {
   }
 }
 
+onMounted(() => {
+  useResizeObserver(playerContainer.value, ([{ contentRect }]) => {
+    const { width, height } = contentRect
+    // 如果当前比例是大于则 表示高作为最小高度
+    if (width / height > WIDTH_HEIGHT_RATIO) {
+      sceneHeight.value = height
+      sceneWidth.value = height * WIDTH_HEIGHT_RATIO
+    } else {
+      sceneWidth.value = width
+      sceneHeight.value = width / WIDTH_HEIGHT_RATIO
+    }
+  })
+})
+
 defineExpose({
   playerContainer
 })
@@ -99,7 +127,7 @@ defineExpose({
 
 <template>
   <div class="player-container app-width-transition" ref="playerContainer">
-    <div class="scene-container" ref="sceneContainerRef">
+    <div class="scene-container" ref="sceneContainerRef" :style="sceneContainerStyle">
       <div
         v-for="(item, i) in itemList"
         :key="i"
@@ -135,8 +163,6 @@ defineExpose({
 
   .scene-container {
     position: relative;
-    width: 700px;
-    height: 393.75px;
     background-color: var(--app-color-black);
 
     .moveable-item {
