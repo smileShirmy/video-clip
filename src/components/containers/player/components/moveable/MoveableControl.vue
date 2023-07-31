@@ -281,7 +281,12 @@ defineExpose({
 </script>
 
 <template>
-  <div v-if="visible" data-moveable class="moveable-control-box">
+  <div
+    v-if="visible"
+    data-moveable
+    class="moveable-control-box"
+    :class="{ 'in-operation': inOperation }"
+  >
     <div class="moveable-control" :style="nwStyle" @pointerdown="onScale">
       <div class="moveable-line nw-line" :style="{ width: `${halfLineWidth * 2}px` }"></div>
     </div>
@@ -306,6 +311,10 @@ defineExpose({
   left: 0;
   will-change: transform;
   outline: 1px solid transparent;
+
+  &.in-operation {
+    opacity: 0.75;
+  }
 
   .moveable-control {
     box-sizing: border-box;
