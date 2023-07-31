@@ -15,6 +15,11 @@ export interface MoveableAttribute {
   height: number
   scale: number
   rotate: number
+
+  startTop: number
+  startLeft: number
+  startWidth: number
+  startHeight: number
 }
 
 const emit = defineEmits<{
@@ -43,8 +48,11 @@ watch(translate, () => {
   emit('translate', translate)
 })
 
-let notScaleHalfWidth = 0
-let notScaleHalfHeight = 0
+let notScaleHalfWidth = ref(0)
+let notScaleHalfHeight = ref(0)
+
+let moveTarget: HTMLDivElement | null = null
+let sceneContainer: HTMLDivElement | null = null
 
 // 未缩放时边线到垂直中线的距离
 let notScalableDistance = ref(0)
@@ -56,15 +64,15 @@ const moveTargetRect = shallowReactive({
   height: 0
 })
 
-const sceneContainerRect = {
+const sceneContainerRect = shallowReactive({
   top: 0,
   left: 0,
   width: 0,
   height: 0
-}
+})
 
-const halfLineWidth = computed(() => notScaleHalfWidth * scale.value)
-const halfLineHeight = computed(() => notScaleHalfHeight * scale.value)
+const halfLineWidth = computed(() => notScaleHalfWidth.value * scale.value)
+const halfLineHeight = computed(() => notScaleHalfHeight.value * scale.value)
 
 const centerBoxCoordinate = shallowReactive({
   x: 0,
@@ -223,8 +231,8 @@ function initTranslatePosition(moveTarget: HTMLDivElement) {
     const { x: centerX, y: centerY } = centerSceneCoordinate.value
 
     notScalableDistance.value = centerX - translate.x
-    notScaleHalfWidth = centerX - translate.x
-    notScaleHalfHeight = centerY - translate.y
+    notScaleHalfWidth.value = centerX - translate.x
+    notScaleHalfHeight.value = centerY - translate.y
   }
 }
 
@@ -232,17 +240,19 @@ const visible = ref(false)
 
 const { onMove } = useMoveable(translate, moveTargetRect, inOperation)
 
-/**
- * 改成同步有必要吗？这样需要每次反映到 DOM 上都要实时获取当前操作目标的属性，应该没啥必要
- */
-function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement, event: PointerEvent) {
-  visible.value = true
+function updateMoveableControl() {
+  if (visible.value) {
+    initMoveableControl()
+  }
+}
 
+function initMoveableControl() {
+  if (!moveTarget || !sceneContainer) return
   /**
    * 这个顺序不能随意调换
    */
   // 获取操作对象和舞台的宽高及位置
-  initRect(moveTarget, sceneContainerRef)
+  initRect(moveTarget, sceneContainer)
   // 获取操作目标相对于其左上角的中心点位置
   initBoxCenterCoordinate()
   // 获取放大倍数
@@ -251,12 +261,29 @@ function show(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement, eve
   initTranslatePosition(moveTarget)
   // 获取旋转角度
   initRotate(moveTarget)
+}
+
+function show(target: HTMLDivElement, sceneContainerRef: HTMLDivElement, event: PointerEvent) {
+  visible.value = true
+  moveTarget = target
+  sceneContainer = sceneContainerRef
+
+  initMoveableControl()
 
   onMove(event)
+
+  moveTarget.addEventListener('pointerdown', onMove)
 }
 
 function hide() {
   visible.value = false
+
+  if (moveTarget) {
+    moveTarget.removeEventListener('pointerdown', onMove)
+  }
+
+  moveTarget = null
+  sceneContainer = null
 }
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate, inOperation)
@@ -276,6 +303,7 @@ const { onScale } = useScalable(
 defineExpose({
   show,
   hide,
+  updateMoveableControl,
   inOperation
 })
 </script>

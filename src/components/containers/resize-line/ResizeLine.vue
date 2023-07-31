@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePlayerStore } from '@/stores/player'
 import { onMounted, ref, computed } from 'vue'
 
 const props = defineProps({
@@ -35,6 +36,8 @@ const props = defineProps({
     default: false
   }
 })
+
+const playerStore = usePlayerStore()
 
 const emit = defineEmits<{
   (e: 'resize', size: { beforeSize: number; afterSize: number }): void
@@ -74,6 +77,7 @@ function onMouseDown(event: MouseEvent) {
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mouseup', onMouseUp)
 
+  playerStore.resizing = true
   emit('mouse-down')
 }
 
@@ -110,7 +114,11 @@ function onMouseMove(event: MouseEvent) {
   emit('resize', { beforeSize, afterSize })
 }
 
-function onMouseUp(event: MouseEvent) {
+function onMouseUp() {
+  setTimeout(() => {
+    playerStore.resizing = false
+  })
+
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mouseup', onMouseUp)
 

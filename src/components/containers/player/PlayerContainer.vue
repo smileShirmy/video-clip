@@ -8,8 +8,12 @@ import { isString } from '@/services/helpers/general'
 import { watch } from 'vue'
 import { findParent } from '@/services/helpers/dom'
 import { onMounted } from 'vue'
-import { useResizeObserver } from '@vueuse/core'
+import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { computed } from 'vue'
+import { usePlayerStore } from '@/stores/player'
+import { storeToRefs } from 'pinia'
+
+const playerStore = storeToRefs(usePlayerStore())
 
 const playerContainer = ref<HTMLElement>()
 const sceneContainerRef = ref<HTMLDivElement | null>(null)
@@ -24,7 +28,12 @@ const item1: ShallowReactive<MoveableAttribute> = shallowReactive({
   width: 100,
   height: 100,
   scale: 1,
-  rotate: 0
+  rotate: 0,
+
+  startTop: 0,
+  startLeft: 0,
+  startWidth: 100,
+  startHeight: 100
 })
 
 const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
@@ -33,7 +42,12 @@ const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
   width: 100,
   height: 100,
   scale: 1,
-  rotate: 0
+  rotate: 0,
+
+  startTop: 0,
+  startLeft: 0,
+  startWidth: 100,
+  startHeight: 100
 })
 
 const itemList = [item1, item2]
@@ -47,13 +61,51 @@ const sceneHeight = ref(0)
 const selected = ref<ShallowReactive<MoveableAttribute> | null>(null)
 
 const sceneContainerStyle: ComputedRef<CSSProperties> = computed(() => ({
-  width: `${sceneWidth.value - SCENE_PADDING}px`,
-  height: `${sceneHeight.value - SCENE_PADDING}px`
+  width: `${sceneWidth.value}px`,
+  height: `${sceneHeight.value}px`
 }))
 
 watch(selected, (item) => {
   if (item === null && moveableControlRef.value) {
     moveableControlRef.value.hide()
+  }
+})
+
+let startSceneWidth = 0
+
+function updateSize() {
+  const ratio = sceneWidth.value / startSceneWidth
+
+  for (const item of itemList) {
+    item.top = item.startTop * ratio
+    item.left = item.startLeft * ratio
+    item.width = item.startWidth * ratio
+    item.height = item.startHeight * ratio
+  }
+
+  if (moveableControlRef.value) {
+    moveableControlRef.value.updateMoveableControl()
+  }
+}
+
+watch(playerStore.resizing, (is, old) => {
+  // 开始缩放
+  if (is && !old) {
+    startSceneWidth = sceneWidth.value
+
+    for (const item of itemList) {
+      item.startTop = item.top
+      item.startLeft = item.left
+      item.startWidth = item.width
+      item.startHeight = item.height
+    }
+  }
+
+  // 完成缩放
+  if (!is && old) {
+    setTimeout(() => {
+      updateSize()
+    })
   }
 })
 
@@ -84,6 +136,8 @@ function onClickOutside(event: PointerEvent) {
     return
   }
 
+  if (playerStore.resizing.value) return
+
   selected.value = null
 }
 
@@ -106,16 +160,29 @@ function onTranslate(translate: { x: number; y: number }) {
   }
 }
 
+watchThrottled(
+  sceneWidth,
+  (width) => {
+    if (width > 0 && startSceneWidth > 0) {
+      updateSize()
+    }
+  },
+  {
+    throttle: 20,
+    trailing: true
+  }
+)
+
 onMounted(() => {
   useResizeObserver(playerContainer.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
-    // 如果当前比例是大于则 表示高作为最小高度
+
     if (width / height > WIDTH_HEIGHT_RATIO) {
-      sceneHeight.value = height
-      sceneWidth.value = height * WIDTH_HEIGHT_RATIO
+      sceneHeight.value = height - SCENE_PADDING
+      sceneWidth.value = height * WIDTH_HEIGHT_RATIO - SCENE_PADDING
     } else {
-      sceneWidth.value = width
-      sceneHeight.value = width / WIDTH_HEIGHT_RATIO
+      sceneWidth.value = width - SCENE_PADDING
+      sceneHeight.value = width / WIDTH_HEIGHT_RATIO - SCENE_PADDING
     }
   })
 })
@@ -162,6 +229,7 @@ defineExpose({
   background-color: var(--app-bg-color-dark);
 
   .scene-container {
+    flex-shrink: 0;
     position: relative;
     background-color: var(--app-color-black);
 

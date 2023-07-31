@@ -48,7 +48,7 @@ export const useTrackStore = defineStore('track', () => {
     () => {
       timelineStore.updateTimeline(scale.value)
     },
-    { throttle: 100 }
+    { throttle: 100, trailing: true }
   )
 
   function setTrackContainerRef(trackContainer: HTMLDivElement) {
