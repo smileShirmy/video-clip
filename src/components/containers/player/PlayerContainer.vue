@@ -74,6 +74,7 @@ watch(selected, (item) => {
 let startSceneWidth = 0
 
 function updateSize() {
+  // 缩放比例
   const ratio = sceneWidth.value / startSceneWidth
 
   for (const item of itemList) {
@@ -120,9 +121,11 @@ function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
   }
 }
 
+// 取消选中
 function onClickOutside(event: PointerEvent) {
   const target = event.target
 
+  // 不能取消选中的目标元素
   if (target instanceof HTMLElement) {
     if (findParent(target, (el) => isString(el.dataset.moveableItem))) {
       return
@@ -132,10 +135,12 @@ function onClickOutside(event: PointerEvent) {
     }
   }
 
+  // 正在操作目标元素
   if (moveableControlRef.value && moveableControlRef.value.inOperation) {
     return
   }
 
+  // 正在缩放舞台区域
   if (playerStore.resizing.value) return
 
   selected.value = null
