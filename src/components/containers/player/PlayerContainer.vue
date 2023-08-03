@@ -85,7 +85,7 @@ function updateSize() {
   }
 
   if (moveableControlRef.value) {
-    moveableControlRef.value.updateMoveableControl()
+    moveableControlRef.value.resizingMoveableControl()
   }
 }
 

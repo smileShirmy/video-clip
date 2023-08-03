@@ -240,25 +240,26 @@ const visible = ref(false)
 
 const { onMove } = useMoveable(translate, moveTargetRect, inOperation)
 
-function updateMoveableControl() {
+function resizingMoveableControl() {
   if (visible.value) {
-    initMoveableControl()
+    if (!moveTarget || !sceneContainer) return
+
+    // 获取操作对象和舞台的宽高及位置
+    initRect(moveTarget, sceneContainer)
+    // 获取操作目标相对于其左上角的中心点位置
+    initBoxCenterCoordinate()
+    // 获取目标元素移动后的位置
+    initTranslatePosition(moveTarget)
   }
 }
 
 function initMoveableControl() {
   if (!moveTarget || !sceneContainer) return
-  /**
-   * 这个顺序不能随意调换
-   */
-  // 获取操作对象和舞台的宽高及位置
-  initRect(moveTarget, sceneContainer)
-  // 获取操作目标相对于其左上角的中心点位置
-  initBoxCenterCoordinate()
+
+  resizingMoveableControl()
+
   // 获取放大倍数
   initScale(moveTarget)
-  // 获取目标元素移动后的位置
-  initTranslatePosition(moveTarget)
   // 获取旋转角度
   initRotate(moveTarget)
 }
@@ -303,7 +304,7 @@ const { onScale } = useScalable(
 defineExpose({
   show,
   hide,
-  updateMoveableControl,
+  resizingMoveableControl,
   inOperation
 })
 </script>
