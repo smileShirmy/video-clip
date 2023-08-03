@@ -27,6 +27,14 @@ function nextFrame() {
     playerStore.currentFrame += 1
   }
 }
+
+function togglePlay() {
+  if (playerStore.playing) {
+    playerStore.pause()
+  } else {
+    playerStore.play()
+  }
+}
 </script>
 
 <template>
@@ -43,7 +51,7 @@ function nextFrame() {
 
     <div class="controls">
       <div @click="prevFrame">上一帧</div>
-      <div>播放</div>
+      <div @click="togglePlay">{{ playerStore.playing ? '暂停' : '播放' }}</div>
       <div @click="nextFrame">下一帧</div>
     </div>
 
