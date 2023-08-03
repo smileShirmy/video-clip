@@ -20,7 +20,7 @@ function onDragStart(e: PointerEvent) {
 <template>
   <div ref="resourceItemRef" class="video-item-container" @pointerdown="onDragStart">
     <div class="video-cover-wrapper">
-      <img src="" />
+      <img class="video-cover" :src="props.data.cover" />
     </div>
     <h5 class="video-name">{{ props.data.name }}</h5>
   </div>
@@ -37,6 +37,12 @@ function onDragStart(e: PointerEvent) {
     background-color: var(--app-color-black);
     border-radius: 4px;
     overflow: hidden;
+
+    .video-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
   }
 
   .video-name {

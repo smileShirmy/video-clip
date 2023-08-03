@@ -21,7 +21,7 @@ const emit = defineEmits<{
   (e: 'unfold', changedWidth: number): void
 }>()
 
-const component = ref<ResourceComponentName | ''>(ResourceComponentName.AUDIO_RESOURCE)
+const component = ref<ResourceComponentName | ''>(ResourceComponentName.VIDEO_RESOURCE)
 
 const resourceContainer = ref<HTMLElement>()
 

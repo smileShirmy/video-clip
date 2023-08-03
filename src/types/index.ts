@@ -14,6 +14,7 @@ export interface VideoResourceResponse {
   name: string
   format: string
   source: string
+  cover: string
   width: number
   height: number
   fps: number
