@@ -60,6 +60,8 @@ const showOverlay = computed(() => {
 const dragSliderEnd = () => {
   trackStore.updateMaxFrameCount(1)
   trackList.setSelectedId(props.data.id)
+  trackList.updatePlayerMaxFrame()
+
   draggable.resizing = false
   if (trackStore.enablePreviewLine) {
     trackStore.showPreviewLine = true

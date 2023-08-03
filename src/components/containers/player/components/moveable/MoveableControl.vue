@@ -52,7 +52,7 @@ let notScaleHalfWidth = ref(0)
 let notScaleHalfHeight = ref(0)
 
 let moveTarget: HTMLDivElement | null = null
-let sceneContainer: HTMLDivElement | null = null
+let sceneContent: HTMLDivElement | null = null
 
 // 未缩放时边线到垂直中线的距离
 let notScalableDistance = ref(0)
@@ -64,7 +64,7 @@ const moveTargetRect = shallowReactive({
   height: 0
 })
 
-const sceneContainerRect = shallowReactive({
+const sceneContentRect = shallowReactive({
   top: 0,
   left: 0,
   width: 0,
@@ -125,8 +125,8 @@ const centerViewportCoordinate = computed(() => ({
 }))
 
 const centerSceneCoordinate = computed(() => ({
-  x: centerViewportCoordinate.value.x - sceneContainerRect.left,
-  y: centerViewportCoordinate.value.y - sceneContainerRect.top
+  x: centerViewportCoordinate.value.x - sceneContentRect.left,
+  y: centerViewportCoordinate.value.y - sceneContentRect.top
 }))
 
 const rotatedNw = computed(() =>
@@ -191,18 +191,18 @@ function initBoxCenterCoordinate() {
 }
 
 // 获取当前目标的 DOMRect 状态
-function initRect(moveTarget: HTMLDivElement, sceneContainerRef: HTMLDivElement) {
+function initRect(moveTarget: HTMLDivElement, sceneContentRef: HTMLDivElement) {
   const moveRect = moveTarget.getBoundingClientRect()
   moveTargetRect.width = moveRect.width
   moveTargetRect.height = moveRect.height
   moveTargetRect.top = moveRect.top
   moveTargetRect.left = moveRect.left
 
-  const sceneRect = sceneContainerRef.getBoundingClientRect()
-  sceneContainerRect.width = sceneRect.width
-  sceneContainerRect.height = sceneRect.height
-  sceneContainerRect.top = sceneRect.top
-  sceneContainerRect.left = sceneRect.left
+  const sceneRect = sceneContentRef.getBoundingClientRect()
+  sceneContentRect.width = sceneRect.width
+  sceneContentRect.height = sceneRect.height
+  sceneContentRect.top = sceneRect.top
+  sceneContentRect.left = sceneRect.left
 }
 
 function initRotate(moveTarget: HTMLDivElement) {
@@ -242,10 +242,10 @@ const { onMove } = useMoveable(translate, moveTargetRect, inOperation)
 
 function resizingMoveableControl() {
   if (visible.value) {
-    if (!moveTarget || !sceneContainer) return
+    if (!moveTarget || !sceneContent) return
 
     // 获取操作对象和舞台的宽高及位置
-    initRect(moveTarget, sceneContainer)
+    initRect(moveTarget, sceneContent)
     // 获取操作目标相对于其左上角的中心点位置
     initBoxCenterCoordinate()
     // 获取目标元素移动后的位置
@@ -254,7 +254,7 @@ function resizingMoveableControl() {
 }
 
 function initMoveableControl() {
-  if (!moveTarget || !sceneContainer) return
+  if (!moveTarget || !sceneContent) return
 
   resizingMoveableControl()
 
@@ -264,10 +264,10 @@ function initMoveableControl() {
   initRotate(moveTarget)
 }
 
-function show(target: HTMLDivElement, sceneContainerRef: HTMLDivElement, event: PointerEvent) {
+function show(target: HTMLDivElement, sceneContentRef: HTMLDivElement, event: PointerEvent) {
   visible.value = true
   moveTarget = target
-  sceneContainer = sceneContainerRef
+  sceneContent = sceneContentRef
 
   initMoveableControl()
 
@@ -284,14 +284,14 @@ function hide() {
   }
 
   moveTarget = null
-  sceneContainer = null
+  sceneContent = null
 }
 
 const { onRotate } = useRotatable(centerViewportCoordinate, rotate, inOperation)
 
 const viewPortRotatedRotation = computed(() => ({
-  x: rotatedRotation.value.x + sceneContainerRect.left,
-  y: rotatedRotation.value.y + sceneContainerRect.top
+  x: rotatedRotation.value.x + sceneContentRect.left,
+  y: rotatedRotation.value.y + sceneContentRect.top
 }))
 const { onScale } = useScalable(
   centerViewportCoordinate,

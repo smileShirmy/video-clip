@@ -31,6 +31,10 @@
   --app-font-size-small: 12px;
   --app-font-size-extra-small: 12px;
 
+  --app-font-size-minimum: 9px;
+
+  --app-color-theme: #ff73b3;
+
   @include theme(
     $app-bg-color: #151620,
     $app-bg-color-light: #222331,

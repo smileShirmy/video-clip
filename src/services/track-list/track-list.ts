@@ -14,6 +14,12 @@ class TrackList {
 
   private _selectedId = ref('')
 
+  private _maxFrame = ref(0)
+
+  get maxFrame() {
+    return this._maxFrame.value
+  }
+
   get selectedId() {
     return this._selectedId.value
   }
@@ -55,8 +61,8 @@ class TrackList {
     )
   }
 
-  getMaxFrame() {
-    return Math.max(...this.list.map((f) => f.getLastFrame()))
+  updatePlayerMaxFrame() {
+    this._maxFrame.value = Math.max(...this.list.map((f) => f.getLastFrame()))
   }
 
   setSelectedId(id: string) {

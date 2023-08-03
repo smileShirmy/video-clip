@@ -4,6 +4,7 @@ import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { trackList } from '@/services/track-list/track-list'
 import { ADAPTIVE_RATIO, INIT_MAX_FRAME_COUNT } from '@/config'
+import { usePlayerStore } from './player'
 
 export type TrackStore = Omit<
   ReturnType<typeof useTrackStore>,
@@ -12,6 +13,7 @@ export type TrackStore = Omit<
 
 export const useTrackStore = defineStore('track', () => {
   const timelineStore = useTimelineStore()
+  const playerStore = usePlayerStore()
 
   const disableScroll = ref(false)
 
@@ -33,11 +35,6 @@ export const useTrackStore = defineStore('track', () => {
 
   // 是否打开预览线
   const enablePreviewLine = ref(true)
-
-  // 当前的帧数 TODO: 这个数据需要统一到视频控制
-  const currentFrame = ref(0)
-
-  const seekLineFrame = ref(0)
 
   // 放大等级
   const scale = ref(0)
@@ -79,7 +76,7 @@ export const useTrackStore = defineStore('track', () => {
    * @param {number} updateLessThanCount 当少于多少个时直接更新
    */
   function updateMaxFrameCount(updateLessThanCount = -1) {
-    const maxFrame = trackList.getMaxFrame()
+    const maxFrame = trackList.maxFrame
     if (maxFrame === 0) {
       initTimelineWidth()
       return
@@ -103,7 +100,7 @@ export const useTrackStore = defineStore('track', () => {
 
   // 自适应轨道
   function adaptiveTrack() {
-    const maxFrame = trackList.getMaxFrame()
+    const maxFrame = trackList.maxFrame
     const width = getTimelineWidth()
     timelineStore.initTimelineWidth = width
     timelineStore.timelineWrapperWidth = width
@@ -138,13 +135,11 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   function split() {
-    trackList.split(seekLineFrame.value)
+    trackList.split(playerStore.currentFrame)
   }
 
   return {
     disableScroll,
-    currentFrame,
-    seekLineFrame,
     scale,
     enableMagnetic,
     enableSticky,

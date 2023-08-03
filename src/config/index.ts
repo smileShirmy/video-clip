@@ -14,6 +14,11 @@ export const TRACK_STICK_WIDTH = 12
 export const TRACK_INTERVAL = 8
 
 /**
+ * 每秒帧数
+ */
+export const PER_SECOND_FRAMES = 30
+
+/**
  * 布局最小宽度
  */
 export const MIN_RESOURCE_CONTAINER_WIDTH = 374

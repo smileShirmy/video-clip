@@ -1,3 +1,5 @@
+import { PER_SECOND_FRAMES } from '@/config'
+
 /**
  * 时间补 0
  *
@@ -43,4 +45,20 @@ export function minutesToTime(minutes: number) {
  */
 export function hoursToTime(hours: number) {
   return `${padZero(hours)}:00:00`
+}
+
+/**
+ * 根据帧转换为时间
+ */
+export function frameToTime(frame: number) {
+  const seconds = Math.floor(frame / PER_SECOND_FRAMES)
+  const frames = frame % PER_SECOND_FRAMES
+  const h = Math.floor((seconds / 60 / 60) % 24)
+  const m = Math.floor((seconds / 60) % 60)
+  const s = Math.floor(seconds % 60)
+
+  return {
+    time: `${padZero(h)}:${padZero(m)}:${padZero(s)}`,
+    frame: padZero(frames)
+  }
 }

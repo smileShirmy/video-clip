@@ -1,6 +1,7 @@
 import { draggable } from '@/services/draggable/draggable'
 import { findParent } from '@/services/helpers/dom'
 import { isString } from '@/services/helpers/general'
+import { usePlayerStore } from '@/stores/player'
 import { useTimelineStore } from '@/stores/timeline'
 import { useTrackStore } from '@/stores/track'
 import { onMounted, type Ref } from 'vue'
@@ -10,6 +11,7 @@ export const useSeekLine = (
   previewLineX: Ref<number>
 ) => {
   const trackStore = useTrackStore()
+  const playerStore = usePlayerStore()
   const timeLienStore = useTimelineStore()
 
   function onPointerup(e: PointerEvent) {
@@ -20,11 +22,11 @@ export const useSeekLine = (
       return
 
     if (trackStore.showPreviewLine && previewLineX.value > -1) {
-      trackStore.seekLineFrame = timeLienStore.pixelToFrame(previewLineX.value)
+      playerStore.currentFrame = timeLienStore.pixelToFrame(previewLineX.value)
       return
     }
 
-    trackStore.seekLineFrame = timeLienStore.pixelToFrame(e.offsetX)
+    playerStore.currentFrame = timeLienStore.pixelToFrame(e.offsetX)
   }
 
   function addListener() {

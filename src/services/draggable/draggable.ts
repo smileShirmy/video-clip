@@ -14,6 +14,7 @@ import {
 import { DragAudio } from './drag-audio'
 import { DragText } from './drag-text'
 import { isNumber } from '../helpers/general'
+import { trackList } from '../track-list/track-list'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -184,6 +185,7 @@ class Draggable {
 
     trackStore.disableScroll = false
     trackStore.showPreviewLine = trackStore.enablePreviewLine
+    trackList.updatePlayerMaxFrame()
   }
 }
 

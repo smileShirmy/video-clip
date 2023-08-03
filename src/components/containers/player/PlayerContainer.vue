@@ -12,11 +12,13 @@ import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia'
+import PlayerControls from './components/player-controls/PlayerControls.vue'
 
 const playerStore = storeToRefs(usePlayerStore())
 
 const playerContainer = ref<HTMLElement>()
-const sceneContainerRef = ref<HTMLDivElement | null>(null)
+const sceneContentRef = ref<HTMLDivElement | null>(null)
+const sceneWrapperRef = ref<HTMLDivElement | null>(null)
 
 const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
 
@@ -52,15 +54,15 @@ const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
 
 const itemList = [item1, item2]
 
-const SCENE_PADDING = 10
-const WIDTH_HEIGHT_RATIO = 16 / 9
+const SCENE_PADDING = 10 * 2
+const ASPECT_RATIO = 16 / 9
 
 const sceneWidth = ref(0)
 const sceneHeight = ref(0)
 
 const selected = ref<ShallowReactive<MoveableAttribute> | null>(null)
 
-const sceneContainerStyle: ComputedRef<CSSProperties> = computed(() => ({
+const sceneContentStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: `${sceneWidth.value}px`,
   height: `${sceneHeight.value}px`
 }))
@@ -114,9 +116,9 @@ function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
   if (
     moveableControlRef.value &&
     event.target instanceof HTMLDivElement &&
-    sceneContainerRef.value instanceof HTMLDivElement
+    sceneContentRef.value instanceof HTMLDivElement
   ) {
-    moveableControlRef.value.show(event.target, sceneContainerRef.value, event)
+    moveableControlRef.value.show(event.target, sceneContentRef.value, event)
     selected.value = item
   }
 }
@@ -179,15 +181,15 @@ watchThrottled(
 )
 
 onMounted(() => {
-  useResizeObserver(playerContainer.value, ([{ contentRect }]) => {
+  useResizeObserver(sceneWrapperRef.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
 
-    if (width / height > WIDTH_HEIGHT_RATIO) {
+    if (width / height > ASPECT_RATIO) {
       sceneHeight.value = height - SCENE_PADDING
-      sceneWidth.value = height * WIDTH_HEIGHT_RATIO - SCENE_PADDING
+      sceneWidth.value = height * ASPECT_RATIO - SCENE_PADDING
     } else {
       sceneWidth.value = width - SCENE_PADDING
-      sceneHeight.value = width / WIDTH_HEIGHT_RATIO - SCENE_PADDING
+      sceneHeight.value = width / ASPECT_RATIO - SCENE_PADDING
     }
   })
 })
@@ -199,50 +201,63 @@ defineExpose({
 
 <template>
   <div class="player-container app-width-transition" ref="playerContainer">
-    <div class="scene-container" ref="sceneContainerRef" :style="sceneContainerStyle">
-      <div
-        v-for="(item, i) in itemList"
-        :key="i"
-        ref="moveableItemRef"
-        class="moveable-item"
-        :style="{
-          width: `${item.width}px`,
-          height: `${item.height}px`,
-          transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
-        }"
-        data-moveable-item
-        v-on-click-outside="onClickOutside"
-        @pointerdown="select($event, item)"
-      ></div>
+    <div class="scene-wrapper" ref="sceneWrapperRef">
+      <div class="scene-content" ref="sceneContentRef" :style="sceneContentStyle">
+        <div
+          v-for="(item, i) in itemList"
+          :key="i"
+          ref="moveableItemRef"
+          class="moveable-item"
+          :style="{
+            width: `${item.width}px`,
+            height: `${item.height}px`,
+            transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
+          }"
+          data-moveable-item
+          v-on-click-outside="onClickOutside"
+          @pointerdown="select($event, item)"
+        ></div>
 
-      <MoveableControl
-        ref="moveableControlRef"
-        @rotate="onRotate"
-        @scale="onScale"
-        @translate="onTranslate"
-      />
+        <MoveableControl
+          ref="moveableControlRef"
+          @rotate="onRotate"
+          @scale="onScale"
+          @translate="onTranslate"
+        />
+      </div>
     </div>
+
+    <PlayerControls />
   </div>
 </template>
 
 <style scoped lang="scss">
 .player-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
   width: 67%;
   background-color: var(--app-bg-color-dark);
 
-  .scene-container {
-    flex-shrink: 0;
+  .scene-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    width: 100%;
+  }
+
+  .scene-content {
     position: relative;
+    margin: auto;
     background-color: var(--app-color-black);
 
     .moveable-item {
-      position: absolute;
       display: inline-block;
-      top: 0;
+      position: absolute;
       left: 0;
+      top: 0;
 
       &:first-child {
         background-color: cadetblue;

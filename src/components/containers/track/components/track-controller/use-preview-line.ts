@@ -45,7 +45,7 @@ export const usePreviewLine = (
       let closestDiff: number | null = null
       isSticky.value = false
 
-      const maxFrame = timelineStore.frameToPixelWidth(trackList.getMaxFrame())
+      const maxFrame = timelineStore.frameToPixelWidth(trackList.maxFrame)
       if (maxFrame === 0 || x > maxFrame) {
         previewLineX.value = -1
         return

@@ -5,16 +5,17 @@ import { useTrackStore } from '@/stores/track'
 import { useTimelineStore } from '@/stores/timeline'
 import { Slider } from '@/services/slider/slider'
 import type { SliderDownOptions } from '@/services/slider/slider'
+import { usePlayerStore } from '@/stores/player'
 
 const trackStore = useTrackStore()
+const playerStore = usePlayerStore()
 const timelineStore = useTimelineStore()
 
 const timelineRulerRef = ref<HTMLDivElement>()
 
 const slider = new Slider({
   change(v: number) {
-    console.log(v)
-    trackStore.seekLineFrame = v
+    playerStore.currentFrame = v
   }
 })
 
@@ -22,11 +23,11 @@ const sliderOptions = computed<SliderDownOptions>(() => ({
   min: 0,
   max: timelineStore.maxFrameCount,
   sliderSize: timelineStore.timelineWidth,
-  value: trackStore.seekLineFrame
+  value: playerStore.currentFrame
 }))
 
 const seekLineStyle: ComputedRef<CSSProperties> = computed(() => ({
-  left: timelineStore.frameToPercentWithUnit(trackStore.seekLineFrame)
+  left: timelineStore.frameToPercentWithUnit(playerStore.currentFrame)
 }))
 
 function onTimelineClick(event: MouseEvent) {
