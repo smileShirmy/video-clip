@@ -1,14 +1,17 @@
-import { PER_SECOND_FRAMES } from '@/config'
+import { FPS } from '@/config'
 import { trackList } from '@/services/track-list/track-list'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-const SPEED = 1000 / PER_SECOND_FRAMES
+const SPEED = 1000 / FPS
+const DEFAULT_ASPECT_RATIO = 16 / 9
 
 export const usePlayerStore = defineStore('player', () => {
   const resizing = ref(false)
 
   const currentFrame = ref(0)
+
+  const aspectRatio = ref(DEFAULT_ASPECT_RATIO)
 
   const playing = ref(false)
 
@@ -37,6 +40,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   return {
     resizing,
+    aspectRatio,
     currentFrame,
     play,
     pause,

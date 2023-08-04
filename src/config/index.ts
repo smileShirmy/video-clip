@@ -16,7 +16,7 @@ export const TRACK_INTERVAL = 8
 /**
  * 每秒帧数
  */
-export const PER_SECOND_FRAMES = 30
+export const FPS = 30
 
 /**
  * 布局最小宽度
@@ -33,7 +33,7 @@ export const MIN_TRACK_CONTAINER_HEIGHT = 210
  */
 export const ADAPTIVE_RATIO = 1.5
 
-export const INIT_MAX_FRAME_COUNT = 3000
+export const INIT_MAX_FRAME_COUNT = 300
 
 export const VIDEO_TRACK_HEIGHT = 60
 

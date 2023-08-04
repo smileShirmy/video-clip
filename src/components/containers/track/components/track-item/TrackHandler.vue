@@ -210,7 +210,6 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   bottom: 0;
   overflow: hidden;
   border-radius: 4px;
-  background-color: #666;
   opacity: 1 !important;
 
   &.overlay {

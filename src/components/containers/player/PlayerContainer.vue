@@ -55,7 +55,6 @@ const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
 const itemList = [item1, item2]
 
 const SCENE_PADDING = 10 * 2
-const ASPECT_RATIO = 16 / 9
 
 const sceneWidth = ref(0)
 const sceneHeight = ref(0)
@@ -183,13 +182,14 @@ watchThrottled(
 onMounted(() => {
   useResizeObserver(sceneWrapperRef.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
+    const ratio = playerStore.aspectRatio.value
 
-    if (width / height > ASPECT_RATIO) {
+    if (width / height > ratio) {
       sceneHeight.value = height - SCENE_PADDING
-      sceneWidth.value = height * ASPECT_RATIO - SCENE_PADDING
+      sceneWidth.value = height * ratio - SCENE_PADDING
     } else {
       sceneWidth.value = width - SCENE_PADDING
-      sceneHeight.value = width / ASPECT_RATIO - SCENE_PADDING
+      sceneHeight.value = width / ratio - SCENE_PADDING
     }
   })
 })

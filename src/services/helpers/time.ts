@@ -1,4 +1,4 @@
-import { PER_SECOND_FRAMES } from '@/config'
+import { FPS } from '@/config'
 
 /**
  * 时间补 0
@@ -51,8 +51,8 @@ export function hoursToTime(hours: number) {
  * 根据帧转换为时间
  */
 export function frameToTime(frame: number) {
-  const seconds = Math.floor(frame / PER_SECOND_FRAMES)
-  const frames = frame % PER_SECOND_FRAMES
+  const seconds = Math.floor(frame / FPS)
+  const frames = frame % FPS
   const h = Math.floor((seconds / 60 / 60) % 24)
   const m = Math.floor((seconds / 60) % 60)
   const s = Math.floor(seconds % 60)
