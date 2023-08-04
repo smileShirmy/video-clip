@@ -44,7 +44,6 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
     timelineStore.frameToPercent(props.data.endFrame) -
     timelineStore.frameToPercent(props.data.startFrame)
   return {
-    visibility: draggable.movingId.value === props.data.id ? 'hidden' : 'unset',
     width: `${width}%`,
     left: leftHandlerStyle.value.left
   }
@@ -138,6 +137,7 @@ function onDragStart(e: PointerEvent) {
 
   props.data.recordBeforeDragFrame()
 
+  // TODO: offsetX 不一定准确，前面可能存在多个 canvas
   draggable.onDragStart(e, trackItemRef.value, props.data, props.data.id, {
     offsetX: e.offsetX,
     offsetY: e.offsetY
@@ -163,26 +163,23 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     :style="trackItemStyle"
     @pointerdown="onDragStart"
   >
+    <div v-if="props.data.id === trackList.selectedId" class="track-item-selected"></div>
     <slot></slot>
   </div>
 
   <div
     class="track-handler left-handler"
+    :class="{ 'handler-selected': props.data.id === trackList.selectedId }"
     :style="leftHandlerStyle"
     @mousedown="onLeftHandlerDown"
     @touchstart="onLeftHandlerDown"
   ></div>
   <div
     class="track-handler right-handler"
+    :class="{ 'handler-selected': props.data.id === trackList.selectedId }"
     :style="rightHandlerStyle"
     @mousedown="onRightHandlerDown"
     @touchstart="onRightHandlerDown"
-  ></div>
-
-  <div
-    v-if="props.data.id === trackList.selectedId"
-    :style="trackItemStyle"
-    class="track-item-selected"
   ></div>
 </template>
 
@@ -198,9 +195,23 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   width: 10px;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1;
+  border-color: transparent;
+
+  &.handler-selected {
+    border-color: var(--app-color-white);
+  }
+
+  &.left-handler {
+    border-radius: 4px 0 0 4px;
+    border-width: 1px 0 1px 1px;
+    border-style: solid;
+  }
 
   &.right-handler {
+    border-radius: 0 4px 4px 0;
     transform: translate(-100%);
+    border-width: 1px 1px 1px 0;
+    border-style: solid;
   }
 }
 
@@ -220,11 +231,12 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
 .track-item-selected {
   position: absolute;
   top: 0;
+  right: 0;
   bottom: 0;
+  left: 0;
   border-radius: 4px;
   box-sizing: border-box;
   border: 1px solid var(--app-color-white);
-  pointer-events: none;
   z-index: 1;
 }
 </lang>

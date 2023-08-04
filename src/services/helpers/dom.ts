@@ -34,3 +34,17 @@ export function findParent(el: HTMLElement, condition: (el: HTMLElement) => bool
 
   return false
 }
+
+export function findParentElement(
+  el: HTMLElement,
+  condition: (el: HTMLElement) => boolean
+): HTMLElement | null {
+  let cur: HTMLElement | null = el
+  do {
+    if (cur && condition(cur)) return cur
+
+    cur = cur.parentElement
+  } while (cur !== null)
+
+  return null
+}

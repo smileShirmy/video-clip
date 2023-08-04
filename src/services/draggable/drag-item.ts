@@ -1,5 +1,5 @@
 import { TRACK_INTERVAL, TRACK_STICK_WIDTH } from '@/config'
-import { getElementPosition } from '../helpers/dom'
+import { findParent, getElementPosition } from '../helpers/dom'
 import { isNumber, isString } from '../helpers/general'
 import type { TrackItem } from '../track-item'
 import { trackList } from '../track-list/track-list'
@@ -16,7 +16,8 @@ import {
   type TrackIntervalData,
   type AddToNewTrackState,
   DraggingState,
-  type AddToCurrentTrackState
+  type AddToCurrentTrackState,
+  type StartMoveTargetAttribute
 } from './types'
 import { TrackType } from '../track/base-track'
 import type { TimelineStore } from '@/stores/timeline'
@@ -36,6 +37,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   readonly trackStore: TrackStore
   readonly onStateChange: (state: DraggingStateData | null) => void
   readonly onDragEnd: () => void
+  readonly startPointerEvent: PointerEvent
 
   protected baseTrackDataList: TrackDataItem[] = []
   protected mainTrackData!: TrackData
@@ -51,7 +53,12 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   private timelineResourceRefLeft = 0
   private timelineResourceRefTop = 0
 
+  private startMoveParentTrackTop = 0
+
+  protected startMoveTargetAttribute: StartMoveTargetAttribute | null = null
+
   constructor(options: DragOptions<T>) {
+    this.startPointerEvent = options.startPointerEvent
     this.dragTarget = options.dragTarget
     this.dragTrackItem = options.dragTrackItem
     this.movingId = options.movingId
@@ -195,12 +202,52 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
           bottomTop: position.top + height - 1
         })
       }
+
+      if (this.isMoveTrackItem && this.startPointerEvent) {
+        const { y } = this.getDragPosition(this.startPointerEvent)!
+        this.startMoveParentTrackTop = y
+      }
     }
 
     this.baseTrackDataList = baseTrackDataList.sort((a, b) => a.top - b.top)
   }
 
-  protected initDraggingTarget(e: PointerEvent) {
+  protected resetMoveTargetAttribute() {
+    if (this.startMoveTargetAttribute) {
+      const { top, left, width, height, zIndex } = this.startMoveTargetAttribute
+
+      this.dragTarget.style.top = top
+      this.dragTarget.style.left = left
+      this.dragTarget.style.width = width
+      this.dragTarget.style.height = height
+      this.dragTarget.style.zIndex = zIndex
+
+      this.startMoveTargetAttribute = null
+    }
+  }
+
+  private initMoveTargetAttribute() {
+    if (this.startMoveTargetAttribute) return
+
+    const { top, left, width, height, zIndex } = this.dragTarget.style
+
+    this.startMoveTargetAttribute = {
+      top,
+      left,
+      width,
+      height,
+      zIndex
+    }
+
+    const { width: rectWidth, height: rectHeight } = this.dragTarget.getBoundingClientRect()
+    this.dragTarget.style.width = `${rectWidth}px`
+    this.dragTarget.style.height = `${rectHeight}px`
+    this.dragTarget.style.zIndex = '1'
+  }
+
+  private initDraggingTarget(e: PointerEvent) {
+    if (this.draggingTarget) return
+
     const { top, left } = this.timelineResourceRef.getBoundingClientRect()
     this.timelineResourceRefLeft = left
     this.timelineResourceRefTop = top
@@ -220,6 +267,26 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
     }
   }
 
+  /**
+   * 第一次移动时初始化
+   */
+  protected initFirstDrag(e: PointerEvent) {
+    if (this.isMoveTrackItem) {
+      this.initMoveTargetAttribute()
+    } else {
+      this.initDraggingTarget(e)
+    }
+  }
+
+  protected updateMoveTargetPosition(x: number, y: number) {
+    if (this.isMoveTrackItem && this.startMoveTargetAttribute) {
+      const { offsetX } = this.dragOffset
+      const left = x - offsetX
+      this.dragTarget.style.top = `${y - this.startMoveParentTrackTop}px`
+      this.dragTarget.style.left = `${left > 0 ? left : 0}px`
+    }
+  }
+
   protected updateDraggingTargetPosition({ x, y }: { x: number; y: number }) {
     if (this.draggingTarget) {
       const { offsetX, offsetY } = this.dragOffset
@@ -227,17 +294,25 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
       if (this.isMoveTrackItem && left < this.timelineResourceRefLeft) {
         left = this.timelineResourceRefLeft
       }
-      this.draggingTarget.style.left = `${left}px`
+
       this.draggingTarget.style.top = `${y - offsetY}px`
+      this.draggingTarget.style.left = `${left}px`
     }
   }
 
   /**
    * 获取当前拖拽点相对于 track-content 元素的位置
    */
-  protected getDragPosition(event: PointerEvent): DragPosition {
-    const { top, left } = getElementPosition(event.target as HTMLElement, this.trackContentRef)
+  protected getDragPosition(event: PointerEvent): DragPosition | null {
+    const { trackContentRef } = this
+    const target = event.target as HTMLElement
+    if (!findParent(target, (el) => el === trackContentRef)) {
+      return null
+    }
+
+    const { top, left } = getElementPosition(event.target as HTMLElement, trackContentRef)
     const y = top + event.offsetY
+    // TODO: 如果当前拖拽点前面存在多个 canvas ? offsetX 不一定准确
     const x = left + event.offsetX
 
     return {

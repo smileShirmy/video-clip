@@ -84,7 +84,7 @@ class Draggable {
    * 如果是移动资源才需要传 movingId 和 dragOffset
    */
   onDragStart(
-    e: PointerEvent | MouseEvent,
+    e: PointerEvent,
     dragTarget: HTMLElement,
     dragTrackItem: TrackItem,
     movingId: string | null = null,
@@ -99,6 +99,7 @@ class Draggable {
     trackStore.showPreviewLine = false
 
     const options = {
+      startPointerEvent: e,
       dragTarget,
       movingId,
       dragOffset,

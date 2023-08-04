@@ -6,6 +6,7 @@ import { FFDir, ffManager } from '@/services/ffmpeg/manager'
 import { onMounted, ref } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 import { useTimelineStore } from '@/stores/timeline'
+import { draggable } from '@/services/draggable/draggable'
 
 defineOptions({
   name: TrackItemName.TRACK_ITEM_VIDEO
@@ -73,6 +74,8 @@ function initFramePreview(
   sourceHeight: number
 ) {
   useResizeObserver(itemContentRef.value, ([{ target, contentRect }]) => {
+    if (draggable.draggingState.value !== null) return
+
     const { width, height } = contentRect
     const imageWidth = height * ratio
     // 确保整除

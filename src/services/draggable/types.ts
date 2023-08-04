@@ -10,6 +10,14 @@ export interface DragPosition {
   x: number //  当前鼠标点距离左边的距离
 }
 
+export interface StartMoveTargetAttribute {
+  top: string
+  left: string
+  width: string
+  height: string
+  zIndex: string
+}
+
 export interface DragOffset {
   offsetX: number
   offsetY: number
@@ -87,6 +95,7 @@ export interface BlankBottomData extends BaseTrackData {
 export type TrackDataItem = BlankTopData | TrackData | TrackIntervalData | BlankBottomData
 
 export interface DragOptions<T> {
+  startPointerEvent: PointerEvent
   dragTarget: HTMLElement
   dragTrackItem: T
   movingId: string | null

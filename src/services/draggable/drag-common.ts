@@ -57,6 +57,8 @@ export class DragCommon extends DragItem<DragTrackItem> {
       this.draggingTarget.remove()
       this.draggingTarget = null
     }
+
+    this.resetMoveTargetAttribute()
   }
 
   /**
@@ -85,7 +87,11 @@ export class DragCommon extends DragItem<DragTrackItem> {
   }
 
   positionHandler(e: PointerEvent) {
-    const { x, y } = this.getDragPosition(e)
+    const position = this.getDragPosition(e)
+    if (!position) return
+
+    const { x, y } = position
+    this.updateMoveTargetPosition(x, y)
     const startFrame = this.xToFrame(x)
 
     // 当前不存在任何资源时
@@ -230,10 +236,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
   draggingHandler = (e: PointerEvent) => {
     e.preventDefault()
 
-    // 第一次拖动时初始化拖动的 DOM 元素
-    if (!this.draggingTarget) {
-      this.initDraggingTarget(e)
-    }
+    this.initFirstDrag(e)
 
     this.updateDraggingTargetPosition(e)
 
@@ -284,6 +287,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
     const { stateData } = this
     if (stateData) {
       this.positionHandler(e)
+      this.resetMoveTargetAttribute()
 
       switch (stateData.state) {
         case DraggingState.ADD_TO_CURRENT_TRACK_STATE:

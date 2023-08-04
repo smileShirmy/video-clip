@@ -53,6 +53,8 @@ export class DragText extends DragItem<TextTrackItem> {
       this.draggingTarget.remove()
       this.draggingTarget = null
     }
+
+    this.resetMoveTargetAttribute()
   }
 
   /**
@@ -81,7 +83,11 @@ export class DragText extends DragItem<TextTrackItem> {
   }
 
   positionHandler(e: PointerEvent) {
-    const { x, y } = this.getDragPosition(e)
+    const position = this.getDragPosition(e)
+    if (!position) return
+
+    const { x, y } = position
+    this.updateMoveTargetPosition(x, y)
     const startFrame = this.xToFrame(x)
 
     for (const trackDataItem of this.trackDataList) {
@@ -182,10 +188,7 @@ export class DragText extends DragItem<TextTrackItem> {
   draggingHandler = (e: PointerEvent) => {
     e.preventDefault()
 
-    // 第一次拖动时初始化拖动的 DOM 元素
-    if (!this.draggingTarget) {
-      this.initDraggingTarget(e)
-    }
+    this.initFirstDrag(e)
 
     this.updateDraggingTargetPosition(e)
 
@@ -219,6 +222,7 @@ export class DragText extends DragItem<TextTrackItem> {
     const { stateData } = this
     if (stateData) {
       this.positionHandler(e)
+      this.resetMoveTargetAttribute()
 
       switch (stateData.state) {
         case DraggingState.ADD_TO_CURRENT_TRACK_STATE:
