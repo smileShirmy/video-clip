@@ -312,7 +312,6 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
 
     const { top, left } = getElementPosition(event.target as HTMLElement, trackContentRef)
     const y = top + event.offsetY
-    // TODO: 如果当前拖拽点前面存在多个 canvas ? offsetX 不一定准确
     const x = left + event.offsetX
 
     return {

@@ -137,7 +137,6 @@ function onDragStart(e: PointerEvent) {
 
   props.data.recordBeforeDragFrame()
 
-  // TODO: offsetX 不一定准确，前面可能存在多个 canvas
   draggable.onDragStart(e, trackItemRef.value, props.data, props.data.id, {
     offsetX: e.offsetX,
     offsetY: e.offsetY
@@ -163,7 +162,10 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     :style="trackItemStyle"
     @pointerdown="onDragStart"
   >
-    <div v-if="props.data.id === trackList.selectedId" class="track-item-selected"></div>
+    <div
+      class="track-item-selected"
+      :class="{ 'is-selected': props.data.id === trackList.selectedId }"
+    ></div>
     <slot></slot>
   </div>
 
@@ -196,6 +198,7 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1;
   border-color: transparent;
+  cursor: col-resize;
 
   &.handler-selected {
     border-color: var(--app-color-white);
@@ -236,7 +239,11 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   left: 0;
   border-radius: 4px;
   box-sizing: border-box;
-  border: 1px solid var(--app-color-white);
   z-index: 1;
+  border: 1px solid transparent;
+
+  &.is-selected {
+    border-color: var(--app-color-white);
+  }
 }
 </lang>

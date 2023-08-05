@@ -38,3 +38,8 @@ export const INIT_MAX_FRAME_COUNT = 300
 export const VIDEO_TRACK_HEIGHT = 60
 
 export const OTHER_TRACK_HEIGHT = 24
+
+/**
+ * canvas 最大宽度
+ */
+export const MAX_CANVAS_WIDTH = 32767
