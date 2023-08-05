@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { hoursToTime, minutesToTime, secondsToTime } from '@/services/helpers/time'
 import { ref, warn } from 'vue'
-import { FRAME_STEP, INIT_MAX_FRAME_COUNT } from '@/config'
+import { FRAME_STEP, INIT_MAX_FRAME_COUNT, MAX_CANVAS_WIDTH, MAX_FRAME_WIDTH } from '@/config'
 
 // 长刻度单位
 enum LongScaleUnit {
@@ -50,8 +50,8 @@ function normalizeConfig(config: TimelineRenderConfig = {}) {
     ratio = window.devicePixelRatio,
     longScaleMinWidth = 120,
     separateParts = 10,
-    maxFrameWidth = 60,
-    maxCanvasWidth = 32767, // canvas 的最大宽度
+    maxFrameWidth = MAX_FRAME_WIDTH,
+    maxCanvasWidth = MAX_CANVAS_WIDTH, // canvas 的最大宽度
     canvasHeight = 30,
     backgroundColor = 'transparent',
     scaleHeight = 7,

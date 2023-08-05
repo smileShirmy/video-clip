@@ -43,3 +43,8 @@ export const OTHER_TRACK_HEIGHT = 24
  * canvas 最大宽度
  */
 export const MAX_CANVAS_WIDTH = 32767
+
+/**
+ * 缩放到最大时一帧的宽度
+ */
+export const MAX_FRAME_WIDTH = 60

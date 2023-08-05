@@ -128,9 +128,6 @@ class FFManger {
       `${frameDir}/f-%d.jpg`
     ]
     await this.ffmpeg.run(...commands)
-
-    const dir = this.readDir(frameDir)
-    console.log(dir)
   }
 
   public getFrame(filename: string, index: number) {

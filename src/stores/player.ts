@@ -25,6 +25,7 @@ export const usePlayerStore = defineStore('player', () => {
   function play() {
     if (currentFrame.value >= trackList.maxFrame) {
       currentFrame.value = trackList.maxFrame
+      pause()
       return
     }
     window.clearTimeout(timer)
