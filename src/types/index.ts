@@ -70,3 +70,22 @@ export enum TrackItemName {
   TRACK_ITEM_STICKER = 'TrackItemSticker',
   TRACK_ITEM_AUDIO = 'TrackItemAudio'
 }
+
+/**
+ * 画面资源属性
+ */
+export interface PlayerAttribute {
+  topRatio: number
+  leftRatio: number
+  widthRatio: number
+  heightRatio: number
+  rotate: number
+  scale: number
+}
+
+export interface AttributeOptions extends Partial<PlayerAttribute> {
+  topRatio: number
+  leftRatio: number
+  widthRatio: number
+  heightRatio: number
+}

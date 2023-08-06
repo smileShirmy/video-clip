@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { draggable } from '@/services/draggable/draggable'
 import { VideoTrackItem } from '@/services/track-item/video-track-item'
+import { usePlayerStore } from '@/stores/player'
 import { type VideoResource } from '@/types'
 import { ref } from 'vue'
 
@@ -8,12 +9,43 @@ const props = defineProps<{
   data: VideoResource
 }>()
 
+const playerStore = usePlayerStore()
 const resourceItemRef = ref<HTMLDivElement | null>(null)
 
 function onDragStart(e: PointerEvent) {
   if (!resourceItemRef.value) return
 
-  draggable.onDragStart(e, resourceItemRef.value, VideoTrackItem.create(props.data))
+  const { width, height } = props.data
+  const { aspectRatio } = playerStore
+
+  const resourceAspectRatio = width / height
+  let topRatio = 0
+  let leftRatio = 0
+  let widthRatio = 1
+  let heightRatio = 1
+
+  if (resourceAspectRatio > playerStore.aspectRatio) {
+    widthRatio = 1
+    heightRatio = 1 / resourceAspectRatio
+    topRatio = (1 - heightRatio) / 2
+    leftRatio = 0
+  } else if (resourceAspectRatio < aspectRatio) {
+    heightRatio = 1
+    widthRatio = resourceAspectRatio
+    topRatio = 0
+    leftRatio = (1 - widthRatio) / 2
+  }
+
+  draggable.onDragStart(
+    e,
+    resourceItemRef.value,
+    VideoTrackItem.create(props.data, {
+      topRatio,
+      leftRatio,
+      widthRatio,
+      heightRatio
+    })
+  )
 }
 </script>
 

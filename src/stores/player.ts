@@ -6,6 +6,11 @@ import { ref } from 'vue'
 const SPEED = 1000 / FPS
 const DEFAULT_ASPECT_RATIO = 16 / 9
 
+export type PlayerStore = Omit<
+  ReturnType<typeof usePlayerStore>,
+  keyof ReturnType<typeof defineStore>
+>
+
 export const usePlayerStore = defineStore('player', () => {
   const resizing = ref(false)
 
@@ -14,6 +19,10 @@ export const usePlayerStore = defineStore('player', () => {
   const aspectRatio = ref(DEFAULT_ASPECT_RATIO)
 
   const playing = ref(false)
+
+  const sceneWidth = ref(0)
+
+  const sceneHeight = ref(0)
 
   let timer: number
 
@@ -40,6 +49,8 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   return {
+    sceneWidth,
+    sceneHeight,
     resizing,
     aspectRatio,
     currentFrame,

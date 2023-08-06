@@ -52,7 +52,7 @@ const trackItemStyle: ComputedRef<CSSProperties> = computed(() => {
 const showOverlay = computed(() => {
   return (
     props.data.component !== TrackItemName.TRACK_ITEM_VIDEO &&
-    props.data.id !== trackList.selectedId
+    props.data.id !== trackList.selectedId.value
   )
 })
 
@@ -146,7 +146,7 @@ function onDragStart(e: PointerEvent) {
 onClickOutside(trackItemRef, (e: PointerEvent) => {
   const el = e.target
   if (el instanceof HTMLElement && isString(el.dataset.clearSelected)) {
-    if (trackList.selectedId === props.data.id) {
+    if (trackList.selectedId.value === props.data.id) {
       trackList.setSelectedId('')
     }
   }
@@ -164,21 +164,21 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   >
     <div
       class="track-item-selected"
-      :class="{ 'is-selected': props.data.id === trackList.selectedId }"
+      :class="{ 'is-selected': props.data.id === trackList.selectedId.value }"
     ></div>
     <slot></slot>
   </div>
 
   <div
     class="track-handler left-handler"
-    :class="{ 'handler-selected': props.data.id === trackList.selectedId }"
+    :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
     :style="leftHandlerStyle"
     @mousedown="onLeftHandlerDown"
     @touchstart="onLeftHandlerDown"
   ></div>
   <div
     class="track-handler right-handler"
-    :class="{ 'handler-selected': props.data.id === trackList.selectedId }"
+    :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
     :style="rightHandlerStyle"
     @mousedown="onRightHandlerDown"
     @touchstart="onRightHandlerDown"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import MoveableControl, { type MoveableAttribute } from './components/moveable/MoveableControl.vue'
-import type { CSSProperties, ComputedRef, ShallowReactive } from 'vue'
+import MoveableControl from './components/moveable/MoveableControl.vue'
+import type { CSSProperties, ComputedRef } from 'vue'
 import { shallowReactive } from 'vue'
 import { vOnClickOutside } from '@/services/directives/click-outside'
 import { isString } from '@/services/helpers/general'
@@ -11,10 +11,14 @@ import { onMounted } from 'vue'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { storeToRefs } from 'pinia'
 import PlayerControls from './components/player-controls/PlayerControls.vue'
+import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
+import { trackList } from '@/services/track-list/track-list'
+import type { PlayerTrackItem } from '@/services/track-item'
+import { storeToRefs } from 'pinia'
+import { PlayerItem } from '@/services/player-item/player-item'
 
-const playerStore = storeToRefs(usePlayerStore())
+const playerStore = usePlayerStore()
 
 const playerContainer = ref<HTMLElement>()
 const sceneContentRef = ref<HTMLDivElement | null>(null)
@@ -24,49 +28,20 @@ const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
 
 const moveableItemRef = ref<HTMLDivElement[]>([])
 
-const item1: ShallowReactive<MoveableAttribute> = shallowReactive({
-  top: 0,
-  left: 0,
-  width: 100,
-  height: 100,
-  scale: 1,
-  rotate: 0,
+const createPlayerItem = (trackItem: PlayerTrackItem): PlayerItem => {
+  return new PlayerItem(trackItem, playerStore)
+}
 
-  startTop: 0,
-  startLeft: 0,
-  startWidth: 100,
-  startHeight: 100
-})
-
-const item2: ShallowReactive<MoveableAttribute> = shallowReactive({
-  top: 0,
-  left: 0,
-  width: 100,
-  height: 100,
-  scale: 1,
-  rotate: 0,
-
-  startTop: 0,
-  startLeft: 0,
-  startWidth: 100,
-  startHeight: 100
-})
-
-const itemList = [item1, item2]
+const playerItems = shallowReactive<PlayerItem[]>([])
 
 const SCENE_PADDING = 10 * 2
 
-const sceneWidth = ref(0)
-const sceneHeight = ref(0)
-
-const selected = ref<ShallowReactive<MoveableAttribute> | null>(null)
-
 const sceneContentStyle: ComputedRef<CSSProperties> = computed(() => ({
-  width: `${sceneWidth.value}px`,
-  height: `${sceneHeight.value}px`
+  width: `${playerStore.sceneWidth}px`,
+  height: `${playerStore.sceneHeight}px`
 }))
 
-watch(selected, (item) => {
+watch(trackList.selectedId, (item) => {
   if (item === null && moveableControlRef.value) {
     moveableControlRef.value.hide()
   }
@@ -76,13 +51,10 @@ let startSceneWidth = 0
 
 function updateSize() {
   // 缩放比例
-  const ratio = sceneWidth.value / startSceneWidth
+  const ratio = playerStore.sceneWidth / startSceneWidth
 
-  for (const item of itemList) {
-    item.top = item.startTop * ratio
-    item.left = item.startLeft * ratio
-    item.width = item.startWidth * ratio
-    item.height = item.startHeight * ratio
+  for (const item of playerItems) {
+    item.updateAttribute(ratio)
   }
 
   if (moveableControlRef.value) {
@@ -90,16 +62,14 @@ function updateSize() {
   }
 }
 
-watch(playerStore.resizing, (is, old) => {
+const { resizing } = storeToRefs(playerStore)
+watch(resizing, (is, old) => {
   // 开始缩放
   if (is && !old) {
-    startSceneWidth = sceneWidth.value
+    startSceneWidth = playerStore.sceneWidth
 
-    for (const item of itemList) {
-      item.startTop = item.top
-      item.startLeft = item.left
-      item.startWidth = item.width
-      item.startHeight = item.height
+    for (const item of playerItems) {
+      item.recordStartAttribute()
     }
   }
 
@@ -111,16 +81,27 @@ watch(playerStore.resizing, (is, old) => {
   }
 })
 
-function select(event: PointerEvent, item: ShallowReactive<MoveableAttribute>) {
+function select(event: PointerEvent, item: PlayerItem) {
   if (
     moveableControlRef.value &&
     event.target instanceof HTMLDivElement &&
     sceneContentRef.value instanceof HTMLDivElement
   ) {
     moveableControlRef.value.show(event.target, sceneContentRef.value, event)
-    selected.value = item
+    trackList.setSelectedId(item.trackItem.id)
   }
 }
+
+const { currentFrame } = storeToRefs(playerStore)
+watch(currentFrame, (currentFrame) => {
+  playerItems.length = 0
+  const items = trackList.getCurrentFramePlayItems(currentFrame)
+  if (items.length) {
+    items.forEach((trackItem) => {
+      playerItems.push(createPlayerItem(trackItem))
+    })
+  }
+})
 
 // 取消选中
 function onClickOutside(event: PointerEvent) {
@@ -142,30 +123,36 @@ function onClickOutside(event: PointerEvent) {
   }
 
   // 正在缩放舞台区域
-  if (playerStore.resizing.value) return
+  if (playerStore.resizing) return
 
-  selected.value = null
+  trackList.selectedId.value = ''
 }
 
+const selectedPlayerItem = computed(() => {
+  const exist = playerItems.find((item) => item.trackItem.id === trackList.selectedId.value)
+  return exist ?? null
+})
+
 function onRotate(rotate: number) {
-  if (selected.value) {
-    selected.value.rotate = rotate
+  if (selectedPlayerItem.value) {
+    selectedPlayerItem.value.attribute.rotate = rotate
   }
 }
 
 function onScale(scale: number) {
-  if (selected.value) {
-    selected.value.scale = scale
+  if (selectedPlayerItem.value) {
+    selectedPlayerItem.value.attribute.scale = scale
   }
 }
 
 function onTranslate(translate: { x: number; y: number }) {
-  if (selected.value) {
-    selected.value.top = translate.y
-    selected.value.left = translate.x
+  if (selectedPlayerItem.value) {
+    selectedPlayerItem.value.top.value = translate.y
+    selectedPlayerItem.value.left.value = translate.x
   }
 }
 
+const { sceneWidth } = storeToRefs(playerStore)
 watchThrottled(
   sceneWidth,
   (width) => {
@@ -182,14 +169,14 @@ watchThrottled(
 onMounted(() => {
   useResizeObserver(sceneWrapperRef.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
-    const ratio = playerStore.aspectRatio.value
+    const ratio = playerStore.aspectRatio
 
     if (width / height > ratio) {
-      sceneHeight.value = height - SCENE_PADDING
-      sceneWidth.value = height * ratio - SCENE_PADDING
+      playerStore.sceneHeight = height - SCENE_PADDING
+      playerStore.sceneWidth = height * ratio - SCENE_PADDING
     } else {
-      sceneWidth.value = width - SCENE_PADDING
-      sceneHeight.value = width / ratio - SCENE_PADDING
+      playerStore.sceneWidth = width - SCENE_PADDING
+      playerStore.sceneHeight = width / ratio - SCENE_PADDING
     }
   })
 })
@@ -203,15 +190,17 @@ defineExpose({
   <div class="player-container app-width-transition" ref="playerContainer">
     <div class="scene-wrapper" ref="sceneWrapperRef">
       <div class="scene-content" ref="sceneContentRef" :style="sceneContentStyle">
+        <PlayerCanvas class="player-canvas" />
+
         <div
-          v-for="(item, i) in itemList"
+          v-for="(item, i) in playerItems"
           :key="i"
           ref="moveableItemRef"
           class="moveable-item"
           :style="{
-            width: `${item.width}px`,
-            height: `${item.height}px`,
-            transform: `translate(${item.left}px, ${item.top}px) scale(${item.scale}) rotate(${item.rotate}deg)`
+            width: `${item.width.value}px`,
+            height: `${item.height.value}px`,
+            transform: `translate(${item.left.value}px, ${item.top.value}px) scale(${item.attribute.scale}) rotate(${item.attribute.rotate}deg)`
           }"
           data-moveable-item
           v-on-click-outside="onClickOutside"
@@ -239,6 +228,14 @@ defineExpose({
   align-items: center;
   width: 67%;
   background-color: var(--app-bg-color-dark);
+
+  .player-canvas {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
 
   .scene-wrapper {
     display: flex;

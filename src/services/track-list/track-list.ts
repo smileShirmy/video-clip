@@ -2,8 +2,9 @@ import { ref, shallowReactive, watch } from 'vue'
 import { useTrackStore } from '@/stores/track'
 import type { Track } from '../track'
 import { MainTrack } from '../track/main-track'
-import type { TrackItem } from '../track-item'
+import type { PlayerTrackItem, TrackItem } from '../track-item'
 import { TrackType } from '../track/base-track'
+import { isPlayerTrackItem } from '../track-item/helper'
 
 class TrackList {
   static create() {
@@ -12,7 +13,7 @@ class TrackList {
 
   private _list = shallowReactive<Track[]>([MainTrack.create()])
 
-  private _selectedId = ref('')
+  selectedId = ref('')
 
   private _maxFrame = ref(0)
 
@@ -20,13 +21,9 @@ class TrackList {
     return this._maxFrame.value
   }
 
-  get selectedId() {
-    return this._selectedId.value
-  }
-
   get selectedTrackItem(): TrackItem | null {
     for (let i = 0; i < this.list.length; i += 1) {
-      const exist = this.list[i].getTrackItem(this.selectedId)
+      const exist = this.list[i].getTrackItem(this.selectedId.value)
       if (exist) return exist
     }
     return null
@@ -66,11 +63,11 @@ class TrackList {
   }
 
   setSelectedId(id: string) {
-    this._selectedId.value = id
+    this.selectedId.value = id
   }
 
   removeSelected() {
-    if (!this.selectedId) return
+    if (!this.selectedId.value) return
 
     const trackItem = this.selectedTrackItem
     trackItem && this.removeTrackItem(trackItem)
@@ -133,6 +130,29 @@ class TrackList {
     if (!clipItem) return
 
     clipItem.split(splitFrame)
+  }
+
+  /**
+   * 获取当前帧用于播放的 trackItem
+   */
+  getCurrentFramePlayItems(currentFrame: number): PlayerTrackItem[] {
+    const len = trackList.list.length
+    const trackItems: PlayerTrackItem[] = []
+    for (let i = len - 1; i >= 0; i -= 1) {
+      const { trackItemList } = trackList.list[i]
+      for (let j = 0; j < trackItemList.length; j += 1) {
+        const trackItem = trackItemList[j]
+        if (
+          isPlayerTrackItem(trackItem) &&
+          currentFrame >= trackItem.startFrame &&
+          currentFrame <= trackItem.endFrame
+        ) {
+          trackItems.push(trackItem)
+        }
+      }
+    }
+
+    return trackItems
   }
 }
 
