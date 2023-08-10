@@ -29,6 +29,7 @@ interface RenderData {
   dy: number
   dw: number
   dh: number
+  rotate: number
 }
 
 function getRenderData(currentFrame: number): Promise<RenderData>[] {
@@ -61,7 +62,8 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
               dx,
               dy,
               dw,
-              dh
+              dh,
+              rotate: item.attribute.rotate
             }
 
             resolve(data)
@@ -77,15 +79,25 @@ async function render(currentFrame: number) {
   if (currentFrame <= 1 || !ctx || rendering) return
 
   rendering = true
-  const renderDataList = await Promise.all(getRenderData(currentFrame))
+  const renderDataList = await Promise.all(getRenderData(currentFrame + 1))
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
   for (let i = 0; i < renderDataList.length; i += 1) {
     const data = renderDataList[i]
 
-    const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh } = data
+    const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate } = data
+    // 图片中心点位置
+    const x = dx + dw / 2
+    const y = dy + dh / 2
+    const radian = (rotate * Math.PI) / 180
 
-    ctx.drawImage(imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh)
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.rotate(radian)
+    ctx.drawImage(imageBitmap, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh)
+    ctx.translate(-x, -y)
+    ctx.rotate(-radian)
+    ctx.restore()
   }
   rendering = false
 }
