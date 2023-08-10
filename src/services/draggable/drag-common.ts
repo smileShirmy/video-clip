@@ -107,7 +107,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
         this.setAddToCurrentTrackState({
           top: this.mainTrackData.top,
           addToTrack: this.mainTrackData.track,
-          startFrame,
+          startFrame: 0,
           widthFrame: this.dragTrackItem.endFrame - this.dragTrackItem.startFrame
         })
       }

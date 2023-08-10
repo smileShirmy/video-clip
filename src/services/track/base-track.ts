@@ -105,6 +105,8 @@ export abstract class BaseTrack<T extends TrackItem> {
     })
 
     if (list.length) {
+      trackList.updatePlayerMaxFrame()
+
       const trackStore = useTrackStore()
       if (trackList.trackItemCount > beforeTrackItemCount) {
         trackStore.updateMaxFrameCount(2)
