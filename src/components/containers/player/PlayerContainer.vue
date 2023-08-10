@@ -24,6 +24,7 @@ const sceneContentRef = ref<HTMLDivElement | null>(null)
 const sceneWrapperRef = ref<HTMLDivElement | null>(null)
 
 const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
+const playerCanvasRef = ref<InstanceType<typeof PlayerCanvas>>()
 
 const moveableItemRef = ref<HTMLDivElement[]>([])
 
@@ -159,12 +160,16 @@ function onRotate(rotate: number) {
   if (selectedPlayerItem.value) {
     selectedPlayerItem.value.attribute.rotate = rotate
   }
+
+  playerCanvasRef.value?.update()
 }
 
 function onScale(scale: number) {
   if (selectedPlayerItem.value) {
     selectedPlayerItem.value.attribute.scale = scale
   }
+
+  playerCanvasRef.value?.update()
 }
 
 function onTranslate(translate: { x: number; y: number }) {
@@ -176,6 +181,8 @@ function onTranslate(translate: { x: number; y: number }) {
     selectedPlayerItem.value.attribute.topRatio = y / playerStore.sceneHeight
     selectedPlayerItem.value.attribute.leftRatio = x / playerStore.sceneWidth
   }
+
+  playerCanvasRef.value?.update()
 }
 
 const { sceneWidth } = storeToRefs(playerStore)
@@ -192,6 +199,8 @@ watchThrottled(
   }
 )
 
+const initScene = ref(false)
+
 onMounted(() => {
   useResizeObserver(sceneWrapperRef.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
@@ -203,6 +212,10 @@ onMounted(() => {
     } else {
       playerStore.sceneWidth = width - SCENE_PADDING
       playerStore.sceneHeight = width / ratio - SCENE_PADDING
+    }
+
+    if (!initScene.value) {
+      initScene.value = true
     }
   })
 })
@@ -216,7 +229,12 @@ defineExpose({
   <div class="player-container app-width-transition" ref="playerContainer">
     <div class="scene-wrapper" ref="sceneWrapperRef">
       <div class="scene-content" ref="sceneContentRef" :style="sceneContentStyle">
-        <PlayerCanvas class="player-canvas" />
+        <PlayerCanvas
+          v-if="initScene"
+          ref="playerCanvasRef"
+          :playerItems="playerItems"
+          :style="sceneContentStyle"
+        />
 
         <div
           v-for="(item, i) in playerItems"

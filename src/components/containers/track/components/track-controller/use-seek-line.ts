@@ -22,10 +22,12 @@ export const useSeekLine = (
       return
 
     if (trackStore.showPreviewLine && previewLineX.value > -1) {
+      playerStore.pause()
       playerStore.currentFrame = timeLienStore.pixelToFrame(previewLineX.value)
       return
     }
 
+    playerStore.pause()
     playerStore.currentFrame = timeLienStore.pixelToFrame(e.offsetX)
   }
 
