@@ -264,19 +264,23 @@ function initMoveableControl() {
   initRotate(moveTarget)
 }
 
-function show(target: HTMLDivElement, sceneContentRef: HTMLDivElement, event: PointerEvent) {
+function show(target: HTMLDivElement, sceneContentRef: HTMLDivElement, event?: PointerEvent) {
   visible.value = true
   moveTarget = target
   sceneContent = sceneContentRef
 
   initMoveableControl()
 
-  onMove(event)
+  if (event) {
+    onMove(event)
+  }
 
   moveTarget.addEventListener('pointerdown', onMove)
 }
 
 function hide() {
+  if (!visible.value) return
+
   visible.value = false
 
   if (moveTarget) {
@@ -305,7 +309,8 @@ defineExpose({
   show,
   hide,
   resizingMoveableControl,
-  inOperation
+  inOperation,
+  visible
 })
 </script>
 

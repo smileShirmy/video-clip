@@ -6,7 +6,6 @@ import { shallowReactive } from 'vue'
 import { vOnClickOutside } from '@/services/directives/click-outside'
 import { isString } from '@/services/helpers/general'
 import { watch } from 'vue'
-import { findParent } from '@/services/helpers/dom'
 import { onMounted } from 'vue'
 import { useResizeObserver, watchThrottled } from '@vueuse/core'
 import { computed } from 'vue'
@@ -41,9 +40,47 @@ const sceneContentStyle: ComputedRef<CSSProperties> = computed(() => ({
   height: `${playerStore.sceneHeight}px`
 }))
 
-watch(trackList.selectedId, (item) => {
-  if (item === null && moveableControlRef.value) {
+watch(trackList.selectedId, (selectedId: string) => {
+  if (!moveableControlRef.value || !(sceneContentRef.value instanceof HTMLElement)) return
+
+  if (selectedId) {
+    const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
+    if (targetItem) {
+      moveableControlRef.value.show(targetItem, sceneContentRef.value)
+    }
+  } else {
     moveableControlRef.value.hide()
+  }
+})
+
+const { currentFrame } = storeToRefs(playerStore)
+watch(currentFrame, (currentFrame) => {
+  playerItems.length = 0
+
+  const selectedId = trackList.selectedId.value
+  const items = trackList.getCurrentFramePlayItems(currentFrame)
+  let hasSelected = false
+  if (items.length) {
+    items.forEach((trackItem) => {
+      if (trackItem.id === selectedId) {
+        hasSelected = true
+      }
+      playerItems.push(createPlayerItem(trackItem))
+    })
+  }
+
+  if (moveableControlRef.value) {
+    // 如果存在选中的目标
+    if (hasSelected) {
+      if (!moveableControlRef.value.visible && sceneContentRef.value instanceof HTMLElement) {
+        const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
+        if (targetItem) {
+          moveableControlRef.value.show(targetItem, sceneContentRef.value)
+        }
+      }
+    } else {
+      moveableControlRef.value.hide()
+    }
   }
 })
 
@@ -92,27 +129,12 @@ function select(event: PointerEvent, item: PlayerItem) {
   }
 }
 
-const { currentFrame } = storeToRefs(playerStore)
-watch(currentFrame, (currentFrame) => {
-  playerItems.length = 0
-  const items = trackList.getCurrentFramePlayItems(currentFrame)
-  if (items.length) {
-    items.forEach((trackItem) => {
-      playerItems.push(createPlayerItem(trackItem))
-    })
-  }
-})
-
 // 取消选中
 function onClickOutside(event: PointerEvent) {
   const target = event.target
 
-  // 不能取消选中的目标元素
   if (target instanceof HTMLElement) {
-    if (findParent(target, (el) => isString(el.dataset.moveableItem))) {
-      return
-    }
-    if (findParent(target, (el) => isString(el.dataset.moveable))) {
+    if (!isString(target.dataset.clearSelected)) {
       return
     }
   }
@@ -147,8 +169,12 @@ function onScale(scale: number) {
 
 function onTranslate(translate: { x: number; y: number }) {
   if (selectedPlayerItem.value) {
-    selectedPlayerItem.value.top.value = translate.y
-    selectedPlayerItem.value.left.value = translate.x
+    const { x, y } = translate
+    selectedPlayerItem.value.top.value = y
+    selectedPlayerItem.value.left.value = x
+
+    selectedPlayerItem.value.attribute.topRatio = y / playerStore.sceneHeight
+    selectedPlayerItem.value.attribute.leftRatio = x / playerStore.sceneWidth
   }
 }
 
@@ -202,6 +228,7 @@ defineExpose({
             height: `${item.height.value}px`,
             transform: `translate(${item.left.value}px, ${item.top.value}px) scale(${item.attribute.scale}) rotate(${item.attribute.rotate}deg)`
           }"
+          :data-id="item.trackItem.id"
           data-moveable-item
           v-on-click-outside="onClickOutside"
           @pointerdown="select($event, item)"
@@ -255,14 +282,6 @@ defineExpose({
       position: absolute;
       left: 0;
       top: 0;
-
-      &:first-child {
-        background-color: cadetblue;
-      }
-
-      &:nth-child(2) {
-        background-color: darkolivegreen;
-      }
     }
   }
 }
