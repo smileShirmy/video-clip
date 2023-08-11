@@ -85,21 +85,14 @@ watch(currentFrame, (currentFrame) => {
   }
 })
 
-let startSceneWidth = 0
-
 function updateSize() {
-  // 缩放比例
-  const ratio = playerStore.sceneWidth / startSceneWidth
-
   for (const item of playerItems) {
-    item.updateAttribute(ratio)
+    item.updateAttribute()
   }
 
   if (moveableControlRef.value) {
     moveableControlRef.value.resizingMoveableControl()
   }
-
-  return ratio
 }
 
 const { resizing } = storeToRefs(playerStore)
@@ -107,21 +100,15 @@ watch(resizing, (is, old) => {
   // 开始缩放
   if (is && !old) {
     playerStore.pause()
-    startSceneWidth = playerStore.sceneWidth
-
-    for (const item of playerItems) {
-      item.recordStartAttribute()
-    }
   }
 
   // 完成缩放
   if (!is && old) {
     setTimeout(() => {
-      const ratio = updateSize()
+      updateSize()
 
       if (playerCanvasRef.value) {
-        // TODO: 有误差，需要优化
-        playerCanvasRef.value.resize(ratio)
+        playerCanvasRef.value.resize()
       }
     })
   }
@@ -197,7 +184,7 @@ const { sceneWidth } = storeToRefs(playerStore)
 watchThrottled(
   sceneWidth,
   (width) => {
-    if (width > 0 && startSceneWidth > 0) {
+    if (width > 0) {
       updateSize()
     }
   },

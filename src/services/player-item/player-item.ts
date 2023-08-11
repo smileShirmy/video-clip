@@ -5,16 +5,12 @@ import type { PlayerStore } from '@/stores/player'
 
 export class PlayerItem {
   readonly trackItem: PlayerTrackItem
+  readonly playerStore: PlayerStore
 
   top: Ref<number> = ref(0)
   left: Ref<number> = ref(0)
   width: Ref<number> = ref(0)
   height: Ref<number> = ref(0)
-
-  private startTop: number
-  private startLeft: number
-  private startWidth: number
-  private startHeight: number
 
   get attribute(): ShallowReactive<PlayerAttribute> {
     return this.trackItem.attribute
@@ -22,8 +18,14 @@ export class PlayerItem {
 
   constructor(trackItem: PlayerTrackItem, playerStore: PlayerStore) {
     this.trackItem = trackItem
-    const { topRatio, leftRatio, widthRatio, heightRatio } = trackItem.attribute
-    const { sceneWidth, sceneHeight } = playerStore
+    this.playerStore = playerStore
+
+    this.updateAttribute()
+  }
+
+  updateAttribute() {
+    const { sceneWidth, sceneHeight } = this.playerStore
+    const { topRatio, leftRatio, widthRatio, heightRatio } = this.trackItem.attribute
 
     const top = sceneHeight * topRatio
     const left = sceneWidth * leftRatio
@@ -34,24 +36,5 @@ export class PlayerItem {
     this.left.value = left
     this.width.value = width
     this.height.value = height
-
-    this.startTop = top
-    this.startLeft = left
-    this.startWidth = width
-    this.startHeight = height
-  }
-
-  recordStartAttribute() {
-    this.startTop = this.top.value
-    this.startLeft = this.left.value
-    this.startHeight = this.height.value
-    this.startWidth = this.width.value
-  }
-
-  updateAttribute(ratio: number) {
-    this.top.value = this.startTop * ratio
-    this.left.value = this.startLeft * ratio
-    this.width.value = this.startWidth * ratio
-    this.height.value = this.startHeight * ratio
   }
 }

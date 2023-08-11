@@ -30,6 +30,7 @@ interface RenderData {
   dw: number
   dh: number
   rotate: number
+  playerItem: PlayerItem
 }
 
 function getDestinationPosition(item: PlayerItem) {
@@ -69,7 +70,8 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
               dy,
               dw,
               dh,
-              rotate: playerItem.attribute.rotate
+              rotate: playerItem.attribute.rotate,
+              playerItem
             }
 
             resolve(data)
@@ -130,19 +132,19 @@ function updatePlayer() {
   render(playerStore.currentFrame.value)
 }
 
-function resize(ratio: number) {
+function resize() {
   if (!ctx || !canvasRef.value) return
 
   updateCanvasSize()
   if (currentRenderData) {
     const scaleData = currentRenderData.map((v) => {
-      const { dx, dy, dw, dh } = v
+      const { dx, dy, dw, dh } = getDestinationPosition(v.playerItem)
       return {
         ...v,
-        dx: dx * ratio,
-        dy: dy * ratio,
-        dw: dw * ratio,
-        dh: dh * ratio
+        dx,
+        dy,
+        dw,
+        dh
       }
     })
     render(playerStore.currentFrame.value, scaleData)
