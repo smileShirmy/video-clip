@@ -32,28 +32,34 @@ interface RenderData {
   rotate: number
 }
 
+function getDestinationPosition(item: PlayerItem) {
+  const { scale } = item.trackItem.attribute
+  const originW = item.width.value
+  const originH = item.height.value
+  const originX = item.left.value
+  const originY = item.top.value
+
+  const dw = originW * scale
+  const dh = originH * scale
+  const dx = originX + (originW - dw) / 2
+  const dy = originY + (originH - dh) / 2
+
+  return { dw, dh, dx, dy }
+}
+
 function getRenderData(currentFrame: number): Promise<RenderData>[] {
   return props.playerItems.map(
-    (item) =>
+    (playerItem) =>
       new Promise((resolve) => {
-        const { trackItem } = item
+        const { trackItem } = playerItem
         if (ctx && trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
           const { name, format, width, height } = trackItem.resource
           const filename = `${name}.${format}`
           const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame)
           createImageBitmap(blobFrame).then((imageBitmap) => {
-            const { scale } = trackItem.attribute
-            const originW = item.width.value
-            const originH = item.height.value
-            const originX = item.left.value
-            const originY = item.top.value
+            const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 
-            const dw = originW * scale
-            const dh = originH * scale
-            const dx = originX + (originW - dw) / 2
-            const dy = originY + (originH - dh) / 2
-
-            const data = {
+            const data: RenderData = {
               imageBitmap,
               sx: 0,
               sy: 0,
@@ -63,7 +69,7 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
               dy,
               dw,
               dh,
-              rotate: item.attribute.rotate
+              rotate: playerItem.attribute.rotate
             }
 
             resolve(data)
@@ -75,15 +81,17 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
 
 let rendering = false
 
-async function render(currentFrame: number) {
+let currentRenderData: RenderData[]
+
+async function render(currentFrame: number, renderData?: RenderData[]) {
   if (currentFrame <= 1 || !ctx || rendering) return
 
   rendering = true
-  const renderDataList = await Promise.all(getRenderData(currentFrame))
+  currentRenderData = renderData ?? (await Promise.all(getRenderData(currentFrame)))
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-  for (let i = 0; i < renderDataList.length; i += 1) {
-    const data = renderDataList[i]
+  for (let i = 0; i < currentRenderData.length; i += 1) {
+    const data = currentRenderData[i]
 
     const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate } = data
     // 图片中心点位置
@@ -108,17 +116,42 @@ watch(playerStore.currentFrame, (currentFrame) => {
   render(currentFrame)
 })
 
-function update() {
+function updateCanvasSize() {
+  if (!canvasRef.value) return
+
+  const { width, height } = canvasRef.value.getBoundingClientRect()
+  canvasWidth = Math.round(width)
+  canvasHeight = Math.round(height)
+  canvasRef.value.width = canvasWidth
+  canvasRef.value.height = canvasHeight
+}
+
+function updatePlayer() {
   render(playerStore.currentFrame.value)
+}
+
+function resize(ratio: number) {
+  if (!ctx || !canvasRef.value) return
+
+  updateCanvasSize()
+  if (currentRenderData) {
+    const scaleData = currentRenderData.map((v) => {
+      const { dx, dy, dw, dh } = v
+      return {
+        ...v,
+        dx: dx * ratio,
+        dy: dy * ratio,
+        dw: dw * ratio,
+        dh: dh * ratio
+      }
+    })
+    render(playerStore.currentFrame.value, scaleData)
+  }
 }
 
 onMounted(() => {
   if (canvasRef.value) {
-    const { width, height } = canvasRef.value.getBoundingClientRect()
-    canvasWidth = Math.round(width)
-    canvasHeight = Math.round(height)
-    canvasRef.value.width = canvasWidth
-    canvasRef.value.height = canvasHeight
+    updateCanvasSize()
 
     const context = canvasRef.value.getContext('2d')
     if (context) {
@@ -128,7 +161,8 @@ onMounted(() => {
 })
 
 defineExpose({
-  update
+  updatePlayer,
+  resize
 })
 </script>
 
