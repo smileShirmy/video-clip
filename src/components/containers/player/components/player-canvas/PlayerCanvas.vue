@@ -79,7 +79,7 @@ async function render(currentFrame: number) {
   if (currentFrame <= 1 || !ctx || rendering) return
 
   rendering = true
-  const renderDataList = await Promise.all(getRenderData(currentFrame + 1))
+  const renderDataList = await Promise.all(getRenderData(currentFrame))
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
   for (let i = 0; i < renderDataList.length; i += 1) {

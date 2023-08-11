@@ -144,7 +144,7 @@ class TrackList {
         const trackItem = trackItemList[j]
         if (
           isPlayerTrackItem(trackItem) &&
-          currentFrame >= trackItem.startFrame &&
+          currentFrame > trackItem.startFrame &&
           currentFrame <= trackItem.endFrame
         ) {
           trackItems.push(trackItem)
