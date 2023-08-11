@@ -46,7 +46,7 @@ watch(trackList.selectedId, (selectedId: string) => {
 
   if (selectedId) {
     const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
-    if (targetItem) {
+    if (targetItem && !moveableControlRef.value.visible) {
       moveableControlRef.value.show(targetItem, sceneContentRef.value)
     }
   } else {

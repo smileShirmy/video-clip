@@ -19,7 +19,7 @@ class FFManger {
   constructor() {
     this.ffmpeg = createFFmpeg({
       corePath: '/ffmpeg/ffmpeg-core.js',
-      log: true,
+      log: false,
       progress: this.progress
     })
 

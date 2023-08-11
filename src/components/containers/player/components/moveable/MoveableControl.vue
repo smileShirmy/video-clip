@@ -7,20 +7,7 @@ import { computed } from 'vue'
 import { getRotatedPoint } from './helper'
 import { shallowReactive } from 'vue'
 import { watch } from 'vue'
-
-export interface MoveableAttribute {
-  top: number
-  left: number
-  width: number
-  height: number
-  scale: number
-  rotate: number
-
-  startTop: number
-  startLeft: number
-  startWidth: number
-  startHeight: number
-}
+import { warn } from '@/services/helpers/warn'
 
 const emit = defineEmits<{
   (e: 'rotate', rotate: number): void
@@ -209,6 +196,8 @@ function initRotate(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(/rotate\((?<deg>\d+(\.\d+)?)deg\)/)
   if (match && match.groups?.deg) {
     rotate.value = Number(match.groups.deg)
+  } else {
+    warn('rotate 格式不正确，无法匹配成功')
   }
 }
 
@@ -216,12 +205,14 @@ function initScale(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(/scale\((?<scale>\d+(\.\d+)?)\)/)
   if (match && match.groups?.scale) {
     scale.value = Number(match.groups.scale)
+  } else {
+    warn('scale 格式不正确，无法匹配成功')
   }
 }
 
 function initTranslatePosition(moveTarget: HTMLDivElement) {
   const match = moveTarget.style.transform.match(
-    /translate\((?<x>\d+(\.\d+)?)px, (?<y>\d+(\.\d+)?)px\)/
+    /translate\((?<x>-?\d+(\.\d+)?)px, (?<y>-?\d+(\.\d+)?)px\)/
   )
   if (match && match.groups?.x && match.groups?.y) {
     translate.x = Number(match.groups.x)
@@ -233,6 +224,8 @@ function initTranslatePosition(moveTarget: HTMLDivElement) {
     notScalableDistance.value = centerX - translate.x
     notScaleHalfWidth.value = centerX - translate.x
     notScaleHalfHeight.value = centerY - translate.y
+  } else {
+    warn('translate 格式不正确，无法匹配成功')
   }
 }
 
