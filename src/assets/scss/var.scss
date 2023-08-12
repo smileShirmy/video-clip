@@ -2,6 +2,7 @@
   $app-bg-color,
   $app-bg-color-light,
   $app-bg-color-lighter,
+  $app-bg-color-extra-lighter,
   $app-bg-color-dark,
   $app-bg-color-darker,
   $app-bg-color-blank,
@@ -14,6 +15,7 @@
   --app-bg-color-dark: #{$app-bg-color-dark};
   --app-bg-color-darker: #{$app-bg-color-darker};
   --app-bg-color-blank: #{$app-bg-color-blank};
+  --app-bg-color-extra-lighter: #{$app-bg-color-extra-lighter};
 
   --app-text-color-primary: #{$app-text-color-primary};
   --app-text-color-regular: #{$app-text-color-regular};
@@ -29,7 +31,7 @@
   --app-font-size-medium: 14px;
   --app-font-size-base: 13px;
   --app-font-size-small: 12px;
-  --app-font-size-extra-small: 12px;
+  --app-font-size-extra-small: 11px;
 
   --app-font-size-minimum: 9px;
 
@@ -42,6 +44,7 @@
     $app-bg-color-dark: #11121a,
     $app-bg-color-darker: #070709,
     $app-bg-color-blank: #000,
+    $app-bg-color-extra-lighter: #4a4b61,
 
     $app-text-color-primary: #a8abb2,
     $app-text-color-regular: #c0c4cc

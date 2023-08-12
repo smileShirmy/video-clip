@@ -1,11 +1,11 @@
 import { ref, type Ref, type ShallowReactive } from 'vue'
 import type { PlayerTrackItem } from '../track-item'
 import type { PlayerAttribute } from '@/types'
-import type { PlayerStore } from '@/stores/player'
 
 export class PlayerItem {
   readonly trackItem: PlayerTrackItem
-  readonly playerStore: PlayerStore
+  private readonly sceneHeight: number
+  private readonly sceneWidth: number
 
   top: Ref<number> = ref(0)
   left: Ref<number> = ref(0)
@@ -16,21 +16,21 @@ export class PlayerItem {
     return this.trackItem.attribute
   }
 
-  constructor(trackItem: PlayerTrackItem, playerStore: PlayerStore) {
+  constructor(trackItem: PlayerTrackItem, sceneWidth: number, sceneHeight: number) {
     this.trackItem = trackItem
-    this.playerStore = playerStore
+    this.sceneWidth = sceneWidth
+    this.sceneHeight = sceneHeight
 
     this.updateAttribute()
   }
 
   updateAttribute() {
-    const { sceneWidth, sceneHeight } = this.playerStore
     const { topRatio, leftRatio, widthRatio, heightRatio } = this.trackItem.attribute
 
-    const top = sceneHeight * topRatio
-    const left = sceneWidth * leftRatio
-    const width = sceneWidth * widthRatio
-    const height = sceneHeight * heightRatio
+    const top = this.sceneHeight * topRatio
+    const left = this.sceneWidth * leftRatio
+    const width = this.sceneWidth * widthRatio
+    const height = this.sceneHeight * heightRatio
 
     this.top.value = top
     this.left.value = left

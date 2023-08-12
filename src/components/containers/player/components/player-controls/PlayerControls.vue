@@ -3,6 +3,11 @@ import { frameToTime } from '@/services/helpers/time'
 import { trackList } from '@/services/track-list/track-list'
 import { usePlayerStore } from '@/stores/player'
 import { useTimelineStore } from '@/stores/timeline'
+import IconSkipPrevious from '@/components/icons/IconSkipPrevious.vue'
+import IconSkipNext from '@/components/icons/IconSkipNext.vue'
+import IconPlayArrow from '@/components/icons/IconPlayArrow.vue'
+import IconPause from '@/components/icons/IconPause.vue'
+import IconFullscreen from '@/components/icons/IconFullscreen.vue'
 import { computed } from 'vue'
 
 const playerStore = usePlayerStore()
@@ -50,14 +55,25 @@ function togglePlay() {
     </div>
 
     <div class="controls">
-      <div @click="prevFrame">上一帧</div>
-      <div @click="togglePlay">{{ playerStore.playing ? '暂停' : '播放' }}</div>
-      <div @click="nextFrame">下一帧</div>
+      <div class="controls-btn" @click="prevFrame">
+        <IconSkipPrevious class="controls-icon" />
+      </div>
+      <div class="controls-btn" @click="togglePlay">
+        <IconPause class="controls-icon" v-show="playerStore.playing" />
+        <IconPlayArrow class="controls-icon" v-show="!playerStore.playing" />
+      </div>
+      <div class="controls-btn" @click="nextFrame">
+        <IconSkipNext class="controls-icon" />
+      </div>
     </div>
 
     <div class="handler-wrapper">
-      <div>画面比例 TODO</div>
-      <div>全屏播放 TODO</div>
+      <!-- TODO: 画面比例切换 -->
+      <div class="handler-item aspect-ratio" title="TODO: 画面切幅">16:9</div>
+      <!-- TODO: 全屏播放 -->
+      <div class="handler-item" title="TODO: 全屏播放">
+        <IconFullscreen class="handler-icon" />
+      </div>
     </div>
   </div>
 </template>
@@ -108,11 +124,21 @@ function togglePlay() {
     justify-content: flex-start;
     align-items: center;
 
-    > div {
+    > .controls-btn {
       cursor: pointer;
 
-      + div {
+      + .controls-btn {
         margin-left: 20px;
+      }
+    }
+
+    .controls-icon {
+      width: 20px;
+      height: 20px;
+      fill: var(--app-text-color-primary);
+
+      &:hover {
+        fill: var(--app-text-color-regular);
       }
     }
   }
@@ -123,10 +149,39 @@ function togglePlay() {
     justify-content: flex-end;
     align-items: center;
 
-    > div {
+    .handler-item {
       cursor: pointer;
 
-      + div {
+      .handler-icon {
+        width: 20px;
+        height: 20px;
+        fill: var(--app-text-color-primary);
+
+        &:hover {
+          fill: var(--app-color-white);
+        }
+      }
+
+      &.aspect-ratio {
+        border: 1px solid var(--app-text-color-primary);
+        padding: 0 7px;
+        height: 14px;
+        line-height: 14px;
+        border-radius: 2px;
+        font-size: var(--app-font-size-minimum);
+        color: var(--app-text-color-primary);
+        text-align: center;
+
+        &:hover {
+          border-color: var(--app-color-white);
+        }
+      }
+
+      &:hover {
+        color: var(--app-color-white);
+      }
+
+      + .handler-item {
         margin-left: 16px;
       }
     }

@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import MoveableControl from './components/moveable/MoveableControl.vue'
 import type { CSSProperties, ComputedRef } from 'vue'
-import { shallowReactive } from 'vue'
 import { vOnClickOutside } from '@/services/directives/click-outside'
 import { isString } from '@/services/helpers/general'
 import { watch } from 'vue'
@@ -13,7 +12,6 @@ import { usePlayerStore } from '@/stores/player'
 import PlayerControls from './components/player-controls/PlayerControls.vue'
 import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
 import { trackList } from '@/services/track-list/track-list'
-import type { PlayerTrackItem } from '@/services/track-item'
 import { storeToRefs } from 'pinia'
 import { PlayerItem } from '@/services/player-item/player-item'
 
@@ -27,12 +25,6 @@ const moveableControlRef = ref<InstanceType<typeof MoveableControl>>()
 const playerCanvasRef = ref<InstanceType<typeof PlayerCanvas>>()
 
 const moveableItemRef = ref<HTMLDivElement[]>([])
-
-const createPlayerItem = (trackItem: PlayerTrackItem): PlayerItem => {
-  return new PlayerItem(trackItem, playerStore)
-}
-
-const playerItems = shallowReactive<PlayerItem[]>([])
 
 const SCENE_PADDING = 10 * 2
 
@@ -55,24 +47,12 @@ watch(trackList.selectedId, (selectedId: string) => {
 })
 
 const { currentFrame } = storeToRefs(playerStore)
-watch(currentFrame, (currentFrame) => {
-  playerItems.length = 0
-
-  const selectedId = trackList.selectedId.value
-  const items = trackList.getCurrentFramePlayItems(currentFrame)
-  let hasSelected = false
-  if (items.length) {
-    items.forEach((trackItem) => {
-      if (trackItem.id === selectedId) {
-        hasSelected = true
-      }
-      playerItems.push(createPlayerItem(trackItem))
-    })
-  }
-
+watch(currentFrame, () => {
   if (moveableControlRef.value) {
     // 如果存在选中的目标
-    if (hasSelected) {
+    if (playerStore.playerSelectedItem) {
+      const selectedId = playerStore.playerSelectedItem.trackItem.id
+
       if (!moveableControlRef.value.visible && sceneContentRef.value instanceof HTMLElement) {
         const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
         if (targetItem) {
@@ -86,7 +66,7 @@ watch(currentFrame, (currentFrame) => {
 })
 
 function updateSize() {
-  for (const item of playerItems) {
+  for (const item of playerStore.playerItems) {
     item.updateAttribute()
   }
 
@@ -146,35 +126,30 @@ function onClickOutside(event: PointerEvent) {
   trackList.selectedId.value = ''
 }
 
-const selectedPlayerItem = computed(() => {
-  const exist = playerItems.find((item) => item.trackItem.id === trackList.selectedId.value)
-  return exist ?? null
-})
-
 function onRotate(rotate: number) {
-  if (selectedPlayerItem.value) {
-    selectedPlayerItem.value.attribute.rotate = rotate
+  if (playerStore.playerSelectedItem) {
+    playerStore.playerSelectedItem.attribute.rotate = rotate
   }
 
   playerCanvasRef.value?.updatePlayer()
 }
 
 function onScale(scale: number) {
-  if (selectedPlayerItem.value) {
-    selectedPlayerItem.value.attribute.scale = scale
+  if (playerStore.playerSelectedItem) {
+    playerStore.playerSelectedItem.attribute.scale = scale
   }
 
   playerCanvasRef.value?.updatePlayer()
 }
 
 function onTranslate(translate: { x: number; y: number }) {
-  if (selectedPlayerItem.value) {
+  if (playerStore.playerSelectedItem) {
     const { x, y } = translate
-    selectedPlayerItem.value.top.value = y
-    selectedPlayerItem.value.left.value = x
+    playerStore.playerSelectedItem.top.value = y
+    playerStore.playerSelectedItem.left.value = x
 
-    selectedPlayerItem.value.attribute.topRatio = y / playerStore.sceneHeight
-    selectedPlayerItem.value.attribute.leftRatio = x / playerStore.sceneWidth
+    playerStore.playerSelectedItem.attribute.topRatio = y / playerStore.sceneHeight
+    playerStore.playerSelectedItem.attribute.leftRatio = x / playerStore.sceneWidth
   }
 
   playerCanvasRef.value?.updatePlayer()
@@ -227,12 +202,12 @@ defineExpose({
         <PlayerCanvas
           v-if="initScene"
           ref="playerCanvasRef"
-          :playerItems="playerItems"
+          :playerItems="playerStore.playerItems"
           :style="sceneContentStyle"
         />
 
         <div
-          v-for="(item, i) in playerItems"
+          v-for="(item, i) in playerStore.playerItems"
           :key="i"
           ref="moveableItemRef"
           class="moveable-item"

@@ -95,7 +95,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
     const startFrame = this.xToFrame(x)
 
     // 当前不存在任何资源时
-    if (trackList.isEmpty) {
+    if (trackList.isEmpty.value) {
       // 如果在主轨道上方
       if (this.isOver(y, this.mainTrackData.top)) {
         this.setAddToNewTrackState({

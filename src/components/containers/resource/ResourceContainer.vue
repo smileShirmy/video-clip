@@ -6,6 +6,7 @@ import VideoResource from './components/video-resource/VideoResource.vue'
 import TextResource from './components/text-resource/TextResource.vue'
 import AudioResource from './components/audio-resource/AudioResource.vue'
 import StickerResource from './components/sticker-resource/StickerResource.vue'
+import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 
 defineOptions({
   components: {
@@ -104,7 +105,7 @@ defineExpose({
     </Transition>
 
     <div v-show="!isFold" class="fold-wrapper" @click="fold">
-      <i class="fold-icon"></i>
+      <IconChevronLeft class="icon-chevron-left" />
     </div>
   </aside>
 </template>
@@ -160,30 +161,13 @@ defineExpose({
     border-radius: 4px 0 0 4px;
     cursor: pointer;
 
-    .fold-icon {
-      position: relative;
-      display: inline-block;
-      width: 0;
-      height: 0;
-      border: 6px solid transparent;
-      border-top: 6px solid transparent;
-      border-bottom: 6px solid transparent;
-      border-left: 3px solid transparent;
-      border-right: 3px solid var(--app-color-white);
+    &:hover {
+      background-color: var(--app-bg-color-extra-lighter);
+    }
 
-      &::after {
-        content: '';
-        position: absolute;
-        left: -2px;
-        top: -6px;
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        border-left: 3px solid transparent;
-        border-right: 3px solid var(--app-bg-color-lighter);
-      }
+    .icon-chevron-left {
+      margin: 0 -4px;
+      fill: var(--app-text-color-primary);
     }
   }
 

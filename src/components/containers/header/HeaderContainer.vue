@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { useDark, useToggle } from '@vueuse/core'
+// import { useDark, useToggle } from '@vueuse/core'
 
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
+// const isDark = useDark()
+// const toggleDark = useToggle(isDark)
 </script>
 
 <template>
   <header class="header-container">
-    <button @click="toggleDark()">toggleDark</button>
+    <!-- TODO: toggleDark -->
+    <!-- <button @click="toggleDark()">toggleDark</button> -->
   </header>
 </template>
 

@@ -6,6 +6,8 @@ import { isNumber } from '@/services/helpers/general'
 import { nextTick } from 'vue'
 import { computed, ref } from 'vue'
 import type { CSSProperties, ComputedRef } from 'vue'
+import IconZoomIn from '@/components/icons/IconZoomIn.vue'
+import IconZoomOut from '@/components/icons/IconZoomOut.vue'
 
 const props = defineProps({
   modelValue: {
@@ -23,6 +25,10 @@ const props = defineProps({
   step: {
     type: Number,
     default: 1
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -79,6 +85,24 @@ function onDragStart(event: MouseEvent | TouchEvent) {
   newPosition = startPosition
 }
 
+// 缩小
+function zoomOut() {
+  if (props.disabled) return
+
+  if (props.modelValue > props.min) {
+    emit('update:modelValue', props.modelValue - 1)
+  }
+}
+
+// 放大
+function zoomIn() {
+  if (props.disabled) return
+
+  if (props.modelValue < props.max) {
+    emit('update:modelValue', props.modelValue + 1)
+  }
+}
+
 function onDragging(event: MouseEvent | TouchEvent) {
   if (dragging) {
     isClick = false
@@ -128,6 +152,8 @@ function setPosition(newPosition: number) {
 }
 
 function onButtonDown(event: MouseEvent | TouchEvent) {
+  if (props.disabled) return
+
   event.preventDefault()
   onDragStart(event)
   window.addEventListener('mousemove', onDragging)
@@ -138,7 +164,8 @@ function onButtonDown(event: MouseEvent | TouchEvent) {
 }
 
 function onSliderClick(event: MouseEvent) {
-  if (!slider.value || dragging) return
+  if (props.disabled || !slider.value || dragging) return
+
   resetSize()
   const sliderOffsetLeft = slider.value.getBoundingClientRect().left
   setPosition(((event.clientX - sliderOffsetLeft) / sliderSize) * 100)
@@ -148,14 +175,31 @@ function onSliderClick(event: MouseEvent) {
 
 <template>
   <div class="scale-slider">
+    <div
+      class="slider-controls zoom-out"
+      :class="{ disabled: props.disabled || props.modelValue === props.min }"
+      title="轨道缩小"
+      @click="zoomOut"
+    >
+      <IconZoomOut class="zoom-icon" />
+    </div>
     <div class="slider-runway" ref="slider" @click="onSliderClick">
       <div class="slider-bar" :style="barStyle"></div>
       <div
         :style="buttonStyle"
         class="slider-button"
+        :class="{ disabled: props.disabled }"
         @mousedown="onButtonDown"
         @touchstart="onButtonDown"
       ></div>
+    </div>
+    <div
+      class="slider-controls zoom-in"
+      :class="{ disabled: props.disabled || props.modelValue === props.max }"
+      title="轨道放大"
+      @click="zoomIn"
+    >
+      <IconZoomIn class="zoom-icon" />
     </div>
   </div>
 </template>
@@ -164,13 +208,46 @@ function onSliderClick(event: MouseEvent) {
 .scale-slider {
   display: flex;
   align-items: center;
-  width: 150px;
   height: 12px;
+
+  .slider-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:not(.disabled):hover {
+      background-color: var(--app-bg-color-extra-lighter);
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &.zoom-out {
+      margin-right: 12px;
+    }
+
+    &.zoom-in {
+      margin-left: 12px;
+    }
+
+    .zoom-icon {
+      width: 16px;
+      height: 16px;
+      fill: var(--app-color-white);
+    }
+  }
 
   .slider-runway {
     position: relative;
     flex: 1;
     cursor: pointer;
+    width: 150px;
     height: 2px;
     background-color: var(--app-bg-color-lighter);
 
@@ -191,6 +268,11 @@ function onSliderClick(event: MouseEvent) {
       background-color: var(--app-color-white);
       transform: translate(-50%);
       user-select: none;
+
+      &.disabled {
+        background-color: var(--app-bg-color-extra-lighter);
+        cursor: not-allowed;
+      }
     }
   }
 }

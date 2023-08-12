@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { trackList } from '@/services/track-list/track-list'
@@ -47,6 +47,24 @@ export const useTrackStore = defineStore('track', () => {
     },
     { throttle: 100, trailing: true }
   )
+
+  // 可能要切割的滚动资源
+  const splitTrackItem = computed(() => {
+    const len = trackList.list.length
+    for (let i = len - 1; i >= 0; i -= 1) {
+      const { trackItemList } = trackList.list[i]
+      for (let j = 0; j < trackItemList.length; j += 1) {
+        const item = trackItemList[j]
+        if (
+          playerStore.currentFrame > item.startFrame &&
+          playerStore.currentFrame < item.endFrame
+        ) {
+          return trackItemList[j]
+        }
+      }
+    }
+    return null
+  })
 
   function setTrackContainerRef(trackContainer: HTMLDivElement) {
     trackContainerRef = trackContainer
@@ -101,6 +119,8 @@ export const useTrackStore = defineStore('track', () => {
   // 自适应轨道
   function adaptiveTrack() {
     const maxFrame = trackList.maxFrame
+    if (maxFrame <= 0) return
+
     const width = getTimelineWidth()
     timelineStore.initTimelineWidth = width
     timelineStore.timelineWrapperWidth = width
@@ -135,12 +155,15 @@ export const useTrackStore = defineStore('track', () => {
   }
 
   function split() {
-    trackList.split(playerStore.currentFrame)
+    if (splitTrackItem.value) {
+      splitTrackItem.value.split(playerStore.currentFrame)
+    }
   }
 
   return {
     disableScroll,
     scale,
+    splitTrackItem,
     enableMagnetic,
     enableSticky,
     enablePreviewLine,

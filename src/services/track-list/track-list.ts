@@ -1,4 +1,4 @@
-import { ref, shallowReactive, watch } from 'vue'
+import { computed, ref, shallowReactive, watch, type ComputedRef } from 'vue'
 import { useTrackStore } from '@/stores/track'
 import type { Track } from '../track'
 import { MainTrack } from '../track/main-track'
@@ -13,9 +13,11 @@ class TrackList {
 
   private _list = shallowReactive<Track[]>([MainTrack.create()])
 
-  selectedId = ref('')
+  selectedId = ref<string>('')
 
   private _maxFrame = ref(0)
+
+  readonly isEmpty: ComputedRef<boolean>
 
   get maxFrame() {
     return this._maxFrame.value
@@ -31,13 +33,6 @@ class TrackList {
 
   get list(): Track[] {
     return this._list
-  }
-
-  /**
-   * 轨道中不存在任何资源
-   */
-  get isEmpty() {
-    return this.list.length === 1 && this.list[0].trackItemList.length === 0
   }
 
   get mainTrack(): MainTrack {
@@ -56,6 +51,8 @@ class TrackList {
       },
       { immediate: true }
     )
+
+    this.isEmpty = computed(() => this.list.length === 1 && this.list[0].trackItemList.length === 0)
   }
 
   updatePlayerMaxFrame() {
@@ -106,30 +103,6 @@ class TrackList {
   insert(track: Track, insertIndex: number) {
     track.parentTrackList = this
     this.list.splice(insertIndex, 0, track)
-  }
-
-  /**
-   * 从下往上找到分割的资源
-   */
-  getSplitTrackItem(splitFrame: number): TrackItem | null {
-    const len = trackList.list.length
-    for (let i = len - 1; i >= 0; i -= 1) {
-      const { trackItemList } = trackList.list[i]
-      for (let j = 0; j < trackItemList.length; j += 1) {
-        const item = trackItemList[j]
-        if (splitFrame > item.startFrame && splitFrame < item.endFrame) {
-          return trackItemList[j]
-        }
-      }
-    }
-    return null
-  }
-
-  split(splitFrame: number) {
-    const clipItem = this.getSplitTrackItem(splitFrame)
-    if (!clipItem) return
-
-    clipItem.split(splitFrame)
   }
 
   /**

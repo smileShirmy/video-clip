@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import IconChevronRight from '@/components/icons/IconChevronRight.vue'
 
 const emit = defineEmits<{
   (e: 'fold', changedWidth: number): void
@@ -53,7 +54,7 @@ defineExpose({
     AttributeContainer
 
     <div v-show="!isFold" class="fold-wrapper" @click.stop="fold">
-      <i class="fold-icon"></i>
+      <IconChevronRight class="icon-chevron-right" />
     </div>
   </div>
 </template>
@@ -77,31 +78,13 @@ defineExpose({
     border-radius: 0 4px 4px 0;
     cursor: pointer;
 
-    .fold-icon {
-      position: relative;
-      left: 3px;
-      display: inline-block;
-      width: 0;
-      height: 0;
-      border: 6px solid transparent;
-      border-top: 6px solid transparent;
-      border-bottom: 6px solid transparent;
-      border-left: 3px solid var(--app-color-white);
-      border-right: 3px solid transparent;
+    &:hover {
+      background-color: var(--app-bg-color-extra-lighter);
+    }
 
-      &::after {
-        content: '';
-        position: absolute;
-        right: -2px;
-        top: -6px;
-        display: inline-block;
-        width: 0;
-        height: 0;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        border-left: 3px solid var(--app-bg-color-lighter);
-        border-right: 3px solid transparent;
-      }
+    .icon-chevron-right {
+      margin: 0 -4px;
+      fill: var(--app-text-color-primary);
     }
   }
 }

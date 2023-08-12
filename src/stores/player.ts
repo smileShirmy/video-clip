@@ -1,7 +1,8 @@
 import { FPS } from '@/config'
+import { PlayerItem } from '@/services/player-item/player-item'
 import { trackList } from '@/services/track-list/track-list'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const SPEED = 1000 / FPS
 const DEFAULT_ASPECT_RATIO = 16 / 9
@@ -12,6 +13,15 @@ export type PlayerStore = Omit<
 >
 
 export const usePlayerStore = defineStore('player', () => {
+  const playerItems = computed(() => {
+    const items = trackList.getCurrentFramePlayItems(currentFrame.value)
+    return items.map((item) => new PlayerItem(item, sceneWidth.value, sceneHeight.value))
+  })
+
+  const playerSelectedItem = computed(() => {
+    return playerItems.value.find((item) => item.trackItem.id === trackList.selectedId.value)
+  })
+
   const resizing = ref(false)
 
   const currentFrame = ref(0)
@@ -49,6 +59,8 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   return {
+    playerItems,
+    playerSelectedItem,
     sceneWidth,
     sceneHeight,
     resizing,
