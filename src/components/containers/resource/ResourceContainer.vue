@@ -7,13 +7,21 @@ import TextResource from './components/text-resource/TextResource.vue'
 import AudioResource from './components/audio-resource/AudioResource.vue'
 import StickerResource from './components/sticker-resource/StickerResource.vue'
 import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
+import IconPhotoLibrary from '@/components/icons/IconPhotoLibrary.vue'
+import IconLibraryMusic from '@/components/icons/IconLibraryMusic.vue'
+import IconTitle from '@/components/icons/IconTitle.vue'
+import IconVideoLibrary from '@/components/icons/IconVideoLibrary.vue'
 
 defineOptions({
   components: {
     [ResourceComponentName.VIDEO_RESOURCE]: VideoResource,
     [ResourceComponentName.TEXT_RESOURCE]: TextResource,
     [ResourceComponentName.AUDIO_RESOURCE]: AudioResource,
-    [ResourceComponentName.STICKER_RESOURCE]: StickerResource
+    [ResourceComponentName.STICKER_RESOURCE]: StickerResource,
+    [ResourceComponentName.VIDEO_RESOURCE + 'Icon']: IconVideoLibrary,
+    [ResourceComponentName.TEXT_RESOURCE + 'Icon']: IconTitle,
+    [ResourceComponentName.AUDIO_RESOURCE + 'Icon']: IconLibraryMusic,
+    [ResourceComponentName.STICKER_RESOURCE + 'Icon']: IconPhotoLibrary
   }
 })
 
@@ -92,6 +100,7 @@ defineExpose({
         :key="item.componentName"
         @click="selectMenu(item.componentName)"
       >
+        <component class="menu-item-icon" :is="item.componentName + 'Icon'" />
         <span>{{ item.name }}</span>
       </li>
     </ul>
@@ -136,7 +145,18 @@ defineExpose({
       cursor: pointer;
 
       &.active {
-        background-color: var(--app-bg-color-light);
+        color: var(--app-color-theme);
+
+        .menu-item-icon {
+          fill: var(--app-color-theme);
+        }
+      }
+
+      .menu-item-icon {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 6px;
+        fill: var(--app-text-color-primary);
       }
     }
   }
