@@ -194,7 +194,8 @@ async function renderWaveform(audioPath: string, name: string) {
 
   await ffManager.generateWaveform(audioPath, name, {
     width: Math.round(width),
-    height: (VIDEO_WAVEFORM_HEIGHT - VIDEO_WAVEFORM_PADDING_TOP) * 2
+    height: (VIDEO_WAVEFORM_HEIGHT - VIDEO_WAVEFORM_PADDING_TOP) * 2,
+    color: '#666780'
   })
   const waveImageBlob = ffManager.getWaveImageBlob(name)
   waveImageUrl.value = window.URL.createObjectURL(waveImageBlob)

@@ -96,11 +96,14 @@ class FFManger {
    * @param {string} filename 文件名称
    * @param {string} fileUrl 文件地址
    */
-  public async writeFile(dir: FFDir, filename: string, fileUrl: string) {
-    if (this.isFileExist(dir, filename)) return
-
+  public async writeFile(dir: FFDir, filename: string, fileUrl: string): Promise<{ path: string }> {
     const path = `${dir}${filename}`
+
+    if (this.isFileExist(dir, filename)) return { path }
+
     await this.ffmpeg.FS('writeFile', path, await fetchFile(fileUrl))
+
+    return { path }
   }
 
   /**
@@ -182,6 +185,7 @@ class FFManger {
     options: {
       width: number
       height: number
+      color: string
     }
   ) {
     const wavePath = `${FFDir.WAVE}${waveName}.png`
@@ -191,7 +195,7 @@ class FFManger {
       '-i',
       audioPath,
       '-filter_complex',
-      `aformat=channel_layouts=mono,compand,showwavespic=s=${width}x${height}:colors=#666780`,
+      `aformat=channel_layouts=mono,compand,showwavespic=s=${width}x${height}:colors=${options.color}`,
       '-frames:v',
       '1',
       wavePath

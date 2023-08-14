@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import { ResourceComponentName, type AudioResource, ResourceType } from '@/types'
-import { ref } from 'vue'
+import { ResourceComponentName, type AudioResource } from '@/types'
+import { onMounted, ref } from 'vue'
 import AudioItem from '../base/audio-item/AudioItem.vue'
+import { getAudios } from '@/services/models/resource'
 
 defineOptions({
   name: ResourceComponentName.AUDIO_RESOURCE
 })
 
-const list = ref<AudioResource[]>([
-  {
-    type: ResourceType.AUDIO,
-    name: '你干嘛',
-    source: '',
-    format: 'mp3',
-    frameCount: 300
-  }
-])
+const list = ref<AudioResource[]>([])
+
+async function getList() {
+  list.value = await getAudios()
+}
+
+onMounted(() => {
+  getList()
+})
 </script>
 
 <template>

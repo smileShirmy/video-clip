@@ -33,7 +33,7 @@ export interface AudioResourceResponse {
   name: string
   format: string
   source: string
-  frameCount: number
+  duration: number
 }
 
 export enum ResourceType {
@@ -59,6 +59,7 @@ export interface StickerResource extends StickerResourceResponse {
 
 export interface AudioResource extends AudioResourceResponse {
   type: ResourceType.AUDIO
+  frameCount: number
 }
 
 /**

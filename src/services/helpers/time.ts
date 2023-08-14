@@ -62,3 +62,10 @@ export function frameToTime(frame: number) {
     frame: padZero(frames)
   }
 }
+
+/**
+ * 根据持续时间转化为帧
+ */
+export function durationToFrameCount(duration: number): number {
+  return Math.ceil(duration / 1000) * FPS
+}
