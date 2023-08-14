@@ -8,12 +8,14 @@ import { useResizeObserver, type ResizeObserverCallback, useThrottleFn } from '@
 import { useTimelineStore } from '@/stores/timeline'
 import { draggable } from '@/services/draggable/draggable'
 import {
+  FPS,
   MAX_CANVAS_WIDTH,
   MAX_FRAME_WIDTH,
   VIDEO_TRACK_HEIGHT,
   VIDEO_WAVEFORM_HEIGHT,
   VIDEO_WAVEFORM_PADDING_TOP
 } from '@/config'
+import { secondsToTime } from '@/services/helpers/time'
 
 defineOptions({
   name: TrackItemName.TRACK_ITEM_VIDEO
@@ -266,16 +268,22 @@ const waveImageStyle: ComputedRef<CSSProperties> = computed(() => {
   }
 })
 
+const duration = computed(() => {
+  const seconds = Math.round(props.data.resource.frameCount / FPS)
+  return secondsToTime(seconds)
+})
+
 onMounted(() => {
   initVideo()
 })
 </script>
 
 <template>
-  <TrackHandler :data="props.data">
+  <TrackHandler :data="props.data" v-slot="{ showHandler }">
     <AppLoading v-if="loading" />
     <div v-show="!loading" class="item-content" ref="itemContentRef" data-canvas-parent></div>
     <img :src="waveImageUrl" class="wave-image" :style="waveImageStyle" />
+    <time v-show="showHandler" class="video-info">{{ duration }}</time>
   </TrackHandler>
 </template>
 
@@ -288,5 +296,16 @@ onMounted(() => {
 
 .wave-image {
   position: absolute;
+}
+
+.video-info {
+  display: inline-block;
+  position: absolute;
+  top: 4px;
+  left: 16px;
+  color: var(--app-text-color-regular);
+  padding: 2px 1px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
 }
 </scss>

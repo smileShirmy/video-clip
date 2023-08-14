@@ -23,6 +23,8 @@ const HANDLER_WIDTH = 10
 let allowMaxFrame = 0
 let allowMinFrame = 0
 
+const showHandler = ref(false)
+
 const trackItemRef = ref<HTMLDivElement | null>(null)
 
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
@@ -151,6 +153,14 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     }
   }
 })
+
+function onmouseenter() {
+  showHandler.value = true
+}
+
+function onmouseleave() {
+  showHandler.value = false
+}
 </script>
 
 <template>
@@ -161,27 +171,35 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
     :class="{ overlay: showOverlay }"
     :style="trackItemStyle"
     @pointerdown="onDragStart"
+    @mouseenter="onmouseenter"
+    @mouseleave="onmouseleave"
   >
     <div
       class="track-item-selected"
       :class="{ 'is-selected': props.data.id === trackList.selectedId.value }"
     ></div>
-    <slot></slot>
+    <slot :showHandler="showHandler"></slot>
   </div>
 
   <div
+    v-show="showHandler"
     class="track-handler left-handler"
     :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
     :style="leftHandlerStyle"
     @mousedown="onLeftHandlerDown"
     @touchstart="onLeftHandlerDown"
+    @mouseenter="onmouseenter"
+    @mouseleave="onmouseleave"
   ></div>
   <div
+    v-show="showHandler"
     class="track-handler right-handler"
     :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
     :style="rightHandlerStyle"
     @mousedown="onRightHandlerDown"
     @touchstart="onRightHandlerDown"
+    @mouseenter="onmouseenter"
+    @mouseleave="onmouseleave"
   ></div>
 </template>
 
@@ -191,6 +209,9 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
 }
 
 .track-handler {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -199,6 +220,23 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   z-index: 1;
   border-color: transparent;
   cursor: col-resize;
+
+  &::before {
+    display: block;
+    content: '';
+    width: 1px;
+    height: 8px;
+    background-color: var(--app-color-white);
+    margin-right: 2px;
+  }
+
+  &::after {
+    display: block;
+    content: '';
+    width: 1px;
+    height: 8px;
+    background-color: var(--app-color-white);
+  }
 
   &.handler-selected {
     border-color: var(--app-color-white);

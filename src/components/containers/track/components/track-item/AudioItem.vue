@@ -8,6 +8,7 @@ import { draggable } from '@/services/draggable/draggable'
 import { FFDir, ffManager } from '@/services/ffmpeg/manager'
 import { useTimelineStore } from '@/stores/timeline'
 import { OTHER_TRACK_HEIGHT } from '@/config'
+import { secondsToTime } from '@/services/helpers/time'
 
 defineOptions({
   name: TrackItemName.TRACK_ITEM_AUDIO
@@ -70,16 +71,21 @@ const waveImageStyle: ComputedRef<CSSProperties> = computed(() => {
   }
 })
 
+const duration = computed(() => {
+  const seconds = Math.round(props.data.resource.duration / 1000)
+  return secondsToTime(seconds)
+})
+
 onMounted(() => {
   initAudio()
 })
 </script>
 
 <template>
-  <TrackHandler :data="props.data">
+  <TrackHandler :data="props.data" v-slot="{ showHandler }">
     <div class="item-content">
       <img :src="waveImageUrl" class="wave-image" :style="waveImageStyle" />
-      <span class="audio-name">{{ props.data.resource.name }}</span>
+      <span class="audio-info">{{ showHandler ? duration : props.data.resource.name }}</span>
     </div>
   </TrackHandler>
 </template>
@@ -98,7 +104,7 @@ onMounted(() => {
   user-select: none;
 }
 
-.audio-name {
+.audio-info {
   position: absolute;
   top: 6px;
   left: 16px;
