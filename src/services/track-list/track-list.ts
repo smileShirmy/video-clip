@@ -75,8 +75,9 @@ class TrackList {
     let removed = false
     this.list.forEach((line) => {
       const r = line.removeTrackItem(trackItem, false)
-      if (!removed && r) {
+      if (r) {
         removed = true
+        this.selectedId.value = ''
       }
     })
 
