@@ -279,7 +279,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <TrackHandler :data="props.data" v-slot="{ showHandler }">
+  <TrackHandler :data="props.data" v-slot="{ showHandler }" :loading="loading">
     <AppLoading v-if="loading" />
     <div v-show="!loading" class="item-content" ref="itemContentRef" data-canvas-parent></div>
     <img :src="waveImageUrl" class="wave-image" :style="waveImageStyle" />

@@ -14,9 +14,15 @@ import { TrackItemName } from '@/types'
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
 
-const props = defineProps<{
-  data: TrackItem
-}>()
+const props = withDefaults(
+  defineProps<{
+    data: TrackItem
+    loading: boolean
+  }>(),
+  {
+    loading: false
+  }
+)
 
 const HANDLER_WIDTH = 10
 
@@ -156,7 +162,9 @@ const onTrackItem = ref(false)
 
 const isSelected = computed(() => trackList.selectedId.value === props.data.id)
 
-const showHandler = computed(() => onTrackItem.value || isSelected.value)
+const showHandler = computed(
+  () => props.loading === false && (onTrackItem.value || isSelected.value)
+)
 
 function onmouseenter() {
   onTrackItem.value = true
