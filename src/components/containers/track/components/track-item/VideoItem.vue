@@ -26,6 +26,8 @@ const canvasCollection: HTMLCanvasElement[] = []
 
 const itemContentRef = ref<HTMLDivElement>()
 
+const loading = ref(false)
+
 function renderCanvas(
   ctx: CanvasRenderingContext2D,
   options: {
@@ -187,6 +189,8 @@ function initFramePreview(
 }
 
 async function initVideo() {
+  loading.value = true
+
   const { name, format, source, width, height } = props.data.resource
   const filename = `${name}.${format}`
   await ffManager.writeFile(FFDir.RESOURCE, filename, source)
@@ -196,6 +200,8 @@ async function initVideo() {
   })
 
   initFramePreview(width / height, filename, width, height)
+
+  loading.value = false
 }
 
 onMounted(() => {
@@ -205,11 +211,16 @@ onMounted(() => {
 
 <template>
   <TrackHandler :data="props.data">
-    <div class="item-content" ref="itemContentRef" data-canvas-parent></div>
+    <AppLoading class="loading" v-if="loading" />
+    <div v-show="!loading" class="item-content" ref="itemContentRef" data-canvas-parent></div>
   </TrackHandler>
 </template>
 
 <scss scoped lang="scss">
+.loading {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .item-content {
   width: 100%;
   height: 100%;
