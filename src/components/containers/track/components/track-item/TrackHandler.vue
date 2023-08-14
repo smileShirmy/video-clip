@@ -23,8 +23,6 @@ const HANDLER_WIDTH = 10
 let allowMaxFrame = 0
 let allowMinFrame = 0
 
-const showHandler = ref(false)
-
 const trackItemRef = ref<HTMLDivElement | null>(null)
 
 const leftHandlerStyle: ComputedRef<CSSProperties> = computed(() => {
@@ -154,12 +152,18 @@ onClickOutside(trackItemRef, (e: PointerEvent) => {
   }
 })
 
+const onTrackItem = ref(false)
+
+const isSelected = computed(() => trackList.selectedId.value === props.data.id)
+
+const showHandler = computed(() => onTrackItem.value || isSelected.value)
+
 function onmouseenter() {
-  showHandler.value = true
+  onTrackItem.value = true
 }
 
 function onmouseleave() {
-  showHandler.value = false
+  onTrackItem.value = false
 }
 </script>
 
@@ -174,17 +178,14 @@ function onmouseleave() {
     @mouseenter="onmouseenter"
     @mouseleave="onmouseleave"
   >
-    <div
-      class="track-item-selected"
-      :class="{ 'is-selected': props.data.id === trackList.selectedId.value }"
-    ></div>
+    <div class="track-item-selected" :class="{ 'is-selected': isSelected }"></div>
     <slot :showHandler="showHandler"></slot>
   </div>
 
   <div
     v-show="showHandler"
     class="track-handler left-handler"
-    :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
+    :class="{ 'handler-selected': isSelected }"
     :style="leftHandlerStyle"
     @mousedown="onLeftHandlerDown"
     @touchstart="onLeftHandlerDown"
@@ -194,7 +195,7 @@ function onmouseleave() {
   <div
     v-show="showHandler"
     class="track-handler right-handler"
-    :class="{ 'handler-selected': props.data.id === trackList.selectedId.value }"
+    :class="{ 'handler-selected': isSelected }"
     :style="rightHandlerStyle"
     @mousedown="onRightHandlerDown"
     @touchstart="onRightHandlerDown"

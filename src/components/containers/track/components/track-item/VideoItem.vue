@@ -213,7 +213,7 @@ function initResizeObserver(
   audioPath: string,
   name: string
 ) {
-  const imageWidth = VIDEO_TRACK_HEIGHT * ratio
+  const imageWidth = (VIDEO_TRACK_HEIGHT - VIDEO_WAVEFORM_HEIGHT) * ratio
   // 避免 canvas 渲染到最后出现图片截断的情况
   const maxCanvasWidth = MAX_CANVAS_WIDTH - (MAX_CANVAS_WIDTH % imageWidth)
 
