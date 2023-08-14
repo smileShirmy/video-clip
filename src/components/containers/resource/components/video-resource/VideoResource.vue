@@ -20,9 +20,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>Search Input</div>
+  <!-- <div>Search Input</div> -->
 
-  <div>Type List</div>
+  <!-- <div>Type List</div> -->
 
   <ul class="s-resource-list">
     <li class="s-resource-item" v-for="(item, i) in list" :key="i">

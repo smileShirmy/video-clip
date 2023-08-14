@@ -37,7 +37,10 @@
 
   --app-color-theme: #ff73b3;
 
+  --app-text-color-dark: #666;
   --app-bg-color-audio-waveform: #223452;
+  --icon-music-note: #9fa1b2;
+  --icon-music-note-bg: #2c2d3e;
 
   @include theme(
     $app-bg-color: #151620,
