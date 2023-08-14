@@ -3,9 +3,16 @@ import { ref } from 'vue'
 import { warn } from '../helpers/warn'
 import { FPS } from '@/config'
 
+/**
+ * /resource/video-1.mp4
+ * /resource/video-1.aac
+ * /frame/video-1.mp4/f-1.jpg
+ * /frame/video-1.mp4/f-2.jpg
+ */
 export enum FFDir {
   RESOURCE = '/resource/',
-  FRAME = '/frame/'
+  FRAME = '/frame/',
+  WAVE = '/wave/'
 }
 
 /**
@@ -41,7 +48,8 @@ class FFManger {
   private async initFileSystem() {
     await Promise.all([
       this.ffmpeg.FS('mkdir', FFDir.RESOURCE),
-      this.ffmpeg.FS('mkdir', FFDir.FRAME)
+      this.ffmpeg.FS('mkdir', FFDir.FRAME),
+      this.ffmpeg.FS('mkdir', FFDir.WAVE)
     ])
   }
 
@@ -133,6 +141,73 @@ class FFManger {
   public getFrame(filename: string, index: number) {
     const fileBuffer = this.ffmpeg.FS('readFile', `${FFDir.FRAME}${filename}/f-${index}.jpg`)
     return new Blob([fileBuffer], { type: 'image/jpeg' })
+  }
+
+  /**
+   * 从视频中提取音频
+   *
+   * @param {string} filename 文件名称
+   * @param {string} videoName 视频名称
+   */
+  public async extraAudio(filename: string, videoName: string): Promise<{ audioPath: string }> {
+    const audioName = `${videoName}.aac`
+    const audioPath = `${FFDir.RESOURCE}${audioName}`
+
+    if (this.isFileExist(FFDir.RESOURCE, audioName)) {
+      return { audioPath }
+    }
+
+    if (!this.isFileExist(FFDir.RESOURCE, filename)) {
+      warn('请先写入资源')
+      return { audioPath }
+    }
+
+    const resourcePath = `${FFDir.RESOURCE}${filename}`
+
+    const commands = ['-v', 'quiet', '-i', resourcePath, '-acodec', 'copy', '-vn', audioPath]
+    await this.ffmpeg.run(...commands)
+    return { audioPath }
+  }
+
+  /**
+   * 生成波形图片
+   *
+   * @param {string} audioPath 音频路径
+   * @param {string} waveName 波形图片名称
+   * @param options 其他配置
+   */
+  public async generateWaveform(
+    audioPath: string,
+    waveName: string,
+    options: {
+      width: number
+      height: number
+    }
+  ) {
+    const wavePath = `${FFDir.WAVE}${waveName}.png`
+    const { width, height } = options
+
+    const commands = [
+      '-i',
+      audioPath,
+      '-filter_complex',
+      `aformat=channel_layouts=mono,compand,showwavespic=s=${width}x${height}:colors=#666780`,
+      '-frames:v',
+      '1',
+      wavePath
+    ]
+
+    await this.ffmpeg.run(...commands)
+  }
+
+  /**
+   * 获取波形图片
+   *
+   * @param {string} waveName 波形图片名称
+   */
+  public getWaveImageBlob(waveName: string) {
+    const fileBuffer = this.ffmpeg.FS('readFile', `${FFDir.WAVE}${waveName}.png`)
+    return new Blob([fileBuffer], { type: 'image/png' })
   }
 }
 

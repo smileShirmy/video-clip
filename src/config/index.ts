@@ -39,6 +39,10 @@ export const VIDEO_TRACK_HEIGHT = 60
 
 export const OTHER_TRACK_HEIGHT = 24
 
+export const VIDEO_WAVEFORM_HEIGHT = 16
+
+export const VIDEO_WAVEFORM_PADDING_TOP = 3
+
 /**
  * canvas 最大宽度
  */
