@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import IconChevronRight from '@/components/icons/IconChevronRight.vue'
+import LayoutAttribute from './components/layout-attribute/LayoutAttribute.vue'
+import { defineComponent } from 'vue'
+
+defineComponent({
+  [LayoutAttribute.name]: LayoutAttribute
+})
 
 const emit = defineEmits<{
   (e: 'fold', changedWidth: number): void
@@ -51,7 +57,7 @@ defineExpose({
     ref="attributeContainer"
     @click="clickContainer"
   >
-    AttributeContainer
+    <LayoutAttribute />
 
     <div v-show="!isFold" class="fold-wrapper" @click.stop="fold">
       <IconChevronRight class="icon-chevron-right" />
@@ -65,6 +71,7 @@ defineExpose({
   position: relative;
   width: calc(33% - 1px);
   background-color: var(--app-bg-color);
+  padding: 16px;
 
   .fold-wrapper {
     position: absolute;

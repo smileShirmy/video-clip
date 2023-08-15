@@ -66,12 +66,12 @@ function onDragStart(e: PointerEvent) {
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background-color: var(--icon-music-note-bg);
+      background-color: var(--icon-color-bg);
 
       .icon-music-note {
         width: 24px;
         height: 24px;
-        fill: var(--icon-music-note);
+        fill: var(--icon-color);
       }
     }
   }
