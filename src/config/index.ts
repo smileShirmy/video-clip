@@ -52,3 +52,8 @@ export const MAX_CANVAS_WIDTH = 32767
  * 缩放到最大时一帧的宽度
  */
 export const MAX_FRAME_WIDTH = 60
+
+/**
+ * 默认文本宽度
+ */
+export const DEFAULT_TEXT_FRAME_COUNT = 90

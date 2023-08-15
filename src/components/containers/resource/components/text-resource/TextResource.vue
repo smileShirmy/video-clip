@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DEFAULT_TEXT_FRAME_COUNT } from '@/config'
 import TextItem from '../base/text-item/TextItem.vue'
 import { ResourceComponentName, ResourceType, type TextResource } from '@/types'
 import { ref } from 'vue'
@@ -7,12 +8,13 @@ defineOptions({
   name: ResourceComponentName.TEXT_RESOURCE
 })
 
-const list = ref<TextResource[]>([
-  {
-    type: ResourceType.TEXT,
-    frameCount: 300
-  }
-])
+const defaultTextResource: TextResource = {
+  type: ResourceType.TEXT,
+  name: '默认文本',
+  frameCount: DEFAULT_TEXT_FRAME_COUNT
+}
+
+const list = ref<TextResource[]>([defaultTextResource])
 </script>
 
 <template>

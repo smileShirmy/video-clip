@@ -19,7 +19,14 @@ const playerStore = storeToRefs(usePlayerStore())
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-interface RenderData {
+enum RenderType {
+  Image = 'image',
+  Text = 'text'
+}
+
+interface ImageRenderData {
+  type: RenderType.Image
+  playerItem: PlayerItem
   imageBitmap: ImageBitmap
   sx: number
   sy: number
@@ -30,8 +37,20 @@ interface RenderData {
   dw: number
   dh: number
   rotate: number
-  playerItem: PlayerItem
 }
+
+interface TextRenderData {
+  type: RenderType.Text
+  playerItem: PlayerItem
+  text: string
+  w: number
+  h: number
+  centerX: number
+  centerY: number
+  rotate: number
+}
+
+type RenderData = ImageRenderData | TextRenderData
 
 function getDestinationPosition(item: PlayerItem) {
   const { scale } = item.trackItem.attribute
@@ -49,36 +68,52 @@ function getDestinationPosition(item: PlayerItem) {
 }
 
 function getRenderData(currentFrame: number): Promise<RenderData>[] {
-  return props.playerItems.map(
-    (playerItem) =>
-      new Promise((resolve) => {
-        const { trackItem } = playerItem
-        if (ctx && trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
-          const { name, format, width, height } = trackItem.resource
-          const filename = `${name}.${format}`
-          const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame)
-          createImageBitmap(blobFrame).then((imageBitmap) => {
-            const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
+  return props.playerItems.map((playerItem) => {
+    return new Promise((resolve) => {
+      const { trackItem } = playerItem
 
-            const data: RenderData = {
-              imageBitmap,
-              sx: 0,
-              sy: 0,
-              sw: width,
-              sh: height,
-              dx,
-              dy,
-              dw,
-              dh,
-              rotate: playerItem.attribute.rotate,
-              playerItem
-            }
+      if (trackItem.component === TrackItemName.TRACK_ITEM_TEXT) {
+        const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 
-            resolve(data)
-          })
-        }
-      })
-  )
+        resolve({
+          type: RenderType.Text,
+          playerItem,
+          text: trackItem.text.value,
+          w: dw,
+          h: dh,
+          centerX: dx + dw / 2,
+          centerY: dy + dh / 2,
+          rotate: playerItem.attribute.rotate
+        })
+      }
+
+      if (ctx && trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
+        const { name, format, width, height } = trackItem.resource
+        const filename = `${name}.${format}`
+        const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame)
+        createImageBitmap(blobFrame).then((imageBitmap) => {
+          const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
+
+          const data: ImageRenderData = {
+            type: RenderType.Image,
+            imageBitmap,
+            sx: 0,
+            sy: 0,
+            sw: width,
+            sh: height,
+            dx,
+            dy,
+            dw,
+            dh,
+            rotate: playerItem.attribute.rotate,
+            playerItem
+          }
+
+          resolve(data)
+        })
+      }
+    })
+  })
 }
 
 let rendering = false
@@ -95,19 +130,36 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
   for (let i = 0; i < currentRenderData.length; i += 1) {
     const data = currentRenderData[i]
 
-    const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate } = data
-    // 图片中心点位置
-    const x = dx + dw / 2
-    const y = dy + dh / 2
-    const radian = (rotate * Math.PI) / 180
+    if (data.type === RenderType.Image) {
+      const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate } = data
+      // 图片中心点位置
+      const x = dx + dw / 2
+      const y = dy + dh / 2
+      const radian = (rotate * Math.PI) / 180
 
-    ctx.save()
-    ctx.translate(x, y)
-    ctx.rotate(radian)
-    ctx.drawImage(imageBitmap, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh)
-    ctx.translate(-x, -y)
-    ctx.rotate(-radian)
-    ctx.restore()
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(radian)
+      ctx.drawImage(imageBitmap, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh)
+      ctx.translate(-x, -y)
+      ctx.rotate(-radian)
+      ctx.restore()
+    } else if (data.type === RenderType.Text) {
+      // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
+      // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
+      const { text, w, h, centerX, centerY, rotate } = data
+      const radian = (rotate * Math.PI) / 180
+
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      ctx.rotate(radian)
+      ctx.fillStyle = '#fff'
+      ctx.font = `${h}px serif`
+      ctx.fillText(text, -w / 2, -h / 2 + h)
+      ctx.translate(-centerX, -centerY)
+      ctx.rotate(-radian)
+      ctx.restore()
+    }
   }
   rendering = false
 }
@@ -132,6 +184,7 @@ function updatePlayer() {
   render(playerStore.currentFrame.value)
 }
 
+// TODO: 需要优化，文本会错位
 function resize() {
   if (!ctx || !canvasRef.value) return
 
@@ -139,13 +192,25 @@ function resize() {
   if (currentRenderData) {
     const scaleData = currentRenderData.map((v) => {
       const { dx, dy, dw, dh } = getDestinationPosition(v.playerItem)
-      return {
-        ...v,
-        dx,
-        dy,
-        dw,
-        dh
+
+      if (v.type === RenderType.Image) {
+        return {
+          ...v,
+          dx,
+          dy,
+          dw,
+          dh
+        }
+      } else if (v.type === RenderType.Text) {
+        return {
+          ...v,
+          w: dw,
+          h: dh,
+          centerX: dx + dw / 2,
+          centerY: dy + dh / 2
+        }
       }
+      return v
     })
     render(playerStore.currentFrame.value, scaleData)
   }

@@ -49,6 +49,7 @@ export interface VideoResource extends VideoResourceResponse {
 
 export interface TextResource extends TextResourceResponse {
   type: ResourceType.TEXT
+  name: string
   frameCount: number
 }
 
