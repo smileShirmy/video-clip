@@ -27,6 +27,11 @@ export interface TextResourceResponse {
 
 export interface StickerResourceResponse {
   name: string
+  format: string
+  source: string
+  width: number
+  height: number
+  frameCount: number
 }
 
 export interface AudioResourceResponse {
@@ -55,7 +60,6 @@ export interface TextResource extends TextResourceResponse {
 
 export interface StickerResource extends StickerResourceResponse {
   type: ResourceType.STICKER
-  frameCount: number
 }
 
 export interface AudioResource extends AudioResourceResponse {

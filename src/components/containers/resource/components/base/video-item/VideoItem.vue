@@ -24,14 +24,14 @@ function onDragStart(e: PointerEvent) {
   let widthRatio = 1
   let heightRatio = 1
 
-  if (resourceAspectRatio > playerStore.aspectRatio) {
+  if (resourceAspectRatio > aspectRatio) {
     widthRatio = 1
-    heightRatio = 1 / resourceAspectRatio
+    heightRatio = 1 / aspectRatio
     topRatio = (1 - heightRatio) / 2
     leftRatio = 0
   } else if (resourceAspectRatio < aspectRatio) {
     heightRatio = 1
-    widthRatio = resourceAspectRatio
+    widthRatio = 1 / aspectRatio
     topRatio = 0
     leftRatio = (1 - widthRatio) / 2
   }

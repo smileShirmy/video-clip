@@ -85,12 +85,35 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
           centerY: dy + dh / 2,
           rotate: playerItem.attribute.rotate
         })
-      }
+      } else if (trackItem.component === TrackItemName.TRACK_ITEM_STICKER) {
+        const { name, format, width, height, frameCount } = trackItem.resource
+        const filename = `${name}.${format}`
+        const frameIndex = ((currentFrame - trackItem.startFrame) % frameCount) + 1
+        const blobFrame = ffManager.getFrame(filename, frameIndex, format)
+        createImageBitmap(blobFrame).then((imageBitmap) => {
+          const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 
-      if (ctx && trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
+          const data: ImageRenderData = {
+            type: RenderType.Image,
+            imageBitmap,
+            sx: 0,
+            sy: 0,
+            sw: width,
+            sh: height,
+            dx,
+            dy,
+            dw,
+            dh,
+            rotate: playerItem.attribute.rotate,
+            playerItem
+          }
+
+          resolve(data)
+        })
+      } else if (trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
         const { name, format, width, height } = trackItem.resource
         const filename = `${name}.${format}`
-        const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame)
+        const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame, format)
         createImageBitmap(blobFrame).then((imageBitmap) => {
           const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 

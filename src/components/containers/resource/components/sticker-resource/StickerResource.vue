@@ -1,19 +1,22 @@
 <script setup lang="ts">
+import { getStickers } from '@/services/models/resource'
 import StickerItem from '../base/sticker-item/StickerItem.vue'
-import { ResourceComponentName, ResourceType, type StickerResource } from '@/types'
-import { ref } from 'vue'
+import { ResourceComponentName, type StickerResource } from '@/types'
+import { onMounted, ref } from 'vue'
 
 defineOptions({
-  name: ResourceComponentName.STICKER_RESOURCE
+  name: ResourceComponentName.VIDEO_RESOURCE
 })
 
-const list = ref<StickerResource[]>([
-  {
-    type: ResourceType.STICKER,
-    frameCount: 300,
-    name: '就这?'
-  }
-])
+const list = ref<StickerResource[]>([])
+
+async function getList() {
+  list.value = await getStickers()
+}
+
+onMounted(() => {
+  getList()
+})
 </script>
 
 <template>

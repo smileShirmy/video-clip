@@ -2,6 +2,7 @@ import { createFFmpeg, fetchFile, type FFmpeg } from '@ffmpeg/ffmpeg'
 import { ref } from 'vue'
 import { warn } from '../helpers/warn'
 import { FPS } from '@/config'
+import { isString } from '../helpers/general'
 
 /**
  * /resource/video-1.mp4
@@ -117,6 +118,7 @@ class FFManger {
     options: {
       width: number
       height: number
+      format: string
     }
   ) {
     const frameDir = `${FFDir.FRAME}${filename}`
@@ -127,6 +129,8 @@ class FFManger {
       return
     }
 
+    const imageExtension = options.format === 'gif' ? 'png' : 'jpg'
+
     this.ffmpeg.FS('mkdir', frameDir)
     const resourcePath = `${FFDir.RESOURCE}${filename}`
     const commands = [
@@ -136,14 +140,22 @@ class FFManger {
       `fps=${FPS}`,
       '-s',
       `${options.width}x${options.height}`,
-      `${frameDir}/f-%d.jpg`
+      `${frameDir}/f-%d.${imageExtension}`
     ]
     await this.ffmpeg.run(...commands)
+
+    console.log(this.readDir(frameDir))
   }
 
-  public getFrame(filename: string, index: number) {
-    const fileBuffer = this.ffmpeg.FS('readFile', `${FFDir.FRAME}${filename}/f-${index}.jpg`)
-    return new Blob([fileBuffer], { type: 'image/jpeg' })
+  public getFrame(filename: string, index: number, format: string) {
+    const imageExtension = isString(format) && format === 'gif' ? 'png' : 'jpg'
+    const type = isString(format) && format === 'gif' ? 'image/png' : 'image/jpeg'
+
+    const fileBuffer = this.ffmpeg.FS(
+      'readFile',
+      `${FFDir.FRAME}${filename}/f-${index}.${imageExtension}`
+    )
+    return new Blob([fileBuffer], { type })
   }
 
   /**

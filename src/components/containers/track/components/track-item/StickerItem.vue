@@ -2,6 +2,8 @@
 import { TrackItemName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
 import type { StickerTrackItem } from '@/services/track-item/sticker-track-item'
+import { onMounted } from 'vue'
+import { FFDir, ffManager } from '@/services/ffmpeg/manager'
 
 defineOptions({
   name: TrackItemName.TRACK_ITEM_STICKER
@@ -10,6 +12,21 @@ defineOptions({
 const props = defineProps<{
   data: StickerTrackItem
 }>()
+
+async function initSticker() {
+  const { name, format, source, width, height } = props.data.resource
+  const filename = `${name}.${format}`
+  await ffManager.writeFile(FFDir.RESOURCE, filename, source)
+  await ffManager.generateFrames(filename, {
+    width,
+    height,
+    format
+  })
+}
+
+onMounted(() => {
+  initSticker()
+})
 </script>
 
 <template>

@@ -2,10 +2,12 @@ import type { Plugin } from 'vite'
 import url from 'url'
 import { videos } from './mock/videos'
 import { audios } from './mock/audios'
+import { stickers } from './mock/stickers'
 
 const dataMap = new Map()
 dataMap.set('videos', videos)
 dataMap.set('audios', audios)
+dataMap.set('stickers', stickers)
 
 export function mockServer(): Plugin {
   return {

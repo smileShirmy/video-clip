@@ -48,6 +48,7 @@ function renderCanvas(
     startIndex: number
     imageCount: number
     startOffsetFrame: number
+    format: string
   }
 ) {
   const {
@@ -57,7 +58,8 @@ function renderCanvas(
     filename,
     startIndex,
     imageCount,
-    startOffsetFrame
+    startOffsetFrame,
+    format
   } = options
 
   const imageBitmapPromises: Promise<ImageBitmap>[] = []
@@ -65,7 +67,7 @@ function renderCanvas(
   for (let i = 0; i < imageCount; i += 1) {
     const frameIndex =
       startOffsetFrame + Math.floor(((startIndex + i) * imageWidth) / timelineStore.frameWidth)
-    const blobFrame = ffManager.getFrame(filename, frameIndex + 1)
+    const blobFrame = ffManager.getFrame(filename, frameIndex + 1, format)
     imageBitmapPromises.push(createImageBitmap(blobFrame))
   }
 
@@ -124,7 +126,8 @@ function renderFrame(
   maxCanvasWidth: number,
   imageWidth: number,
   sourceWidth: number,
-  sourceHeight: number
+  sourceHeight: number,
+  format: string
 ) {
   const { width } = contentRect
   // 确保整除
@@ -153,7 +156,8 @@ function renderFrame(
         filename,
         startIndex: i * canvasImageCount,
         imageCount: canvasImageCount,
-        startOffsetFrame
+        startOffsetFrame,
+        format
       })
     } else {
       renderCanvas(ctx, {
@@ -163,7 +167,8 @@ function renderFrame(
         filename,
         startIndex: i * canvasImageCount,
         imageCount: lastCanvasImageCount,
-        startOffsetFrame
+        startOffsetFrame,
+        format
       })
       break
     }
@@ -211,7 +216,8 @@ function initResizeObserver(
   sourceWidth: number,
   sourceHeight: number,
   audioPath: string,
-  name: string
+  name: string,
+  format: string
 ) {
   const imageWidth = (VIDEO_TRACK_HEIGHT - VIDEO_WAVEFORM_HEIGHT) * ratio
   // 避免 canvas 渲染到最后出现图片截断的情况
@@ -230,7 +236,8 @@ function initResizeObserver(
         maxCanvasWidth,
         imageWidth,
         sourceWidth,
-        sourceHeight
+        sourceHeight,
+        format
       )
 
       renderWaveform(audioPath, name)
@@ -251,10 +258,11 @@ async function initVideo() {
   const { audioPath } = await ffManager.extraAudio(filename, name)
   await ffManager.generateFrames(filename, {
     width,
-    height
+    height,
+    format
   })
 
-  initResizeObserver(width / height, filename, width, height, audioPath, name)
+  initResizeObserver(width / height, filename, width, height, audioPath, name, format)
 
   loading.value = false
 }
