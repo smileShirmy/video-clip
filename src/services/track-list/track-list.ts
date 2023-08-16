@@ -19,16 +19,10 @@ class TrackList {
 
   readonly isEmpty: ComputedRef<boolean>
 
+  readonly selectedTrackItem: ComputedRef<TrackItem | null>
+
   get maxFrame() {
     return this._maxFrame.value
-  }
-
-  get selectedTrackItem(): TrackItem | null {
-    for (let i = 0; i < this.list.length; i += 1) {
-      const exist = this.list[i].getTrackItem(this.selectedId.value)
-      if (exist) return exist
-    }
-    return null
   }
 
   get list(): Track[] {
@@ -53,6 +47,14 @@ class TrackList {
     )
 
     this.isEmpty = computed(() => this.list.length === 1 && this.list[0].trackItemList.length === 0)
+
+    this.selectedTrackItem = computed(() => {
+      for (let i = 0; i < this.list.length; i += 1) {
+        const exist = this.list[i].getTrackItem(this.selectedId.value)
+        if (exist) return exist
+      }
+      return null
+    })
   }
 
   updatePlayerMaxFrame() {
@@ -66,8 +68,7 @@ class TrackList {
   removeSelected() {
     if (!this.selectedId.value) return
 
-    const trackItem = this.selectedTrackItem
-    trackItem && this.removeTrackItem(trackItem)
+    this.selectedTrackItem.value && this.removeTrackItem(this.selectedTrackItem.value)
     this.removeEmptyTrack()
   }
 

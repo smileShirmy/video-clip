@@ -24,7 +24,8 @@ export class VideoTrackItem extends BaseTrackItem<
     widthRatio: 1,
     heightRatio: 1,
     scale: 1,
-    rotate: 0
+    rotate: 0,
+    opacity: 1
   })
 
   constructor(resource: VideoResource, attribute: AttributeOptions) {

@@ -19,7 +19,8 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
     widthRatio: 1,
     heightRatio: 1,
     scale: 1,
-    rotate: 0
+    rotate: 0,
+    opacity: 1
   })
 
   constructor(resource: StickerResource, attribute: AttributeOptions) {

@@ -87,6 +87,7 @@ export interface PlayerAttribute {
   heightRatio: number
   rotate: number
   scale: number
+  opacity: number
 }
 
 export interface AttributeOptions extends Partial<PlayerAttribute> {

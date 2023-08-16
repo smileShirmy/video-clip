@@ -39,7 +39,7 @@ export const useTrackStore = defineStore('track', () => {
   // 放大等级
   const scale = ref(0)
 
-  // 当下面三个值发生改变时都要重新绘制
+  // 当下的值发生改变时都要重新绘制
   watchThrottled(
     [scale],
     () => {

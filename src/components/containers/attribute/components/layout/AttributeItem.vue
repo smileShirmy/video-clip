@@ -1,23 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import AttributeSlider from '../base/AttributeSlider.vue'
-import InputNumber from '../base/InputNumber.vue'
-
-defineOptions({
-  name: 'LayoutAttribute'
+const props = defineProps({
+  label: {
+    type: String,
+    required: true
+  }
 })
-
-const opacity = ref(0)
 </script>
 
 <template>
   <div class="attribute-item">
-    <div class="attribute-label">不透明度</div>
+    <div class="attribute-label">{{ props.label }}</div>
     <div class="attribute-handler">
-      <AttributeSlider v-model="opacity" />
+      <slot></slot>
     </div>
     <div class="attribute-other-handler">
-      <InputNumber v-model="opacity" unit="%" />
+      <slot name="other"></slot>
     </div>
   </div>
 </template>

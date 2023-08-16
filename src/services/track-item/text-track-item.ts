@@ -19,7 +19,8 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     widthRatio: 1,
     heightRatio: 1,
     scale: 1,
-    rotate: 0
+    rotate: 0,
+    opacity: 1
   })
 
   text = ref<string>('默认文本')
