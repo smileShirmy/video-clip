@@ -172,6 +172,7 @@ function onSliderClick(event: MouseEvent) {
   display: flex;
   align-items: center;
   height: 12px;
+  user-select: none;
 
   .slider-controls {
     display: flex;

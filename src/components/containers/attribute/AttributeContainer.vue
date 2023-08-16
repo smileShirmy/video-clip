@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import IconChevronRight from '@/components/icons/IconChevronRight.vue'
-import { trackList } from '@/services/track-list/track-list'
 import { watch } from 'vue'
 import { TrackItemName } from '@/types'
 import VideoPicture from './video-attribute/video-picture/VideoPicture.vue'
 import StickerPicture from './sticker-attribute/sticker-picture/StickerPicture.vue'
+import { useTrackStore } from '@/stores/track'
+import { storeToRefs } from 'pinia'
 
 defineOptions({
   components: {
@@ -18,6 +19,8 @@ const emit = defineEmits<{
   (e: 'fold', changedWidth: number): void
   (e: 'unfold', changedWidth: number): void
 }>()
+
+const trackStore = useTrackStore()
 
 const attributeContainer = ref<HTMLElement>()
 
@@ -66,25 +69,26 @@ const tabsMap: Record<TrackItemName, TabItem[]> = {
   ],
   [TrackItemName.TRACK_ITEM_AUDIO]: [],
   [TrackItemName.TRACK_ITEM_TEXT]: [],
-  [TrackItemName.TRACK_ITEM_STICKER]: []
+  [TrackItemName.TRACK_ITEM_STICKER]: [
+    {
+      component: StickerPicture.name,
+      name: '画面'
+    }
+  ]
 }
 
 const tabs = ref<TabItem[]>([])
 
-const tabComponent = ref(VideoPicture.name)
+const tabComponent = ref('')
 
+const { selectedTrackItem } = storeToRefs(trackStore)
 watch(
-  trackList.selectedTrackItem,
+  selectedTrackItem,
   (selected) => {
     if (selected === null) {
-      tabs.value = [
-        {
-          component: VideoPicture.name,
-          name: '画面'
-        }
-      ]
       return
     }
+
     tabs.value = tabsMap[selected.component]
 
     const [firstTab] = tabs.value

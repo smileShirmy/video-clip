@@ -246,7 +246,7 @@ function resizingMoveableControl() {
   }
 }
 
-function initMoveableControl() {
+function updateMoveableControl() {
   if (!moveTarget || !sceneContent) return
 
   resizingMoveableControl()
@@ -262,7 +262,7 @@ function show(target: HTMLDivElement, sceneContentRef: HTMLDivElement, event?: P
   moveTarget = target
   sceneContent = sceneContentRef
 
-  initMoveableControl()
+  updateMoveableControl()
 
   if (event) {
     onMove(event)
@@ -302,6 +302,7 @@ defineExpose({
   show,
   hide,
   resizingMoveableControl,
+  updateMoveableControl,
   inOperation,
   visible
 })

@@ -14,8 +14,11 @@ import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
 import { trackList } from '@/services/track-list/track-list'
 import { storeToRefs } from 'pinia'
 import { PlayerItem } from '@/services/player-item/player-item'
+import { useTrackStore } from '@/stores/track'
+import { isPlayerTrackItem } from '@/services/track-item/helper'
 
 const playerStore = usePlayerStore()
+const trackStore = useTrackStore()
 
 const playerContainer = ref<HTMLElement>()
 const sceneContentRef = ref<HTMLDivElement | null>(null)
@@ -109,6 +112,8 @@ function select(event: PointerEvent, item: PlayerItem) {
 function onClickOutside(event: PointerEvent) {
   const target = event.target
 
+  if (target instanceof SVGSVGElement) return
+
   if (target instanceof HTMLElement) {
     if (!isString(target.dataset.clearSelected)) {
       return
@@ -130,16 +135,12 @@ function onRotate(rotate: number) {
   if (playerStore.playerSelectedItem) {
     playerStore.playerSelectedItem.attribute.rotate = rotate
   }
-
-  playerCanvasRef.value?.updatePlayer()
 }
 
 function onScale(scale: number) {
   if (playerStore.playerSelectedItem) {
     playerStore.playerSelectedItem.attribute.scale = scale
   }
-
-  playerCanvasRef.value?.updatePlayer()
 }
 
 function onTranslate(translate: { x: number; y: number }) {
@@ -151,8 +152,6 @@ function onTranslate(translate: { x: number; y: number }) {
     playerStore.playerSelectedItem.attribute.topRatio = y / playerStore.sceneHeight
     playerStore.playerSelectedItem.attribute.leftRatio = x / playerStore.sceneWidth
   }
-
-  playerCanvasRef.value?.updatePlayer()
 }
 
 const { sceneWidth } = storeToRefs(playerStore)
@@ -164,6 +163,23 @@ watchThrottled(
     }
   },
   {
+    throttle: 20,
+    trailing: true
+  }
+)
+
+// TODO: 这样监听的属性太多了，需要优化
+const { selectedTrackItem } = storeToRefs(trackStore)
+watchThrottled(
+  selectedTrackItem,
+  (trackItem) => {
+    if (trackItem && isPlayerTrackItem(trackItem)) {
+      playerCanvasRef.value?.updatePlayer()
+      moveableControlRef.value?.updateMoveableControl()
+    }
+  },
+  {
+    deep: true,
     throttle: 20,
     trailing: true
   }

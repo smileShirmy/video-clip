@@ -39,6 +39,14 @@ export const useTrackStore = defineStore('track', () => {
   // 放大等级
   const scale = ref(0)
 
+  const selectedTrackItem = computed(() => {
+    for (let i = 0; i < trackList.list.length; i += 1) {
+      const exist = trackList.list[i].getTrackItem(trackList.selectedId.value)
+      if (exist) return exist
+    }
+    return null
+  })
+
   // 当下的值发生改变时都要重新绘制
   watchThrottled(
     [scale],
@@ -171,6 +179,7 @@ export const useTrackStore = defineStore('track', () => {
     showHorizontalLine,
     showVerticalLine,
     showPreviewLine,
+    selectedTrackItem,
     setTrackContainerRef,
     initTimeline,
     updateMaxFrameCount,

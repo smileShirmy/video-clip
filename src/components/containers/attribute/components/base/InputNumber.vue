@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { isNumber } from '@/services/helpers/general'
 import { computed } from 'vue'
+import IconExpandLess from '@/components/icons/IconExpandLess.vue'
+import IconExpandMore from '@/components/icons/IconExpandMore.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -66,11 +68,18 @@ const inputValue = computed(() => {
 <template>
   <div class="input-number">
     <div class="input-wrapper">
-      <input class="input-inner" :value="inputValue" @input="onInput" type="text" />
+      <div v-if="$slots.prefix" class="prefix">
+        <slot name="prefix"></slot>
+      </div>
+      <input class="input-inner" :value="inputValue" @input.stop="onInput" type="text" />
     </div>
     <div class="handler">
-      <div class="handler-arrow arrow-up" @click="plus"></div>
-      <div class="handler-arrow arrow-down" @click="minus"></div>
+      <div class="handler-arrow arrow-up" @click.stop="plus">
+        <IconExpandLess class="icon-arrow" />
+      </div>
+      <div class="handler-arrow arrow-down" @click.stop="minus">
+        <IconExpandMore class="icon-arrow" />
+      </div>
     </div>
   </div>
 </template>
@@ -80,21 +89,31 @@ const inputValue = computed(() => {
   display: flex;
   justify-content: flex-start;
   flex-wrap: nowrap;
+  user-select: none;
+  font-size: var(--app-font-size-small);
+  color: var(--app-text-color-dark);
 
   .input-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
     box-sizing: border-box;
-    width: 60px;
     height: 20px;
+    padding: 0 10px;
     border-radius: 4px;
     background-color: var(--app-bg-color-lighter);
     border: 1px solid transparent;
+
+    .prefix {
+      margin-right: 8px;
+    }
 
     &:hover {
       border-color: var(--app-bg-color-extra-lighter);
     }
 
     .input-inner {
-      width: 100%;
+      width: 40px;
       height: 100%;
       outline: none;
       color: var(--app-text-color-regular);
@@ -107,12 +126,22 @@ const inputValue = computed(() => {
     margin-left: 4px;
 
     .handler-arrow {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       width: 16px;
       height: 10px;
       background-color: var(--app-bg-color-lighter);
+      cursor: pointer;
 
       &:hover {
         background-color: var(--app-bg-color-extra-lighter);
+      }
+
+      .icon-arrow {
+        width: 12px;
+        height: 12px;
+        fill: var(--app-text-color-primary);
       }
     }
 

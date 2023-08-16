@@ -25,6 +25,7 @@ const props = defineProps({
   justify-content: flex-start;
   align-items: center;
   margin-right: 80px;
+  padding: 8px 0;
 
   .attribute-label {
     flex-shrink: 0;
