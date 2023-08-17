@@ -143,8 +143,6 @@ class FFManger {
       `${frameDir}/f-%d.${imageExtension}`
     ]
     await this.ffmpeg.run(...commands)
-
-    console.log(this.readDir(frameDir))
   }
 
   public getFrame(filename: string, index: number, format: string) {

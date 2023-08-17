@@ -181,7 +181,8 @@ watchThrottled(
   {
     deep: true,
     throttle: 20,
-    trailing: true
+    trailing: true,
+    flush: 'post'
   }
 )
 
