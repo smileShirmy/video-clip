@@ -1,8 +1,14 @@
 import { createFFmpeg, fetchFile, type FFmpeg } from '@ffmpeg/ffmpeg'
-import { ref } from 'vue'
+import { ref, shallowReactive, watch } from 'vue'
 import { warn } from '../helpers/warn'
 import { FPS } from '@/config'
 import { isString } from '../helpers/general'
+
+interface TaskItem {
+  commands: string[]
+  resolve: (value: unknown) => void
+  reject: (reason?: any) => void
+}
 
 /**
  * /resource/video-1.mp4
@@ -21,6 +27,10 @@ export enum FFDir {
  */
 class FFManger {
   private ffmpeg: FFmpeg
+
+  private taskList = shallowReactive<TaskItem[]>([])
+
+  private running = ref(false)
 
   public isLoaded = ref(false)
 
@@ -41,6 +51,31 @@ class FFManger {
     await this.ffmpeg.load()
     await this.initFileSystem()
     this.isLoaded.value = true
+
+    watch(this.taskList, () => {
+      if (this.running.value || this.taskList.length === 0) return
+      this.running.value = true
+
+      this.runTask()
+    })
+  }
+
+  /**
+   * 循环执行所有任务
+   */
+  private async runTask() {
+    const [task] = this.taskList
+    if (!task) {
+      this.running.value = false
+      return
+    }
+
+    const { commands, resolve } = task
+    const r = await this.ffmpeg.run(...commands)
+    resolve(r)
+    this.taskList.shift()
+
+    await this.runTask()
   }
 
   /**
@@ -142,7 +177,7 @@ class FFManger {
       `${options.width}x${options.height}`,
       `${frameDir}/f-%d.${imageExtension}`
     ]
-    await this.ffmpeg.run(...commands)
+    await this.run(commands)
   }
 
   public getFrame(filename: string, index: number, format: string) {
@@ -178,7 +213,7 @@ class FFManger {
     const resourcePath = `${FFDir.RESOURCE}${filename}`
 
     const commands = ['-v', 'quiet', '-i', resourcePath, '-acodec', 'copy', '-vn', audioPath]
-    await this.ffmpeg.run(...commands)
+    await this.run(commands)
     return { audioPath }
   }
 
@@ -211,7 +246,7 @@ class FFManger {
       wavePath
     ]
 
-    await this.ffmpeg.run(...commands)
+    await this.run(commands)
   }
 
   /**
@@ -222,6 +257,19 @@ class FFManger {
   public getWaveImageBlob(waveName: string) {
     const fileBuffer = this.ffmpeg.FS('readFile', `${FFDir.WAVE}${waveName}.png`)
     return new Blob([fileBuffer], { type: 'image/png' })
+  }
+
+  /**
+   * 执行 ffmpeg 命令
+   */
+  public async run(commands: string[]) {
+    return new Promise((resolve, reject) => {
+      this.taskList.push({
+        commands,
+        resolve,
+        reject
+      })
+    })
   }
 }
 

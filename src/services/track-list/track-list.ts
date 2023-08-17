@@ -58,11 +58,11 @@ class TrackList {
   removeSelected() {
     if (!this.selectedId.value) return
 
-    this.selectedTrackItem.value && this.removeTrackItem(this.selectedTrackItem.value)
+    this.removeTrackItem(this.selectedId.value)
     this.removeEmptyTrack()
   }
 
-  removeTrackItem(trackItem: TrackItem, isUpdateMaxFrameCount = true) {
+  removeTrackItem(trackItem: TrackItem | string, isUpdateMaxFrameCount = true) {
     let removed = false
     this.list.forEach((line) => {
       const r = line.removeTrackItem(trackItem, false)
