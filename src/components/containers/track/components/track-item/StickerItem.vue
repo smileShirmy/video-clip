@@ -49,5 +49,8 @@ onMounted(() => {
   font-size: var(--app-font-size-small);
   padding: 0 10px;
   user-select: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

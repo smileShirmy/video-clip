@@ -37,6 +37,7 @@ interface ImageRenderData {
   dw: number
   dh: number
   rotate: number
+  opacity: number
 }
 
 interface TextRenderData {
@@ -48,6 +49,7 @@ interface TextRenderData {
   centerX: number
   centerY: number
   rotate: number
+  opacity: number
 }
 
 type RenderData = ImageRenderData | TextRenderData
@@ -83,7 +85,8 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
           h: dh,
           centerX: dx + dw / 2,
           centerY: dy + dh / 2,
-          rotate: playerItem.attribute.rotate
+          rotate: playerItem.attribute.rotate,
+          opacity: playerItem.attribute.opacity
         })
       } else if (trackItem.component === TrackItemName.TRACK_ITEM_STICKER) {
         const { name, format, width, height, frameCount } = trackItem.resource
@@ -105,7 +108,8 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dw,
             dh,
             rotate: playerItem.attribute.rotate,
-            playerItem
+            playerItem,
+            opacity: playerItem.attribute.opacity
           }
 
           resolve(data)
@@ -129,7 +133,8 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dw,
             dh,
             rotate: playerItem.attribute.rotate,
-            playerItem
+            playerItem,
+            opacity: playerItem.attribute.opacity
           }
 
           resolve(data)
@@ -154,13 +159,14 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
     const data = currentRenderData[i]
 
     if (data.type === RenderType.Image) {
-      const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate } = data
+      const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate, opacity } = data
       // 图片中心点位置
       const x = dx + dw / 2
       const y = dy + dh / 2
       const radian = (rotate * Math.PI) / 180
 
       ctx.save()
+      ctx.globalAlpha = opacity
       ctx.translate(x, y)
       ctx.rotate(radian)
       ctx.drawImage(imageBitmap, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh)
@@ -170,10 +176,11 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
     } else if (data.type === RenderType.Text) {
       // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
-      const { text, w, h, centerX, centerY, rotate } = data
+      const { text, w, h, centerX, centerY, rotate, opacity } = data
       const radian = (rotate * Math.PI) / 180
 
       ctx.save()
+      ctx.globalAlpha = opacity
       ctx.translate(centerX, centerY)
       ctx.rotate(radian)
       ctx.fillStyle = '#fff'
