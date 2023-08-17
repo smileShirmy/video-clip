@@ -5,13 +5,19 @@ import { watch } from 'vue'
 import { TrackItemName } from '@/types'
 import VideoPicture from './video-attribute/video-picture/VideoPicture.vue'
 import StickerPicture from './sticker-attribute/sticker-picture/StickerPicture.vue'
+import SoundControls from './audio-attribute/sound-controls/SoundControls.vue'
+import TextStyle from './text-attribute/TextStyle.vue'
+import EmptyAttribute from './empty-attribute/EmptyAttribute.vue'
 import { useTrackStore } from '@/stores/track'
 import { storeToRefs } from 'pinia'
 
 defineOptions({
   components: {
     [VideoPicture.name]: VideoPicture,
-    [StickerPicture.name]: StickerPicture
+    [StickerPicture.name]: StickerPicture,
+    [SoundControls.name]: SoundControls,
+    [TextStyle.name]: TextStyle,
+    [EmptyAttribute.name]: EmptyAttribute
   }
 })
 
@@ -67,8 +73,18 @@ const tabsMap: Record<TrackItemName, TabItem[]> = {
       name: '画面'
     }
   ],
-  [TrackItemName.TRACK_ITEM_AUDIO]: [],
-  [TrackItemName.TRACK_ITEM_TEXT]: [],
+  [TrackItemName.TRACK_ITEM_AUDIO]: [
+    {
+      component: SoundControls.name,
+      name: '音频'
+    }
+  ],
+  [TrackItemName.TRACK_ITEM_TEXT]: [
+    {
+      component: TextStyle.name,
+      name: '文本样式'
+    }
+  ],
   [TrackItemName.TRACK_ITEM_STICKER]: [
     {
       component: StickerPicture.name,
@@ -79,17 +95,22 @@ const tabsMap: Record<TrackItemName, TabItem[]> = {
 
 const tabs = ref<TabItem[]>([])
 
-const tabComponent = ref('')
+const tabComponent = ref(EmptyAttribute.name)
 
 const { selectedTrackItem } = storeToRefs(trackStore)
 watch(
   selectedTrackItem,
   (selected) => {
     if (selected === null) {
-      return
+      tabs.value = [
+        {
+          name: '草稿参数',
+          component: EmptyAttribute.name
+        }
+      ]
+    } else {
+      tabs.value = tabsMap[selected.component]
     }
-
-    tabs.value = tabsMap[selected.component]
 
     const [firstTab] = tabs.value
     if (firstTab) {

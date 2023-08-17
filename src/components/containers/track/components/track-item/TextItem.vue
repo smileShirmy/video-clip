@@ -28,6 +28,9 @@ const props = defineProps<{
   align-items: center;
   background-color: #dda26b;
   height: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--app-color-white);
   font-size: var(--app-font-size-small);
   padding: 0 10px;
