@@ -1,8 +1,8 @@
 import { FPS } from '@/config'
-import { PlayerItem } from '@/services/player-item/player-item'
+import type { PlayerTrackItem } from '@/services/track-item'
 import { trackList } from '@/services/track-list/track-list'
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, shallowReactive, watch, type ShallowReactive } from 'vue'
 
 const SPEED = 1000 / FPS
 const DEFAULT_ASPECT_RATIO = 16 / 9
@@ -13,13 +13,10 @@ export type PlayerStore = Omit<
 >
 
 export const usePlayerStore = defineStore('player', () => {
-  const playerItems = computed(() => {
-    const items = trackList.getCurrentFramePlayItems(currentFrame.value)
-    return items.map((item) => new PlayerItem(item, sceneWidth.value, sceneHeight.value))
-  })
+  const playerItems: ShallowReactive<PlayerTrackItem[]> = shallowReactive<PlayerTrackItem[]>([])
 
   const playerSelectedItem = computed(() => {
-    return playerItems.value.find((item) => item.trackItem.id === trackList.selectedId.value)
+    return playerItems.find((item) => item.id === trackList.selectedId.value)
   })
 
   const resizing = ref(false)
@@ -35,6 +32,15 @@ export const usePlayerStore = defineStore('player', () => {
   const sceneHeight = ref(0)
 
   let timer: number
+
+  watch(
+    [currentFrame],
+    () => {
+      const items = trackList.getCurrentFramePlayItems(currentFrame.value)
+      playerItems.splice(0, playerItems.length - 1, ...items)
+    },
+    { immediate: true }
+  )
 
   function pause() {
     playing.value = false

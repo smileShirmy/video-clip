@@ -5,13 +5,20 @@ import {
   type AttributeOptions
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
-import { ref, shallowReactive, type ShallowReactive } from 'vue'
+import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
 import type { VideoTrack } from '../track/video-track'
 
 export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_TEXT
 
   resource: TextResource
+
+  readonly renderSize: {
+    top: ComputedRef<number>
+    left: ComputedRef<number>
+    width: ComputedRef<number>
+    height: ComputedRef<number>
+  }
 
   attribute: ShallowReactive<PlayerAttribute> = shallowReactive({
     topRatio: 0,
@@ -35,6 +42,13 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
 
     this.setEndFrame(resource.frameCount)
     this.resource = Object.assign({}, resource)
+
+    this.renderSize = {
+      top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),
+      left: computed(() => this.playerStore.sceneWidth * this.attribute.leftRatio),
+      width: computed(() => this.playerStore.sceneWidth * this.attribute.widthRatio),
+      height: computed(() => this.playerStore.sceneHeight * this.attribute.heightRatio)
+    }
   }
 
   split(splitFrame: number) {

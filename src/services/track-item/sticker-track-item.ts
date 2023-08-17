@@ -6,12 +6,19 @@ import {
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import type { VideoTrack } from '../track/video-track'
-import { shallowReactive, type ShallowReactive } from 'vue'
+import { shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
 
 export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_STICKER
 
   resource: StickerResource
+
+  readonly renderSize: {
+    top: ComputedRef<number>
+    left: ComputedRef<number>
+    width: ComputedRef<number>
+    height: ComputedRef<number>
+  }
 
   attribute: ShallowReactive<PlayerAttribute> = shallowReactive({
     topRatio: 0,
@@ -33,6 +40,13 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
 
     this.setEndFrame(resource.frameCount)
     this.resource = Object.assign({}, resource)
+
+    this.renderSize = {
+      top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),
+      left: computed(() => this.playerStore.sceneWidth * this.attribute.leftRatio),
+      width: computed(() => this.playerStore.sceneWidth * this.attribute.widthRatio),
+      height: computed(() => this.playerStore.sceneHeight * this.attribute.heightRatio)
+    }
   }
 
   split(splitFrame: number) {

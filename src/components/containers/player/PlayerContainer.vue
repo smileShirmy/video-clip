@@ -13,9 +13,9 @@ import PlayerControls from './components/player-controls/PlayerControls.vue'
 import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
 import { trackList } from '@/services/track-list/track-list'
 import { storeToRefs } from 'pinia'
-import { PlayerItem } from '@/services/player-item/player-item'
 import { useTrackStore } from '@/stores/track'
 import { isPlayerTrackItem } from '@/services/track-item/helper'
+import type { PlayerTrackItem } from '@/services/track-item'
 
 const playerStore = usePlayerStore()
 const trackStore = useTrackStore()
@@ -54,7 +54,7 @@ watch(currentFrame, () => {
   if (moveableControlRef.value) {
     // 如果存在选中的目标
     if (playerStore.playerSelectedItem) {
-      const selectedId = playerStore.playerSelectedItem.trackItem.id
+      const selectedId = playerStore.playerSelectedItem.id
 
       if (!moveableControlRef.value.visible && sceneContentRef.value instanceof HTMLElement) {
         const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
@@ -68,11 +68,7 @@ watch(currentFrame, () => {
   }
 })
 
-function updateSize() {
-  for (const item of playerStore.playerItems) {
-    item.updateAttribute()
-  }
-
+function updateMoveableSize() {
   if (moveableControlRef.value) {
     moveableControlRef.value.resizingMoveableControl()
   }
@@ -87,24 +83,22 @@ watch(resizing, (is, old) => {
 
   // 完成缩放
   if (!is && old) {
-    setTimeout(() => {
-      updateSize()
+    updateMoveableSize()
 
-      if (playerCanvasRef.value) {
-        playerCanvasRef.value.resize()
-      }
-    })
+    if (playerCanvasRef.value) {
+      playerCanvasRef.value.updateSizeAndRender()
+    }
   }
 })
 
-function select(event: PointerEvent, item: PlayerItem) {
+function select(event: PointerEvent, item: PlayerTrackItem) {
   if (
     moveableControlRef.value &&
     event.target instanceof HTMLDivElement &&
     sceneContentRef.value instanceof HTMLDivElement
   ) {
     moveableControlRef.value.show(event.target, sceneContentRef.value, event)
-    trackList.setSelectedId(item.trackItem.id)
+    trackList.setSelectedId(item.id)
   }
 }
 
@@ -146,9 +140,6 @@ function onScale(scale: number) {
 function onTranslate(translate: { x: number; y: number }) {
   if (playerStore.playerSelectedItem) {
     const { x, y } = translate
-    playerStore.playerSelectedItem.top.value = y
-    playerStore.playerSelectedItem.left.value = x
-
     playerStore.playerSelectedItem.attribute.topRatio = y / playerStore.sceneHeight
     playerStore.playerSelectedItem.attribute.leftRatio = x / playerStore.sceneWidth
   }
@@ -159,7 +150,7 @@ watchThrottled(
   sceneWidth,
   (width) => {
     if (width > 0) {
-      updateSize()
+      updateMoveableSize()
     }
   },
   {
@@ -168,13 +159,13 @@ watchThrottled(
   }
 )
 
-// TODO: 这样监听的属性太多了，需要优化
+// 使用 deep: true 会不会监听太多属性了？
 const { selectedTrackItem } = storeToRefs(trackStore)
 watchThrottled(
   selectedTrackItem,
   (trackItem) => {
     if (trackItem && isPlayerTrackItem(trackItem)) {
-      playerCanvasRef.value?.updatePlayer()
+      playerCanvasRef.value?.renderForAttributeChange()
       moveableControlRef.value?.updateMoveableControl()
     }
   },
@@ -216,12 +207,7 @@ defineExpose({
   <div class="player-container app-width-transition" ref="playerContainer">
     <div class="scene-wrapper" ref="sceneWrapperRef">
       <div class="scene-content" ref="sceneContentRef" :style="sceneContentStyle">
-        <PlayerCanvas
-          v-if="initScene"
-          ref="playerCanvasRef"
-          :playerItems="playerStore.playerItems"
-          :style="sceneContentStyle"
-        />
+        <PlayerCanvas v-if="initScene" ref="playerCanvasRef" :style="sceneContentStyle" />
 
         <div
           v-for="(item, i) in playerStore.playerItems"
@@ -229,11 +215,11 @@ defineExpose({
           ref="moveableItemRef"
           class="moveable-item"
           :style="{
-            width: `${item.width.value}px`,
-            height: `${item.height.value}px`,
-            transform: `translate(${item.left.value}px, ${item.top.value}px) scale(${item.attribute.scale}) rotate(${item.attribute.rotate}deg)`
+            width: `${item.renderSize.width.value}px`,
+            height: `${item.renderSize.height.value}px`,
+            transform: `translate(${item.renderSize.left.value}px, ${item.renderSize.top.value}px) scale(${item.attribute.scale}) rotate(${item.attribute.rotate}deg)`
           }"
-          :data-id="item.trackItem.id"
+          :data-id="item.id"
           data-moveable-item
           v-on-click-outside="onClickOutside"
           @pointerdown="select($event, item)"

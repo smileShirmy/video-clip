@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import type { PlayerItem } from '@/services/player-item/player-item'
 import { usePlayerStore } from '@/stores/player'
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
 import { ffManager } from '@/services/ffmpeg/manager'
 import { TrackItemName } from '@/types'
-
-const props = defineProps<{
-  playerItems: PlayerItem[]
-}>()
+import type { PlayerTrackItem } from '@/services/track-item'
 
 let ctx: CanvasRenderingContext2D | null = null
 let canvasWidth = 0
 let canvasHeight = 0
 
-const playerStore = storeToRefs(usePlayerStore())
+const playerStore = usePlayerStore()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
@@ -26,7 +22,7 @@ enum RenderType {
 
 interface ImageRenderData {
   type: RenderType.Image
-  playerItem: PlayerItem
+  playerItem: PlayerTrackItem
   imageBitmap: ImageBitmap
   sx: number
   sy: number
@@ -36,30 +32,26 @@ interface ImageRenderData {
   dy: number
   dw: number
   dh: number
-  rotate: number
-  opacity: number
 }
 
 interface TextRenderData {
   type: RenderType.Text
-  playerItem: PlayerItem
+  playerItem: PlayerTrackItem
   text: string
   w: number
   h: number
   centerX: number
   centerY: number
-  rotate: number
-  opacity: number
 }
 
 type RenderData = ImageRenderData | TextRenderData
 
-function getDestinationPosition(item: PlayerItem) {
-  const { scale } = item.trackItem.attribute
-  const originW = item.width.value
-  const originH = item.height.value
-  const originX = item.left.value
-  const originY = item.top.value
+function getDestinationPosition(item: PlayerTrackItem) {
+  const { scale } = item.attribute
+  const originW = item.renderSize.width.value
+  const originH = item.renderSize.height.value
+  const originX = item.renderSize.left.value
+  const originY = item.renderSize.top.value
 
   const dw = originW * scale
   const dh = originH * scale
@@ -70,28 +62,24 @@ function getDestinationPosition(item: PlayerItem) {
 }
 
 function getRenderData(currentFrame: number): Promise<RenderData>[] {
-  return props.playerItems.map((playerItem) => {
+  return playerStore.playerItems.map((playerItem) => {
     return new Promise((resolve) => {
-      const { trackItem } = playerItem
-
-      if (trackItem.component === TrackItemName.TRACK_ITEM_TEXT) {
+      if (playerItem.component === TrackItemName.TRACK_ITEM_TEXT) {
         const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 
         resolve({
           type: RenderType.Text,
           playerItem,
-          text: trackItem.text.value,
+          text: playerItem.text.value,
           w: dw,
           h: dh,
           centerX: dx + dw / 2,
-          centerY: dy + dh / 2,
-          rotate: playerItem.attribute.rotate,
-          opacity: playerItem.attribute.opacity
+          centerY: dy + dh / 2
         })
-      } else if (trackItem.component === TrackItemName.TRACK_ITEM_STICKER) {
-        const { name, format, width, height, frameCount } = trackItem.resource
+      } else if (playerItem.component === TrackItemName.TRACK_ITEM_STICKER) {
+        const { name, format, width, height, frameCount } = playerItem.resource
         const filename = `${name}.${format}`
-        const frameIndex = ((currentFrame - trackItem.startFrame) % frameCount) + 1
+        const frameIndex = ((currentFrame - playerItem.startFrame) % frameCount) + 1
         const blobFrame = ffManager.getFrame(filename, frameIndex, format)
         createImageBitmap(blobFrame).then((imageBitmap) => {
           const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
@@ -107,17 +95,15 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dy,
             dw,
             dh,
-            rotate: playerItem.attribute.rotate,
-            playerItem,
-            opacity: playerItem.attribute.opacity
+            playerItem
           }
 
           resolve(data)
         })
-      } else if (trackItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
-        const { name, format, width, height } = trackItem.resource
+      } else if (playerItem.component === TrackItemName.TRACK_ITEM_VIDEO) {
+        const { name, format, width, height } = playerItem.resource
         const filename = `${name}.${format}`
-        const blobFrame = ffManager.getFrame(filename, currentFrame - trackItem.startFrame, format)
+        const blobFrame = ffManager.getFrame(filename, currentFrame - playerItem.startFrame, format)
         createImageBitmap(blobFrame).then((imageBitmap) => {
           const { dx, dy, dw, dh } = getDestinationPosition(playerItem)
 
@@ -132,9 +118,7 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dy,
             dw,
             dh,
-            rotate: playerItem.attribute.rotate,
-            playerItem,
-            opacity: playerItem.attribute.opacity
+            playerItem
           }
 
           resolve(data)
@@ -157,9 +141,10 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
   for (let i = 0; i < currentRenderData.length; i += 1) {
     const data = currentRenderData[i]
+    const { rotate, opacity } = data.playerItem.attribute
 
     if (data.type === RenderType.Image) {
-      const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh, rotate, opacity } = data
+      const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh } = data
       // 图片中心点位置
       const x = dx + dw / 2
       const y = dy + dh / 2
@@ -176,7 +161,7 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
     } else if (data.type === RenderType.Text) {
       // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
-      const { text, w, h, centerX, centerY, rotate, opacity } = data
+      const { text, w, h, centerX, centerY } = data
       const radian = (rotate * Math.PI) / 180
 
       ctx.save()
@@ -194,11 +179,16 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
   rendering = false
 }
 
-watch(playerStore.currentFrame, (currentFrame) => {
-  if (!ctx) return
+const { currentFrame } = storeToRefs(playerStore)
+watch(
+  currentFrame,
+  (currentFrame) => {
+    if (!ctx) return
 
-  render(currentFrame)
-})
+    render(currentFrame)
+  },
+  { flush: 'post' }
+)
 
 function updateCanvasSize() {
   if (!canvasRef.value) return
@@ -210,17 +200,21 @@ function updateCanvasSize() {
   canvasRef.value.height = canvasHeight
 }
 
-function updatePlayer() {
-  render(playerStore.currentFrame.value)
+// 更新尺寸并重新渲染
+function updateSizeAndRender() {
+  updateCanvasSize()
+
+  // 会重新获取图片，因此画面会闪动（中间有异步行为）
+  render(playerStore.currentFrame)
 }
 
-// TODO: 需要优化，文本会错位
-function resize() {
-  if (!ctx || !canvasRef.value) return
-
+// 如果仅仅只是改变属性，直接取当前帧的渲染数据，这是为了防止画面闪动
+function renderForAttributeChange() {
   updateCanvasSize()
+
+  // 直接使用现成的数据，因此需要根据当前情况更新渲染数据
   if (currentRenderData) {
-    const scaleData = currentRenderData.map((v) => {
+    const transformData = currentRenderData.map((v) => {
       const { dx, dy, dw, dh } = getDestinationPosition(v.playerItem)
 
       if (v.type === RenderType.Image) {
@@ -242,7 +236,7 @@ function resize() {
       }
       return v
     })
-    render(playerStore.currentFrame.value, scaleData)
+    render(playerStore.currentFrame, transformData)
   }
 }
 
@@ -258,8 +252,8 @@ onMounted(() => {
 })
 
 defineExpose({
-  updatePlayer,
-  resize
+  updateSizeAndRender,
+  renderForAttributeChange
 })
 </script>
 

@@ -3,6 +3,7 @@ import { uuid } from '../helpers/general'
 import { TrackItemName } from '@/types'
 import type { TrackItem } from '.'
 import type { Track } from '../track'
+import { usePlayerStore, type PlayerStore } from '@/stores/player'
 
 export abstract class BaseTrackItem<
   R extends { frameCount: number },
@@ -12,6 +13,8 @@ export abstract class BaseTrackItem<
   abstract readonly component: TrackItemName
 
   abstract resource: R
+
+  readonly playerStore: PlayerStore
 
   parentTrack: P | null = null
 
@@ -35,6 +38,10 @@ export abstract class BaseTrackItem<
 
   get maxFrame() {
     return this.minFrame + this.resource.frameCount
+  }
+
+  constructor() {
+    this.playerStore = usePlayerStore()
   }
 
   abstract split(splitFrame: number): T
