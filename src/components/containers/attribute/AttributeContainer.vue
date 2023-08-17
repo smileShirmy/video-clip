@@ -137,18 +137,18 @@ defineExpose({
     ref="attributeContainer"
     @click="clickContainer"
   >
-    <ul class="tabs">
+    <ul class="tabs" :class="{ 'tabs-fold': isFold }">
       <li
         class="tab-item"
-        :class="{ 'is-active': tab.component === tabComponent }"
+        :class="{ 'is-active': !isFold && tab.component === tabComponent }"
         v-for="tab in tabs"
         :key="tab.component"
-        @click.stop="onClickTab(tab)"
+        @click="onClickTab(tab)"
       >
         {{ tab.name }}
       </li>
     </ul>
-    <div class="tab-content">
+    <div v-show="!isFold" class="tab-content">
       <component :is="tabComponent" />
     </div>
 
@@ -196,6 +196,16 @@ defineExpose({
     border-bottom: 1px solid var(--app-bg-color-blank);
     padding: 0 16px;
     user-select: none;
+
+    &.tabs-fold {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      border-bottom: none;
+      padding: 0;
+      background-color: transparent;
+    }
 
     .tab-item {
       position: relative;
