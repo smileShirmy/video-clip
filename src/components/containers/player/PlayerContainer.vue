@@ -84,10 +84,6 @@ watch(resizing, (is, old) => {
   // 完成缩放
   if (!is && old) {
     updateMoveableSize()
-
-    if (playerCanvasRef.value) {
-      playerCanvasRef.value.updateSizeAndRender()
-    }
   }
 })
 

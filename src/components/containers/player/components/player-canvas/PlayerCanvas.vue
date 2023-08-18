@@ -200,15 +200,7 @@ function updateCanvasSize() {
   canvasRef.value.height = canvasHeight
 }
 
-// 更新尺寸并重新渲染
-function updateSizeAndRender() {
-  updateCanvasSize()
-
-  // 会重新获取图片，因此画面会闪动（中间有异步行为）
-  render(playerStore.currentFrame)
-}
-
-// 如果仅仅只是改变属性，直接取当前帧的渲染数据，这是为了防止画面闪动
+// 如果仅仅只是改变属性，直接取当前帧的渲染数据（为了避免重新生成图片这个异步行为造成渲染时会闪动）
 function renderForAttributeChange() {
   updateCanvasSize()
 
@@ -252,7 +244,6 @@ onMounted(() => {
 })
 
 defineExpose({
-  updateSizeAndRender,
   renderForAttributeChange
 })
 </script>
