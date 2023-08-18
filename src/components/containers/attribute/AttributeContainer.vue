@@ -236,7 +236,11 @@ defineExpose({
   }
 
   .tab-content {
+    box-sizing: border-box;
     padding: 16px;
+    height: calc(100% - 32px);
+    overflow: hidden;
+    overflow-y: auto;
   }
 }
 </style>

@@ -2,7 +2,8 @@ import {
   TrackItemName,
   type TextResource,
   type PlayerAttribute,
-  type AttributeOptions
+  type AttributeOptions,
+  type TextAttribute
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
@@ -29,6 +30,10 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     scale: 1,
     rotate: 0,
     opacity: 1
+  })
+
+  textAttribute = shallowReactive<TextAttribute>({
+    letterSpacingRatio: 0
   })
 
   text = ref<string>(DEFAULT_TEXT)

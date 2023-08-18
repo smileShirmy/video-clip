@@ -96,3 +96,10 @@ export interface AttributeOptions extends Partial<PlayerAttribute> {
   widthRatio: number
   heightRatio: number
 }
+
+/**
+ * 文本属性
+ */
+export interface TextAttribute {
+  letterSpacingRatio: number
+}

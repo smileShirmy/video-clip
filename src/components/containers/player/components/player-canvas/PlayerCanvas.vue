@@ -164,6 +164,8 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       const { w, h, centerX, centerY } = data
       const text = data.playerItem.text.value
       const scale = data.playerItem.attribute.scale
+      const letterSpacing =
+        playerStore.sceneWidth * data.playerItem.textAttribute.letterSpacingRatio * scale
       const x = -w / 2
       const y = -h / 2 + h
       const lineHeight = playerStore.sceneHeight * TEXT_LINE_HEIGHT_RATIO * scale
@@ -179,9 +181,22 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       ctx.rotate(radian)
       ctx.fillStyle = '#fff'
       ctx.font = `${lineHeight}px "Microsoft YaHei"`
+      ctx.textAlign = 'left'
 
       for (let n = 0; n < lines.length; n += 1) {
-        ctx.fillText(lines[lines.length - n - 1], x, y - n * lineHeight)
+        const line = lines[lines.length - n - 1]
+        const arrText = line.split('')
+        const lineY = y - n * lineHeight
+
+        let offsetX = 0
+        for (let i = 0; i < arrText.length; i += 1) {
+          const v = arrText[i]
+          const textW = ctx.measureText(v).width
+          ctx.fillText(v, x + offsetX, lineY)
+          console.log(textW, letterSpacing)
+
+          offsetX = offsetX + textW + letterSpacing
+        }
       }
 
       ctx.translate(-centerX, -centerY)

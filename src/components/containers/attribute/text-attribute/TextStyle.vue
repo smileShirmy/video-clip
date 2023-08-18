@@ -49,7 +49,11 @@ function updateTextAttribute(text: string) {
   const { sceneHeight, sceneWidth } = playerStore
   const fontSize = TEXT_LINE_HEIGHT_RATIO * playerStore.sceneHeight
 
+  const { letterSpacingRatio } = trackItem.textAttribute
+  const letterSpacing = letterSpacingRatio * playerStore.sceneWidth
+
   wrapper.style.fontSize = `${fontSize}px`
+  wrapper.style.letterSpacing = `${letterSpacing}px`
   wrapper.innerText = text
   const {
     leftRatio: beforeLeftRatio,
@@ -62,7 +66,8 @@ function updateTextAttribute(text: string) {
   const beforeCenterYRatio = beforeTopRatio + beforeHeightRatio / 2
 
   const { width, height } = wrapper.getBoundingClientRect()
-  const widthRatio = width / sceneWidth
+  // 因为 letterSpacing 是跟随在每一个字符后面的，因此需要把最后一个字符的 letterSpacing 给去掉
+  const widthRatio = (width - letterSpacing) / sceneWidth
   const heightRatio = height / sceneHeight
 
   trackItem.attribute.widthRatio = widthRatio
@@ -114,6 +119,17 @@ const translateY = computed({
     trackItem.attribute.topRatio = y / 100
   }
 })
+
+const letterSpacing = computed({
+  get() {
+    return trackItem.textAttribute.letterSpacingRatio * 1000
+  },
+  set(letterSpacing) {
+    trackItem.textAttribute.letterSpacingRatio = letterSpacing / 1000
+
+    updateTextAttribute(trackItem.text.value)
+  }
+})
 </script>
 
 <template>
@@ -158,6 +174,9 @@ const translateY = computed({
     <template #other>
       <InputNumber :max="360" v-model="rotate" unit="°" />
     </template>
+  </AttributeItem>
+  <AttributeItem label="字间距">
+    <InputNumber :max="100" v-model="letterSpacing" />
   </AttributeItem>
 </template>
 
