@@ -79,6 +79,15 @@ function updateTextAttribute(text: string) {
   trackItem.attribute.topRatio = beforeTopRatio + yDiff
 }
 
+const opacity = computed({
+  get() {
+    return trackItem.attribute.opacity * 100
+  },
+  set(opacity) {
+    trackItem.attribute.opacity = opacity / 100
+  }
+})
+
 const rotate = computed({
   get() {
     return trackItem.attribute.rotate
@@ -120,6 +129,12 @@ const translateY = computed({
     <AttributeSlider :max="500" v-model="scale" />
     <template #other>
       <InputNumber :max="500" v-model="scale" unit="%" />
+    </template>
+  </AttributeItem>
+  <AttributeItem label="不透明度">
+    <AttributeSlider v-model="opacity" />
+    <template #other>
+      <InputNumber v-model="opacity" unit="%" />
     </template>
   </AttributeItem>
 
