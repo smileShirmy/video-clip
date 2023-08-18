@@ -7,7 +7,7 @@ import { useThrottleFn } from '@vueuse/core'
 import type { TextTrackItem } from '@/services/track-item/text-track-item'
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { TEXT_HEIGHT_RATIO } from '@/config'
+import { DEFAULT_TEXT, TEXT_LINE_HEIGHT_RATIO } from '@/config'
 
 defineOptions({
   name: 'TextStyle'
@@ -32,7 +32,7 @@ const text = computed(() => trackItem.text)
 const onTextInput = useThrottleFn(
   (event: Event) => {
     const { value } = event.target as HTMLTextAreaElement
-    trackItem.text.value = value
+    trackItem.text.value = value === '' ? DEFAULT_TEXT : value
 
     updateTextAttribute(value)
   },
@@ -47,7 +47,7 @@ function updateTextAttribute(text: string) {
   if (!wrapper) return
 
   const { sceneHeight, sceneWidth } = playerStore
-  const fontSize = TEXT_HEIGHT_RATIO * playerStore.sceneHeight
+  const fontSize = TEXT_LINE_HEIGHT_RATIO * playerStore.sceneHeight
 
   wrapper.style.fontSize = `${fontSize}px`
   wrapper.innerText = text

@@ -7,6 +7,7 @@ import {
 import { BaseTrackItem } from './base-track-item'
 import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
 import type { VideoTrack } from '../track/video-track'
+import { DEFAULT_TEXT } from '@/config'
 
 export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_TEXT
@@ -30,7 +31,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     opacity: 1
   })
 
-  text = ref<string>('默认文本')
+  text = ref<string>(DEFAULT_TEXT)
 
   constructor(resource: TextResource, attribute: AttributeOptions) {
     super()

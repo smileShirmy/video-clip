@@ -7,6 +7,7 @@ import { ffManager } from '@/services/ffmpeg/manager'
 import { TrackItemName } from '@/types'
 import type { PlayerTrackItem } from '@/services/track-item'
 import type { TextTrackItem } from '@/services/track-item/text-track-item'
+import { TEXT_LINE_HEIGHT_RATIO } from '@/config'
 
 let ctx: CanvasRenderingContext2D | null = null
 let canvasWidth = 0
@@ -161,16 +162,27 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
       const { w, h, centerX, centerY } = data
-      const { text } = data.playerItem
+      const text = data.playerItem.text.value
+      const x = -w / 2
+      const y = -h / 2 + h
+      const lineHeight = playerStore.sceneHeight * TEXT_LINE_HEIGHT_RATIO
       const radian = (rotate * Math.PI) / 180
+      const lines = text.split('\n')
+      if (lines[lines.length - 1] === '') {
+        lines.pop()
+      }
 
       ctx.save()
       ctx.globalAlpha = opacity
       ctx.translate(centerX, centerY)
       ctx.rotate(radian)
       ctx.fillStyle = '#fff'
-      ctx.font = `${h}px "Microsoft YaHei"`
-      ctx.fillText(text.value, -w / 2, -h / 2 + h)
+      ctx.font = `${lineHeight}px "Microsoft YaHei"`
+
+      for (let n = 0; n < lines.length; n += 1) {
+        ctx.fillText(lines[lines.length - n - 1], x, y - n * lineHeight)
+      }
+
       ctx.translate(-centerX, -centerY)
       ctx.rotate(-radian)
       ctx.restore()

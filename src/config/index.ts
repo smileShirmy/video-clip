@@ -61,4 +61,9 @@ export const DEFAULT_TEXT_FRAME_COUNT = 90
 /**
  * 默认文本高度
  */
-export const TEXT_HEIGHT_RATIO = 0.04
+export const TEXT_LINE_HEIGHT_RATIO = 0.04
+
+/**
+ * 默认文本内容
+ */
+export const DEFAULT_TEXT = '默认文本'
