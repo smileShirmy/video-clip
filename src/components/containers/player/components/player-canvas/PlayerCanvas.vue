@@ -163,9 +163,10 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
       const { w, h, centerX, centerY } = data
       const text = data.playerItem.text.value
+      const scale = data.playerItem.attribute.scale
       const x = -w / 2
       const y = -h / 2 + h
-      const lineHeight = playerStore.sceneHeight * TEXT_LINE_HEIGHT_RATIO
+      const lineHeight = playerStore.sceneHeight * TEXT_LINE_HEIGHT_RATIO * scale
       const radian = (rotate * Math.PI) / 180
       const lines = text.split('\n')
       if (lines[lines.length - 1] === '') {

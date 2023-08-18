@@ -1,0 +1,24 @@
+.s-attribute-title {
+  padding: 8px 0;
+  color: var(--app-text-color-regular)
+}
+
+.s-split-line {
+  width: 100%;
+  height: 1px;
+  margin: 10px 0;
+  background-color: var(--app-bg-color-light);
+}
+
+.s-coordinate {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  .s-attribute-item-line {
+    width: 8px;
+    height: 1px;
+    margin: 0 4px;
+    background-color: var(--app-bg-color-lighter);
+  }
+}

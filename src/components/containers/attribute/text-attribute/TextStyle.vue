@@ -78,26 +78,80 @@ function updateTextAttribute(text: string) {
   trackItem.attribute.leftRatio = beforeLeftRatio + xDiff
   trackItem.attribute.topRatio = beforeTopRatio + yDiff
 }
+
+const rotate = computed({
+  get() {
+    return trackItem.attribute.rotate
+  },
+  set(rotate) {
+    trackItem.attribute.rotate = rotate
+  }
+})
+
+const translateX = computed({
+  get() {
+    return trackItem.attribute.leftRatio * 100
+  },
+  set(x) {
+    trackItem.attribute.leftRatio = x / 100
+  }
+})
+
+const translateY = computed({
+  get() {
+    return trackItem.attribute.topRatio * 100
+  },
+  set(y) {
+    trackItem.attribute.topRatio = y / 100
+  }
+})
 </script>
 
 <template>
   <div ref="textAttributeRef" class="text-attribute"></div>
 
   <textarea class="textarea-input" rows="3" :value="text.value" @input="onTextInput"></textarea>
-  <div class="split-line"></div>
+
+  <div class="s-split-line"></div>
+
+  <h5 class="s-attribute-title">基础样式</h5>
+
   <AttributeItem label="缩放">
     <AttributeSlider :max="500" v-model="scale" />
     <template #other>
       <InputNumber :max="500" v-model="scale" unit="%" />
     </template>
   </AttributeItem>
+
+  <div class="s-split-line"></div>
+
+  <h5 class="s-attribute-title">位置与对齐</h5>
+
+  <AttributeItem label="坐标">
+    <div class="s-coordinate">
+      <InputNumber :min="-Infinity" :max="Infinity" v-model="translateX">
+        <template #prefix>X</template>
+      </InputNumber>
+      <span class="s-attribute-item-line"></span> <span class="s-attribute-item-line"></span>
+      <InputNumber :min="-Infinity" :max="Infinity" v-model="translateY">
+        <template #prefix>Y</template>
+      </InputNumber>
+    </div>
+  </AttributeItem>
+  <AttributeItem label="旋转">
+    <AttributeSlider :max="360" v-model="rotate" />
+    <template #other>
+      <InputNumber :max="360" v-model="rotate" unit="°" />
+    </template>
+  </AttributeItem>
 </template>
 
 <style lang="scss" scoped>
+@use '../assets/scss/shared.scss';
+
 .textarea-input {
   box-sizing: border-box;
   width: 100%;
-  margin-bottom: 10px;
   padding: 12px 14px;
   border-radius: 8px;
   background-color: var(--app-bg-color-light);
@@ -106,12 +160,6 @@ function updateTextAttribute(text: string) {
   resize: none;
   color: var(--app-text-color-regular);
   font-family: inherit;
-}
-
-.split-line {
-  width: 100%;
-  height: 1px;
-  background-color: var(--app-bg-color-light);
 }
 
 .text-attribute {

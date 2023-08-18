@@ -73,11 +73,11 @@ const translateY = computed({
     </template>
   </AttributeItem>
   <AttributeItem label="坐标">
-    <div class="coordinate">
+    <div class="s-coordinate">
       <InputNumber :min="-Infinity" :max="Infinity" v-model="translateX">
         <template #prefix>X</template>
       </InputNumber>
-      <span class="split-line"></span>
+      <span class="s-attribute-item-line"></span>
       <InputNumber :min="-Infinity" :max="Infinity" v-model="translateY">
         <template #prefix>Y</template>
       </InputNumber>
@@ -92,16 +92,5 @@ const translateY = computed({
 </template>
 
 <style lang="scss" scoped>
-.coordinate {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-
-  .split-line {
-    width: 8px;
-    height: 1px;
-    margin: 0 4px;
-    background-color: var(--app-bg-color-lighter);
-  }
-}
+@use '../../assets/scss/shared.scss';
 </style>
