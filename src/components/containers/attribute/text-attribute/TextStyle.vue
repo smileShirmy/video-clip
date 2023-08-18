@@ -51,6 +51,15 @@ function updateTextAttribute(text: string) {
 
   wrapper.style.fontSize = `${fontSize}px`
   wrapper.innerText = text
+  const {
+    leftRatio: beforeLeftRatio,
+    topRatio: beforeTopRatio,
+    heightRatio: beforeHeightRatio,
+    widthRatio: beforeWidthRatio
+  } = trackItem.attribute
+
+  const beforeCenterXRatio = beforeLeftRatio + beforeWidthRatio / 2
+  const beforeCenterYRatio = beforeTopRatio + beforeHeightRatio / 2
 
   const { width, height } = wrapper.getBoundingClientRect()
   const widthRatio = width / sceneWidth
@@ -58,6 +67,16 @@ function updateTextAttribute(text: string) {
 
   trackItem.attribute.widthRatio = widthRatio
   trackItem.attribute.heightRatio = heightRatio
+
+  const newCenterXRatio = beforeLeftRatio + widthRatio / 2
+  const newCenterYRatio = beforeTopRatio + heightRatio / 2
+
+  const xDiff = beforeCenterXRatio - newCenterXRatio
+  const yDiff = beforeCenterYRatio - newCenterYRatio
+
+  // 根据中心点来缩放，因此需要调整位置
+  trackItem.attribute.leftRatio = beforeLeftRatio + xDiff
+  trackItem.attribute.topRatio = beforeTopRatio + yDiff
 }
 </script>
 
