@@ -6,6 +6,7 @@ import { onMounted } from 'vue'
 import { ffManager } from '@/services/ffmpeg/manager'
 import { TrackItemName } from '@/types'
 import type { PlayerTrackItem } from '@/services/track-item'
+import type { TextTrackItem } from '@/services/track-item/text-track-item'
 
 let ctx: CanvasRenderingContext2D | null = null
 let canvasWidth = 0
@@ -36,8 +37,7 @@ interface ImageRenderData {
 
 interface TextRenderData {
   type: RenderType.Text
-  playerItem: PlayerTrackItem
-  text: string
+  playerItem: TextTrackItem
   w: number
   h: number
   centerX: number
@@ -70,7 +70,6 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
         resolve({
           type: RenderType.Text,
           playerItem,
-          text: playerItem.text.value,
           w: dw,
           h: dh,
           centerX: dx + dw / 2,
@@ -161,7 +160,8 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
     } else if (data.type === RenderType.Text) {
       // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
-      const { text, w, h, centerX, centerY } = data
+      const { w, h, centerX, centerY } = data
+      const { text } = data.playerItem
       const radian = (rotate * Math.PI) / 180
 
       ctx.save()
@@ -169,8 +169,8 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       ctx.translate(centerX, centerY)
       ctx.rotate(radian)
       ctx.fillStyle = '#fff'
-      ctx.font = `${h}px serif`
-      ctx.fillText(text, -w / 2, -h / 2 + h)
+      ctx.font = `${h}px "Microsoft YaHei"`
+      ctx.fillText(text.value, -w / 2, -h / 2 + h)
       ctx.translate(-centerX, -centerY)
       ctx.rotate(-radian)
       ctx.restore()

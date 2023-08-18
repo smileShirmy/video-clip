@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TEXT_HEIGHT_RATIO } from '@/config'
 import { draggable } from '@/services/draggable/draggable'
 import { TextTrackItem } from '@/services/track-item/text-track-item'
 import { usePlayerStore } from '@/stores/player'
@@ -16,7 +17,7 @@ const resourceItemRef = ref<HTMLDivElement | null>(null)
 function onDragStart(e: PointerEvent) {
   if (!resourceItemRef.value) return
   const { aspectRatio } = playerStore
-  const heightRatio = 0.04
+  const heightRatio = TEXT_HEIGHT_RATIO
 
   const widthRatio = (heightRatio / aspectRatio) * 4
 
