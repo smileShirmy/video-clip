@@ -33,7 +33,8 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
   })
 
   textAttribute = shallowReactive<TextAttribute>({
-    letterSpacingRatio: 0
+    letterSpacingRatio: 0,
+    lineSpacingRatio: 0
   })
 
   text = ref<string>(DEFAULT_TEXT)

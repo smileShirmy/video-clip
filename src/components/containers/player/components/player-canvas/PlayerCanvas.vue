@@ -166,6 +166,9 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       const scale = data.playerItem.attribute.scale
       const letterSpacing =
         playerStore.sceneWidth * data.playerItem.textAttribute.letterSpacingRatio * scale
+      const lineSpacing =
+        playerStore.sceneHeight * data.playerItem.textAttribute.lineSpacingRatio * scale
+
       const x = -w / 2
       const y = -h / 2 + h
       const lineHeight = playerStore.sceneHeight * TEXT_LINE_HEIGHT_RATIO * scale
@@ -186,15 +189,13 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       for (let n = 0; n < lines.length; n += 1) {
         const line = lines[lines.length - n - 1]
         const arrText = line.split('')
-        const lineY = y - n * lineHeight
+        const lineY = y - n * lineHeight - lineSpacing * n
 
         let offsetX = 0
         for (let i = 0; i < arrText.length; i += 1) {
           const v = arrText[i]
           const textW = ctx.measureText(v).width
           ctx.fillText(v, x + offsetX, lineY)
-          console.log(textW, letterSpacing)
-
           offsetX = offsetX + textW + letterSpacing
         }
       }

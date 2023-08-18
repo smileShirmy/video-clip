@@ -46,11 +46,13 @@ function updateTextAttribute(text: string) {
   const wrapper = textAttributeRef.value
   if (!wrapper) return
 
+  const lineCount = text.split('\n').length
   const { sceneHeight, sceneWidth } = playerStore
   const fontSize = TEXT_LINE_HEIGHT_RATIO * playerStore.sceneHeight
 
-  const { letterSpacingRatio } = trackItem.textAttribute
-  const letterSpacing = letterSpacingRatio * playerStore.sceneWidth
+  const { letterSpacingRatio, lineSpacingRatio } = trackItem.textAttribute
+  const letterSpacing = letterSpacingRatio * sceneWidth
+  const lineSpacing = lineSpacingRatio * sceneHeight
 
   wrapper.style.fontSize = `${fontSize}px`
   wrapper.style.letterSpacing = `${letterSpacing}px`
@@ -68,7 +70,7 @@ function updateTextAttribute(text: string) {
   const { width, height } = wrapper.getBoundingClientRect()
   // 因为 letterSpacing 是跟随在每一个字符后面的，因此需要把最后一个字符的 letterSpacing 给去掉
   const widthRatio = (width - letterSpacing) / sceneWidth
-  const heightRatio = height / sceneHeight
+  const heightRatio = (height + lineSpacing * (lineCount - 1)) / sceneHeight
 
   trackItem.attribute.widthRatio = widthRatio
   trackItem.attribute.heightRatio = heightRatio
@@ -122,10 +124,21 @@ const translateY = computed({
 
 const letterSpacing = computed({
   get() {
-    return trackItem.textAttribute.letterSpacingRatio * 1000
+    return trackItem.textAttribute.letterSpacingRatio * 500
   },
   set(letterSpacing) {
-    trackItem.textAttribute.letterSpacingRatio = letterSpacing / 1000
+    trackItem.textAttribute.letterSpacingRatio = letterSpacing / 500
+
+    updateTextAttribute(trackItem.text.value)
+  }
+})
+
+const lineSpacing = computed({
+  get() {
+    return trackItem.textAttribute.lineSpacingRatio * 500
+  },
+  set(lineSpacing) {
+    trackItem.textAttribute.lineSpacingRatio = lineSpacing / 500
 
     updateTextAttribute(trackItem.text.value)
   }
@@ -163,7 +176,7 @@ const letterSpacing = computed({
       <InputNumber :min="-Infinity" :max="Infinity" v-model="translateX">
         <template #prefix>X</template>
       </InputNumber>
-      <span class="s-attribute-item-line"></span> <span class="s-attribute-item-line"></span>
+      <span class="s-attribute-item-line"></span>
       <InputNumber :min="-Infinity" :max="Infinity" v-model="translateY">
         <template #prefix>Y</template>
       </InputNumber>
@@ -176,7 +189,11 @@ const letterSpacing = computed({
     </template>
   </AttributeItem>
   <AttributeItem label="字间距">
-    <InputNumber :max="100" v-model="letterSpacing" />
+    <div class="spacing-line-height">
+      <InputNumber :max="100" v-model="letterSpacing" />
+      <span class="line-height-label">行间距</span>
+      <InputNumber :max="100" v-model="lineSpacing" />
+    </div>
   </AttributeItem>
 </template>
 
@@ -206,5 +223,15 @@ const letterSpacing = computed({
   z-index: -1;
   line-height: 1;
   letter-spacing: 0;
+}
+
+.spacing-line-height {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  .line-height-label {
+    margin: 0 16px;
+  }
 }
 </style>

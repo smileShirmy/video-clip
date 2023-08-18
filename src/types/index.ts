@@ -102,4 +102,5 @@ export interface AttributeOptions extends Partial<PlayerAttribute> {
  */
 export interface TextAttribute {
   letterSpacingRatio: number
+  lineSpacingRatio: number
 }
