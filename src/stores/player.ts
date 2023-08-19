@@ -37,7 +37,7 @@ export const usePlayerStore = defineStore('player', () => {
     [currentFrame],
     () => {
       const items = trackList.getCurrentFramePlayItems(currentFrame.value)
-      playerItems.splice(0, playerItems.length - 1, ...items)
+      playerItems.splice(0, playerItems.length, ...items)
     },
     { immediate: true }
   )
