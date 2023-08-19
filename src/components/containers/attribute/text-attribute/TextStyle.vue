@@ -8,6 +8,7 @@ import type { TextTrackItem } from '@/services/track-item/text-track-item'
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { DEFAULT_TEXT, TEXT_LINE_HEIGHT_RATIO } from '@/config'
+import { PlayerAttributeChangeAction } from '@/services/steps-manager/steps-manager'
 
 defineOptions({
   name: 'TextStyle'
@@ -26,6 +27,10 @@ const scale = computed({
     trackItem.attribute.scale = scale / 100
   }
 })
+
+function onScaleChange(newVal: number, oldVal: number) {
+  PlayerAttributeChangeAction.create(trackItem, 'scale', oldVal / 100).end(newVal / 100)
+}
 
 const text = computed(() => trackItem.text)
 
@@ -157,7 +162,7 @@ const lineSpacing = computed({
   <AttributeItem label="缩放">
     <AttributeSlider :max="500" v-model="scale" />
     <template #other>
-      <InputNumber :max="500" v-model="scale" unit="%" />
+      <InputNumber :max="500" v-model="scale" unit="%" @change="onScaleChange" />
     </template>
   </AttributeItem>
   <AttributeItem label="不透明度">

@@ -21,20 +21,11 @@ const props = withDefaults(
 )
 
 const emit = defineEmits({
-  ['update:modelValue']: (val) => isNumber(val),
-  change: (val) => isNumber(val)
+  ['update:modelValue']: (val: number) => isNumber(val),
+  change: (val: number, oldVal: number) => isNumber(val) && isNumber(oldVal) && val !== oldVal
 })
 
 function setModelValue(val: number) {
-  emit('update:modelValue', val)
-  emit('change', val)
-}
-
-function onInput(event: Event) {
-  const { value } = event.target as HTMLInputElement
-
-  let val = props.unit ? Number(value.replace(props.unit, '')) : Number(value)
-
   if (val > props.max) {
     val = props.max
   }
@@ -42,20 +33,27 @@ function onInput(event: Event) {
     val = props.min
   }
 
+  emit('update:modelValue', val)
+  emit('change', Math.round(val), props.modelValue)
+}
+
+function onBlur(event: Event) {
+  const { value } = event.target as HTMLInputElement
+
+  const val = props.unit ? Number(value.replace(props.unit, '')) : Number(value)
+
   setModelValue(val)
 }
 
 function plus() {
   if (props.modelValue < props.max) {
-    const val = props.modelValue + props.step
-    setModelValue(val > props.max ? props.max : val)
+    setModelValue(props.modelValue + props.step)
   }
 }
 
 function minus() {
   if (props.modelValue > props.min) {
-    const val = props.modelValue - props.step
-    setModelValue(val < props.min ? props.min : val)
+    setModelValue(props.modelValue - props.step)
   }
 }
 
@@ -71,7 +69,7 @@ const inputValue = computed(() => {
       <div v-if="$slots.prefix" class="prefix">
         <slot name="prefix"></slot>
       </div>
-      <input class="input-inner" :value="inputValue" @input.stop="onInput" type="text" />
+      <input class="input-inner" :value="inputValue" @blur.stop="onBlur" type="text" />
     </div>
     <div class="handler">
       <div class="handler-arrow arrow-up" @click.stop="plus">

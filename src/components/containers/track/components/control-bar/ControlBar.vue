@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { trackList } from '@/services/track-list/track-list'
+import { stepsManager } from '@/services/steps-manager/steps-manager'
 import ScaleSlider from './ScaleSlider.vue'
 import { useTrackStore } from '@/stores/track'
 import IconUndo from '@/components/icons/IconUndo.vue'
@@ -33,17 +34,35 @@ function removeSelected() {
 
   trackList.removeSelected()
 }
+
+function undo() {
+  stepsManager.undo()
+}
+
+function redo() {
+  stepsManager.redo()
+}
 </script>
 
 <template>
   <div class="control-bar">
     <section class="control-bar-child">
-      <!-- TODO: 撤销 -->
-      <div class="control-item disabled" title="TODO: 撤销">
+      <div
+        class="control-item"
+        :class="{ disabled: !stepsManager.allowUndo.value }"
+        @click="undo"
+        title="撤销"
+      >
         <IconUndo class="icon" />
       </div>
-      <!-- TODO: 重做 -->
-      <div class="control-item disabled" title="TODO: 重做">
+      <div
+        class="control-item"
+        :class="{
+          disabled: !stepsManager.allowRedo.value
+        }"
+        @click="redo"
+        title="重做"
+      >
         <IconRedo class="icon" />
       </div>
       <div
