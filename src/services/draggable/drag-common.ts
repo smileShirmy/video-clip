@@ -301,7 +301,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
       }
     }
 
-    this.onDragEnd()
+    this.onDragEnd(this.movingId)
     this.destroy()
   }
 }

@@ -231,7 +231,7 @@ export class DragAudio extends DragItem<AudioTrackItem> {
       }
     }
 
-    this.onDragEnd()
+    this.onDragEnd(this.movingId)
     this.destroy()
   }
 }

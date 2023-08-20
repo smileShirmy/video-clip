@@ -18,6 +18,7 @@ import { OTHER_TRACK_HEIGHT } from '@/config'
 import { DragItem } from './drag-item'
 import type { TextTrackItem } from '../track-item/text-track-item'
 import { warn } from '../helpers/warn'
+import { AddTrackItemAction } from '../steps-manager/add-track-item-action'
 
 export class DragText extends DragItem<TextTrackItem> {
   trackDataList: TrackDataItem[] = []
@@ -188,6 +189,10 @@ export class DragText extends DragItem<TextTrackItem> {
   draggingHandler = (e: PointerEvent) => {
     e.preventDefault()
 
+    if (this.isFirstDrag) {
+      this.isFirstDrag = false
+    }
+
     this.initFirstDrag(e)
 
     this.updateDraggingTargetPosition(e)
@@ -236,7 +241,11 @@ export class DragText extends DragItem<TextTrackItem> {
       }
     }
 
-    this.onDragEnd()
+    if (this.movingId === null) {
+      new AddTrackItemAction(this.dragTrackItem.toData())
+    }
+
+    this.onDragEnd(this.movingId)
     this.destroy()
   }
 }

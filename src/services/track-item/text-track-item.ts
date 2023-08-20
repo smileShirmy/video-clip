@@ -3,12 +3,14 @@ import {
   type TextResource,
   type PlayerAttribute,
   type AttributeOptions,
-  type TextAttribute
+  type TextAttribute,
+  type TextTrackItemData
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
 import type { VideoTrack } from '../track/video-track'
 import { DEFAULT_TEXT } from '@/config'
+import { deepClone } from '../helpers/general'
 
 export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_TEXT
@@ -48,7 +50,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     this.attribute.heightRatio = heightRatio
 
     this.setEndFrame(resource.frameCount)
-    this.resource = Object.assign({}, resource)
+    this.resource = deepClone(resource)
 
     this.renderSize = {
       top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),
@@ -63,6 +65,15 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     this.parentTrack?.addTrackItemWithNoEffect(newItem)
 
     return this.baseSplit(newItem, splitFrame)
+  }
+
+  toData(): TextTrackItemData {
+    return {
+      resource: deepClone(this.resource),
+      attribute: deepClone(this.attribute),
+      textAttribute: deepClone(this.textAttribute),
+      text: this.text.value
+    }
   }
 
   static create(resource: TextResource, attribute: AttributeOptions) {

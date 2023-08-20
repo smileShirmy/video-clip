@@ -104,3 +104,10 @@ export interface TextAttribute {
   letterSpacingRatio: number
   lineSpacingRatio: number
 }
+
+export interface TextTrackItemData {
+  resource: TextResource
+  attribute: PlayerAttribute
+  textAttribute: TextAttribute
+  text: string
+}

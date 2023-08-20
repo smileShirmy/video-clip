@@ -8,7 +8,7 @@ import type { TextTrackItem } from '@/services/track-item/text-track-item'
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { DEFAULT_TEXT, TEXT_LINE_HEIGHT_RATIO } from '@/config'
-import { PlayerAttributeChangeAction } from '@/services/steps-manager/steps-manager'
+import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
 
 defineOptions({
   name: 'TextStyle'
