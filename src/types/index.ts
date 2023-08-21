@@ -116,12 +116,39 @@ export interface BaseTrackItemData {
 }
 
 export interface TextTrackItemData {
+  type: TrackItemName.TRACK_ITEM_TEXT
   base: BaseTrackItemData
   resource: TextResource
   attribute: PlayerAttribute
   textAttribute: TextAttribute
   text: string
 }
+
+export interface VideoTrackItemData {
+  type: TrackItemName.TRACK_ITEM_VIDEO
+  base: BaseTrackItemData
+  resource: VideoResource
+  attribute: PlayerAttribute
+}
+
+export interface StickerTrackItemData {
+  type: TrackItemName.TRACK_ITEM_STICKER
+  base: BaseTrackItemData
+  resource: StickerResource
+  attribute: PlayerAttribute
+}
+
+export interface AudioTrackItemData {
+  type: TrackItemName.TRACK_ITEM_AUDIO
+  base: BaseTrackItemData
+  resource: AudioResource
+}
+
+export type TrackItemData =
+  | TextTrackItemData
+  | VideoTrackItemData
+  | StickerTrackItemData
+  | AudioTrackItemData
 
 export interface BaseTrackData {
   id: string
@@ -132,3 +159,15 @@ export interface VideoTrackData {
   type: TrackType.VIDEO
   height: number
 }
+
+export interface AudioTrackData {
+  base: BaseTrackData
+  type: TrackType.AUDIO
+}
+
+export interface MainTrackData {
+  base: BaseTrackData
+  type: TrackType.MAIN
+}
+
+export type TrackData = VideoTrackData | AudioTrackData | MainTrackData

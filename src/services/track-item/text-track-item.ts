@@ -77,10 +77,6 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
       this.attribute.opacity = opacity
     }
 
-    if (!base || !isNumber(base.endFrame)) {
-      this.setEndFrame(resource.frameCount)
-    }
-
     this.renderSize = {
       top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),
       left: computed(() => this.playerStore.sceneWidth * this.attribute.leftRatio),
@@ -93,6 +89,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
       this.textAttribute.letterSpacingRatio = letterSpacingRatio
       this.textAttribute.lineSpacingRatio = lineSpacingRatio
     }
+
     if (isString(text)) {
       this.text.value = text
     }
@@ -107,6 +104,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
 
   toData(): TextTrackItemData {
     return {
+      type: this.component,
       base: this.toBaseData(),
       resource: deepClone(this.resource),
       attribute: deepClone(this.attribute),

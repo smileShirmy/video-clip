@@ -6,16 +6,22 @@ import { watch } from 'vue'
 import type { TrackItem } from '../track-item'
 import { isMainTrackAllowItem, isMainTrackAllowItems } from './helper'
 import { isArray } from '../helpers/general'
+import type { BaseTrackData, MainTrackData } from '@/types'
 
 export type MainTrackAllowItem = VideoTrackItem | StickerTrackItem
 
 export class MainTrack extends BaseTrack<MainTrackAllowItem> {
-  type = TrackType.MAIN
+  readonly type = TrackType.MAIN
 
-  height = VIDEO_TRACK_HEIGHT
+  readonly height = VIDEO_TRACK_HEIGHT
 
-  constructor() {
-    super()
+  constructor(
+    options: {
+      base?: BaseTrackData
+    } = {}
+  ) {
+    const { base } = options
+    super(base)
 
     this.bindParentTrack()
   }
@@ -42,6 +48,17 @@ export class MainTrack extends BaseTrack<MainTrackAllowItem> {
       },
       { immediate: true }
     )
+  }
+
+  toData(): MainTrackData {
+    return {
+      base: this.toBaseData(),
+      type: this.type
+    }
+  }
+
+  static toTrack(options: MainTrackData) {
+    return new MainTrack(options)
   }
 
   static create() {

@@ -16,6 +16,7 @@ import { AudioTrack } from '../track/audio-track'
 import { trackList } from '../track-list/track-list'
 import { isIntersectionOfTwoIntervals } from '../helpers/general'
 import type { TrackItem } from '../track-item'
+import { AddTrackItemAction } from '../steps-manager/add-track-item-action'
 
 export class DragAudio extends DragItem<AudioTrackItem> {
   trackDataList: TrackDataItem[] = []
@@ -233,5 +234,11 @@ export class DragAudio extends DragItem<AudioTrackItem> {
 
     this.onDragEnd(this.movingId)
     this.destroy()
+
+    setTimeout(() => {
+      if (this.movingId === null) {
+        new AddTrackItemAction(this.dragTrackItem.toData())
+      }
+    })
   }
 }

@@ -5,16 +5,23 @@ import { watch } from 'vue'
 import type { TrackItem } from '../track-item'
 import { isArray } from '../helpers/general'
 import { isAudioTrackAllowItem, isAudioTrackAllowItems } from './helper'
+import type { AudioTrackData, BaseTrackData } from '@/types'
 
 export type AudioTrackAllowItem = AudioTrackItem
 
 export class AudioTrack extends BaseTrack<AudioTrackItem> {
-  type = TrackType.AUDIO
+  readonly type = TrackType.AUDIO
 
-  height = OTHER_TRACK_HEIGHT
+  readonly height = OTHER_TRACK_HEIGHT
 
-  constructor() {
-    super()
+  constructor(
+    options: {
+      base?: BaseTrackData
+      height?: number
+    } = {}
+  ) {
+    const { base } = options
+    super(base)
 
     this.bindParentTrack()
   }
@@ -41,6 +48,17 @@ export class AudioTrack extends BaseTrack<AudioTrackItem> {
       },
       { immediate: true }
     )
+  }
+
+  toData(): AudioTrackData {
+    return {
+      base: this.toBaseData(),
+      type: this.type
+    }
+  }
+
+  static toTrack(options: AudioTrackData) {
+    return new AudioTrack(options)
   }
 
   static create() {

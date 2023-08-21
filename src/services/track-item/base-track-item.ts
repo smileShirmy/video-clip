@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { deepClone, isNumber, uuid } from '../helpers/general'
-import { TrackItemName, type BaseTrackItemData } from '@/types'
+import { TrackItemName, type BaseTrackItemData, type TrackItemData } from '@/types'
 import type { TrackItem } from '.'
 import type { Track } from '../track'
 import { usePlayerStore, type PlayerStore } from '@/stores/player'
@@ -61,6 +61,8 @@ export abstract class BaseTrackItem<
   }
 
   abstract split(splitFrame: number): T
+
+  abstract toData(): TrackItemData
 
   protected baseSplit(newItem: T, splitFrame: number): T {
     newItem.setStartFrame(splitFrame)
