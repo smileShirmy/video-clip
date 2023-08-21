@@ -219,7 +219,7 @@ export class DragText extends DragItem<TextTrackItem> {
     const track = VideoTrack.create({
       height: OTHER_TRACK_HEIGHT
     })
-    trackList.insert(track, insertTrackIndex)
+    trackList.insertTrack(track, insertTrackIndex)
     track.addTrackItem(this.dragTrackItem)
   }
 
@@ -240,12 +240,13 @@ export class DragText extends DragItem<TextTrackItem> {
           break
       }
     }
-
-    if (this.movingId === null) {
-      new AddTrackItemAction(this.dragTrackItem.toData())
-    }
-
     this.onDragEnd(this.movingId)
     this.destroy()
+
+    setTimeout(() => {
+      if (this.movingId === null) {
+        new AddTrackItemAction(this.dragTrackItem.toData())
+      }
+    })
   }
 }

@@ -4,18 +4,17 @@ import {
   type PlayerAttribute,
   type AttributeOptions,
   type TextAttribute,
-  type TextTrackItemData
+  type TextTrackItemData,
+  type BaseTrackItemData
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
 import type { VideoTrack } from '../track/video-track'
 import { DEFAULT_TEXT } from '@/config'
-import { deepClone } from '../helpers/general'
+import { deepClone, isNumber, isString } from '../helpers/general'
 
 export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_TEXT
-
-  resource: TextResource
 
   readonly renderSize: {
     top: ComputedRef<number>
@@ -41,22 +40,61 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
 
   text = ref<string>(DEFAULT_TEXT)
 
-  constructor(resource: TextResource, attribute: AttributeOptions) {
-    super()
-    const { topRatio, leftRatio, widthRatio, heightRatio } = attribute
+  constructor(
+    resource: TextResource,
+    options: {
+      base?: BaseTrackItemData
+      attribute: AttributeOptions
+      textAttribute?: TextAttribute
+      text?: string
+    }
+  ) {
+    const {
+      base,
+      attribute,
+      textAttribute = shallowReactive<TextAttribute>({
+        letterSpacingRatio: 0,
+        lineSpacingRatio: 0
+      }),
+      text
+    } = options
+
+    super(resource, base)
+
+    const { topRatio, leftRatio, widthRatio, heightRatio, scale, rotate, opacity } = attribute
     this.attribute.topRatio = topRatio
     this.attribute.leftRatio = leftRatio
     this.attribute.widthRatio = widthRatio
     this.attribute.heightRatio = heightRatio
 
-    this.setEndFrame(resource.frameCount)
-    this.resource = deepClone(resource)
+    if (isNumber(scale)) {
+      this.attribute.scale = scale
+    }
+    if (isNumber(rotate)) {
+      this.attribute.rotate = rotate
+    }
+    if (isNumber(opacity)) {
+      this.attribute.opacity = opacity
+    }
+
+    if (!base || !isNumber(base.endFrame)) {
+      this.setEndFrame(resource.frameCount)
+    }
 
     this.renderSize = {
       top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),
       left: computed(() => this.playerStore.sceneWidth * this.attribute.leftRatio),
       width: computed(() => this.playerStore.sceneWidth * this.attribute.widthRatio),
       height: computed(() => this.playerStore.sceneHeight * this.attribute.heightRatio)
+    }
+
+    if (textAttribute) {
+      const { letterSpacingRatio, lineSpacingRatio } = textAttribute
+      this.textAttribute.letterSpacingRatio = letterSpacingRatio
+      this.textAttribute.lineSpacingRatio = lineSpacingRatio
+    }
+    if (isString(text)) {
+      this.text.value = text
     }
   }
 
@@ -69,6 +107,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
 
   toData(): TextTrackItemData {
     return {
+      base: this.toBaseData(),
       resource: deepClone(this.resource),
       attribute: deepClone(this.attribute),
       textAttribute: deepClone(this.textAttribute),
@@ -76,7 +115,19 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     }
   }
 
+  static toTrackItem(data: TextTrackItemData) {
+    const { resource, attribute, textAttribute, text, base } = data
+    return new TextTrackItem(resource, {
+      base,
+      attribute,
+      textAttribute,
+      text
+    })
+  }
+
   static create(resource: TextResource, attribute: AttributeOptions) {
-    return new TextTrackItem(resource, attribute)
+    return new TextTrackItem(resource, {
+      attribute
+    })
   }
 }

@@ -1,3 +1,5 @@
+import type { TrackType } from '@/services/track/base-track'
+
 export enum ResourceComponentName {
   VIDEO_RESOURCE = 'videoResource',
   TEXT_RESOURCE = 'textResource',
@@ -105,9 +107,28 @@ export interface TextAttribute {
   lineSpacingRatio: number
 }
 
+export interface BaseTrackItemData {
+  id: string
+  minFrame: number
+  startFrame: number
+  endFrame: number
+  parentTrackId?: string
+}
+
 export interface TextTrackItemData {
+  base: BaseTrackItemData
   resource: TextResource
   attribute: PlayerAttribute
   textAttribute: TextAttribute
   text: string
+}
+
+export interface BaseTrackData {
+  id: string
+}
+
+export interface VideoTrackData {
+  base: BaseTrackData
+  type: TrackType.VIDEO
+  height: number
 }

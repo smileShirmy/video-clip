@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { uuid } from '../helpers/general'
-import { TrackItemName } from '@/types'
+import { deepClone, isNumber, uuid } from '../helpers/general'
+import { TrackItemName, type BaseTrackItemData } from '@/types'
 import type { TrackItem } from '.'
 import type { Track } from '../track'
 import { usePlayerStore, type PlayerStore } from '@/stores/player'
@@ -12,13 +12,13 @@ export abstract class BaseTrackItem<
 > {
   abstract readonly component: TrackItemName
 
-  abstract resource: R
+  readonly resource: R
+
+  readonly id: string
 
   readonly playerStore: PlayerStore
 
   parentTrack: P | null = null
-
-  readonly id = uuid()
 
   minFrame = 0
 
@@ -40,7 +40,23 @@ export abstract class BaseTrackItem<
     return this.minFrame + this.resource.frameCount
   }
 
-  constructor() {
+  constructor(resource: R, options: Partial<BaseTrackItemData> = {}) {
+    this.resource = deepClone(resource)
+
+    const { id = uuid(), startFrame, endFrame, minFrame } = options
+    this.id = id
+    if (isNumber(startFrame)) {
+      this._startFrame.value = startFrame
+    }
+    if (isNumber(endFrame)) {
+      this._endFrame.value = endFrame
+    } else {
+      this._endFrame.value = this.resource.frameCount
+    }
+    if (isNumber(minFrame)) {
+      this.minFrame = minFrame
+    }
+
     this.playerStore = usePlayerStore()
   }
 
@@ -115,5 +131,15 @@ export abstract class BaseTrackItem<
       return pre
     }, [])
     return Math.max(...frames, this.minFrame)
+  }
+
+  protected toBaseData(): BaseTrackItemData {
+    return {
+      id: this.id,
+      minFrame: this.minFrame,
+      startFrame: this.startFrame,
+      endFrame: this.endFrame,
+      parentTrackId: this.parentTrack?.id
+    }
   }
 }

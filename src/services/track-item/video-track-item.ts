@@ -16,8 +16,6 @@ export class VideoTrackItem extends BaseTrackItem<
 > {
   readonly component = TrackItemName.TRACK_ITEM_VIDEO
 
-  resource: VideoResource
-
   readonly renderSize: {
     top: ComputedRef<number>
     left: ComputedRef<number>
@@ -36,15 +34,12 @@ export class VideoTrackItem extends BaseTrackItem<
   })
 
   constructor(resource: VideoResource, attribute: AttributeOptions) {
-    super()
+    super(resource)
     const { topRatio, leftRatio, widthRatio, heightRatio } = attribute
     this.attribute.topRatio = topRatio
     this.attribute.leftRatio = leftRatio
     this.attribute.widthRatio = widthRatio
     this.attribute.heightRatio = heightRatio
-
-    this.setEndFrame(resource.frameCount)
-    this.resource = Object.assign({}, resource)
 
     this.renderSize = {
       top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),

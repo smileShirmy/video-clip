@@ -7,6 +7,7 @@ import { watch } from 'vue'
 import type { TrackItem } from '../track-item'
 import { isArray } from '../helpers/general'
 import { isVideoTrackAllowItem, isVideoTrackAllowItems } from './helper'
+import type { BaseTrackData, VideoTrackData } from '@/types'
 
 export type VideoTrackAllowItem = VideoTrackItem | TextTrackItem | StickerTrackItem
 
@@ -15,14 +16,19 @@ export interface VideoTrackOptions {
 }
 
 export class VideoTrack extends BaseTrack<VideoTrackAllowItem> {
-  type = TrackType.VIDEO
+  readonly type = TrackType.VIDEO
 
   height: number
 
-  constructor(options: VideoTrackOptions = {}) {
-    super()
+  constructor(
+    options: {
+      base?: BaseTrackData
+      height?: number
+    } = {}
+  ) {
+    const { base, height = VIDEO_TRACK_HEIGHT } = options
+    super(base)
 
-    const { height = VIDEO_TRACK_HEIGHT } = options
     this.height = height
     this.bindParentTrack()
   }
@@ -49,6 +55,18 @@ export class VideoTrack extends BaseTrack<VideoTrackAllowItem> {
       },
       { immediate: true }
     )
+  }
+
+  toData(): VideoTrackData {
+    return {
+      base: this.toBaseData(),
+      height: this.height,
+      type: this.type
+    }
+  }
+
+  static toTrack(options: VideoTrackData) {
+    return new VideoTrack(options)
   }
 
   static create(options: VideoTrackOptions = {}) {

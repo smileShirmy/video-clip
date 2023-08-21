@@ -265,7 +265,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
       const track = VideoTrack.create({
         height: this.mainTrackData.track.hasVideo ? VIDEO_TRACK_HEIGHT : OTHER_TRACK_HEIGHT
       })
-      trackList.insert(track, insertTrackIndex - 1)
+      trackList.insertTrack(track, insertTrackIndex - 1)
       track.addTrackItem(this.mainTrackData.track.trackItemList)
 
       // 清空主轨道并且把当前拖拽的资源放入主轨道
@@ -278,7 +278,7 @@ export class DragCommon extends DragItem<DragTrackItem> {
             ? VIDEO_TRACK_HEIGHT
             : OTHER_TRACK_HEIGHT
       })
-      trackList.insert(track, insertTrackIndex)
+      trackList.insertTrack(track, insertTrackIndex)
       track.addTrackItem(this.dragTrackItem)
     }
   }

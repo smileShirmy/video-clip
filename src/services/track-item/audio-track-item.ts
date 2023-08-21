@@ -5,12 +5,8 @@ import type { AudioTrack } from '../track/audio-track'
 export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem, AudioTrack> {
   readonly component = TrackItemName.TRACK_ITEM_AUDIO
 
-  resource: AudioResource
-
   constructor(resource: AudioResource) {
-    super()
-    this.setEndFrame(resource.frameCount)
-    this.resource = Object.assign({}, resource)
+    super(resource)
   }
 
   split(splitFrame: number) {

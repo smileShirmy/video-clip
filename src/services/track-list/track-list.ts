@@ -5,6 +5,7 @@ import { MainTrack } from '../track/main-track'
 import type { PlayerTrackItem, TrackItem } from '../track-item'
 import { TrackType } from '../track/base-track'
 import { isPlayerTrackItem } from '../track-item/helper'
+import { isString } from '../helpers/general'
 
 class TrackList {
   static create() {
@@ -68,7 +69,14 @@ class TrackList {
       const r = line.removeTrackItem(trackItem, false)
       if (r) {
         removed = true
-        this.selectedId.value = ''
+
+        if (isString(trackItem)) {
+          if (trackItem === this.selectedId.value) {
+            this.selectedId.value = ''
+          }
+        } else if (trackItem.id === this.selectedId.value) {
+          this.selectedId.value = ''
+        }
       }
     })
 
@@ -92,9 +100,17 @@ class TrackList {
     }
   }
 
-  insert(track: Track, insertIndex: number) {
+  insertTrack(track: Track, insertIndex: number) {
     track.parentTrackList = this
     this.list.splice(insertIndex, 0, track)
+  }
+
+  findTrack(trackId: string) {
+    const index = this._list.findIndex((v) => v.id === trackId)
+    return {
+      index,
+      track: this._list[index]
+    }
   }
 
   /**

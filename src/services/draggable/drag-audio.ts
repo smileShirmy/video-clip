@@ -209,7 +209,7 @@ export class DragAudio extends DragItem<AudioTrackItem> {
     const { insertTrackIndex } = stateData
 
     const track = AudioTrack.create()
-    trackList.insert(track, insertTrackIndex)
+    trackList.insertTrack(track, insertTrackIndex)
     track.addTrackItem(this.dragTrackItem)
   }
 

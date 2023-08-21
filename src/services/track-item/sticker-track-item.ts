@@ -11,8 +11,6 @@ import { shallowReactive, type ComputedRef, type ShallowReactive, computed } fro
 export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_STICKER
 
-  resource: StickerResource
-
   readonly renderSize: {
     top: ComputedRef<number>
     left: ComputedRef<number>
@@ -31,15 +29,12 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
   })
 
   constructor(resource: StickerResource, attribute: AttributeOptions) {
-    super()
+    super(resource)
     const { topRatio, leftRatio, widthRatio, heightRatio } = attribute
     this.attribute.topRatio = topRatio
     this.attribute.leftRatio = leftRatio
     this.attribute.widthRatio = widthRatio
     this.attribute.heightRatio = heightRatio
-
-    this.setEndFrame(resource.frameCount)
-    this.resource = Object.assign({}, resource)
 
     this.renderSize = {
       top: computed(() => this.playerStore.sceneHeight * this.attribute.topRatio),

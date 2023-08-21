@@ -3,7 +3,7 @@ import { isArray, isString, uuid } from '../helpers/general'
 import { trackList, type TrackListType } from '../track-list/track-list'
 import { useTrackStore } from '@/stores/track'
 import type { TrackItem } from '../track-item'
-import { TrackItemName } from '@/types'
+import { TrackItemName, type BaseTrackData } from '@/types'
 import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
 
 export enum TrackType {
@@ -13,7 +13,7 @@ export enum TrackType {
 }
 
 export abstract class BaseTrack<T extends TrackItem> {
-  readonly id = uuid()
+  readonly id: string
 
   parentTrackList: TrackListType | null = null
 
@@ -31,6 +31,11 @@ export abstract class BaseTrack<T extends TrackItem> {
     return this._trackItemList.some(
       (trackItem) => trackItem.component === TrackItemName.TRACK_ITEM_VIDEO
     )
+  }
+
+  constructor(options: Partial<BaseTrackData> = {}) {
+    const { id = uuid() } = options
+    this.id = id
   }
 
   abstract bindParentTrack(): void
@@ -139,5 +144,11 @@ export abstract class BaseTrack<T extends TrackItem> {
     const trackStore = useTrackStore()
     trackStore.updateMaxFrameCount()
     this.updateTrackHeight()
+  }
+
+  protected toBaseData(): BaseTrackData {
+    return {
+      id: this.id
+    }
   }
 }
