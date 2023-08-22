@@ -29,7 +29,7 @@ const scale = computed({
 })
 
 function onScaleChange(newVal: number, oldVal: number) {
-  PlayerAttributeChangeAction.create(trackItem, 'scale', oldVal / 100).end(newVal / 100)
+  PlayerAttributeChangeAction.create(trackItem.id, 'scale', oldVal / 100).end(newVal / 100)
 }
 
 const text = computed(() => trackItem.text)

@@ -1,24 +1,25 @@
 import type { PlayerAttribute } from '@/types'
-import type { PlayerTrackItem } from '../track-item'
 import { stepsManager } from './steps-manager'
 import { warn } from '../helpers/warn'
 import { Action } from './action'
+import { trackList } from '../track-list/track-list'
+import { isPlayerTrackItem } from '../track-item/helper'
 
 export class PlayerAttributeChangeAction extends Action {
-  private trackItem: PlayerTrackItem
+  private trackItemId: string
   private startVal: number
   private endVal?: number
   private key: keyof PlayerAttribute
 
-  constructor(trackItem: PlayerTrackItem, key: keyof PlayerAttribute, startVal: number) {
+  constructor(trackItemId: string, key: keyof PlayerAttribute, startVal: number) {
     super()
-    this.trackItem = trackItem
+    this.trackItemId = trackItemId
     this.startVal = startVal
     this.key = key
   }
 
-  static create(trackItem: PlayerTrackItem, key: keyof PlayerAttribute, startVal: number) {
-    return new PlayerAttributeChangeAction(trackItem, key, startVal)
+  static create(trackItemId: string, key: keyof PlayerAttribute, startVal: number) {
+    return new PlayerAttributeChangeAction(trackItemId, key, startVal)
   }
 
   public end(value: number) {
@@ -31,10 +32,16 @@ export class PlayerAttributeChangeAction extends Action {
       warn('请检查是否没有设置结束值？')
       return
     }
-    this.trackItem.attribute[this.key] = this.endVal
+    const trackItem = trackList.getTrackItem(this.trackItemId)
+    if (trackItem && isPlayerTrackItem(trackItem)) {
+      trackItem.attribute[this.key] = this.endVal
+    }
   }
 
   undo() {
-    this.trackItem.attribute[this.key] = this.startVal
+    const trackItem = trackList.getTrackItem(this.trackItemId)
+    if (trackItem && isPlayerTrackItem(trackItem)) {
+      trackItem.attribute[this.key] = this.startVal
+    }
   }
 }

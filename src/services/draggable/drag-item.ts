@@ -279,7 +279,9 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   protected initFirstDrag(e: PointerEvent) {
     if (this.isFirstDrag) {
       this.isFirstDrag = false
-      this.moveTrackItemAction = new MoveTrackItemAction(this.dragTrackItem)
+      if (this.isMoveTrackItem) {
+        this.moveTrackItemAction = new MoveTrackItemAction(this.dragTrackItem)
+      }
     }
 
     if (this.isMoveTrackItem) {
@@ -455,10 +457,10 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
 
   protected addDragEndAction() {
     setTimeout(() => {
-      if (this.movingId === null) {
-        new AddTrackItemAction(this.dragTrackItem.toData())
-      } else {
+      if (this.isMoveTrackItem) {
         this.moveTrackItemAction?.end()
+      } else {
+        new AddTrackItemAction(this.dragTrackItem.toData())
       }
     })
   }

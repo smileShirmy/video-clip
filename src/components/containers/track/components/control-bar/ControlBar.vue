@@ -42,11 +42,15 @@ function removeSelected() {
 }
 
 function undo() {
-  stepsManager.undo()
+  if (stepsManager.allowUndo.value) {
+    stepsManager.undo()
+  }
 }
 
 function redo() {
-  stepsManager.redo()
+  if (stepsManager.allowRedo.value) {
+    stepsManager.redo()
+  }
 }
 </script>
 
