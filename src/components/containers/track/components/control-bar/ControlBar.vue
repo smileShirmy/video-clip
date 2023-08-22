@@ -12,6 +12,7 @@ import IconCompress from '@/components/icons/IconCompress.vue'
 import IconExpand from '@/components/icons/IconExpand.vue'
 import IconFirstPage from '@/components/icons/IconFirstPage.vue'
 import IconArrow from '@/components/icons/IconArrow.vue'
+import { DeleteTrackItemAction } from '@/services/steps-manager/delete-track-item-action'
 
 const trackStore = useTrackStore()
 
@@ -31,6 +32,11 @@ const disableDelete = computed(() => {
 
 function removeSelected() {
   if (disableDelete.value) return
+
+  const selected = trackList.selectedTrackItem.value
+  if (selected) {
+    new DeleteTrackItemAction(selected.toData())
+  }
 
   trackList.removeSelected()
 }
