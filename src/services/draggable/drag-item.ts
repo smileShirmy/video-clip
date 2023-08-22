@@ -22,6 +22,8 @@ import {
 import { TrackType } from '../track/base-track'
 import type { TimelineStore } from '@/stores/timeline'
 import type { TrackStore } from '@/stores/track'
+import { MoveTrackItemAction } from '../steps-manager/move-track-item-action'
+import { AddTrackItemAction } from '../steps-manager/add-track-item-action'
 
 export const INTERVAL_MIDDLE_OFFSET = (TRACK_INTERVAL - 1) / 2
 
@@ -58,6 +60,8 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   private startMoveParentTrackTop = 0
 
   protected startMoveTargetAttribute: StartMoveTargetAttribute | null = null
+
+  moveTrackItemAction?: MoveTrackItemAction
 
   constructor(options: DragOptions<T>) {
     this.startPointerEvent = options.startPointerEvent
@@ -273,6 +277,11 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
    * 第一次移动时初始化
    */
   protected initFirstDrag(e: PointerEvent) {
+    if (this.isFirstDrag) {
+      this.isFirstDrag = false
+      this.moveTrackItemAction = new MoveTrackItemAction(this.dragTrackItem)
+    }
+
     if (this.isMoveTrackItem) {
       this.initMoveTargetAttribute()
     } else {
@@ -442,5 +451,15 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
 
     this.stateData = data
     this.onStateChange(data)
+  }
+
+  protected addDragEndAction() {
+    setTimeout(() => {
+      if (this.movingId === null) {
+        new AddTrackItemAction(this.dragTrackItem.toData())
+      } else {
+        this.moveTrackItemAction?.end()
+      }
+    })
   }
 }

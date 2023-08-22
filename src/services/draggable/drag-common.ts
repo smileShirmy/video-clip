@@ -20,7 +20,6 @@ import { DragItem } from './drag-item'
 import type { AudioTrackItem } from '../track-item/audio-track-item'
 import { TrackItemName } from '@/types'
 import type { TextTrackItem } from '../track-item/text-track-item'
-import { AddTrackItemAction } from '../steps-manager/add-track-item-action'
 
 type DragTrackItem = Exclude<TrackItem, AudioTrackItem | TextTrackItem>
 
@@ -305,10 +304,6 @@ export class DragCommon extends DragItem<DragTrackItem> {
     this.onDragEnd(this.movingId)
     this.destroy()
 
-    setTimeout(() => {
-      if (this.movingId === null) {
-        new AddTrackItemAction(this.dragTrackItem.toData())
-      }
-    })
+    this.addDragEndAction()
   }
 }
