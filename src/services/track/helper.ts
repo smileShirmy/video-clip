@@ -46,7 +46,7 @@ export const isVideoTrackAllowItem = (trackItem: TrackItem): trackItem is VideoT
 export const isVideoTrackAllowItems = (
   trackItems: TrackItem[]
 ): trackItems is VideoTrackAllowItem[] => {
-  return trackItems.every((item) => isMainTrackAllowItem(item))
+  return trackItems.every((item) => isVideoTrackAllowItem(item))
 }
 
 export const isVideoTrack = (track: Track): track is VideoTrack => {

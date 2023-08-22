@@ -32,6 +32,7 @@ export class SplitTrackItemAction extends Action {
 
   redo() {
     this.parentTrack.removeTrackItem(this.startTrackItemData.base.id, false)
-    this.parentTrack.addTrackItem(this.endTrackItemData.map((data) => toTrackItem(data)))
+    const trackItems = this.endTrackItemData.map((data) => toTrackItem(data))
+    this.parentTrack.addTrackItem(trackItems)
   }
 }
