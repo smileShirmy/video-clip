@@ -2,11 +2,11 @@ import type { TrackData } from '@/types'
 import type { TrackItem } from '../track-item'
 import { trackList } from '../track-list/track-list'
 import { Action } from './action'
-import { warn } from 'vue'
 import { toTrack } from './helper'
 import { stepsManager } from './steps-manager'
 
 interface StoreValue {
+  id: string
   startFrame: number
   endFrame: number
   minFrame: number
@@ -14,24 +14,19 @@ interface StoreValue {
 }
 
 export class MoveTrackItemAction extends Action {
-  private readonly trackItem: TrackItem
   private startVal?: StoreValue
   private endVal?: StoreValue
   private parentTrackIndex = 0
 
   constructor(trackItem: TrackItem) {
     super()
-    this.trackItem = trackItem
-    const { startFrame, endFrame, minFrame, parentTrack } = trackItem
-    const parentTrackId = parentTrack?.id
-    if (!parentTrackId) {
-      warn('该行为只能作用于移动资源时')
-      return
-    }
+    const { id, startFrame, endFrame, minFrame, parentTrack } = trackItem
+    const parentTrackId = parentTrack?.id!
     const { track, index } = trackList.findTrack(parentTrackId)
     this.parentTrackIndex = index
     if (track) {
       this.startVal = {
+        id,
         startFrame,
         endFrame,
         minFrame,
@@ -40,16 +35,13 @@ export class MoveTrackItemAction extends Action {
     }
   }
 
-  end() {
-    const { startFrame, endFrame, minFrame, parentTrack } = this.trackItem
-    const parentTrackId = parentTrack?.id
-    if (!parentTrackId) {
-      warn('该行为只能作用于移动资源时')
-      return
-    }
+  end(trackItem: TrackItem) {
+    const { id, startFrame, endFrame, minFrame, parentTrack } = trackItem
+    const parentTrackId = parentTrack?.id!
     const { track } = trackList.findTrack(parentTrackId)
     if (track) {
       this.endVal = {
+        id,
         startFrame,
         endFrame,
         minFrame,
@@ -62,19 +54,25 @@ export class MoveTrackItemAction extends Action {
 
   private moveTo(val?: StoreValue) {
     if (!val) return
+    const trackItem = trackList.getTrackItem(val.id)
+
+    if (!trackItem) {
+      console.log('找不到？')
+      return
+    }
 
     const { startFrame, endFrame, minFrame, parentTrackData } = val
-    this.trackItem.setStartFrame(startFrame)
-    this.trackItem.setEndFrame(endFrame)
-    this.trackItem.minFrame = minFrame
+    trackItem.setStartFrame(startFrame)
+    trackItem.setEndFrame(endFrame)
+    trackItem.minFrame = minFrame
 
     const { track } = trackList.findTrack(parentTrackData.base.id)
     if (track) {
-      track.addTrackItem(this.trackItem)
+      track.addTrackItem(trackItem)
     } else {
       const parentTrack = toTrack(parentTrackData)
       trackList.insertTrack(parentTrack, this.parentTrackIndex)
-      parentTrack.addTrackItem(this.trackItem)
+      parentTrack.addTrackItem(trackItem)
     }
   }
 

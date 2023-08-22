@@ -458,7 +458,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   protected addDragEndAction() {
     setTimeout(() => {
       if (this.isMoveTrackItem) {
-        this.moveTrackItemAction?.end()
+        this.moveTrackItemAction?.end(this.dragTrackItem)
       } else {
         new AddTrackItemAction(this.dragTrackItem.toData())
       }
