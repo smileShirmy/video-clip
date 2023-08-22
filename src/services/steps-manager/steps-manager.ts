@@ -1,5 +1,6 @@
 import { shallowReactive, type ShallowReactive, type ComputedRef, computed, ref } from 'vue'
 import type { Action } from './action'
+import { MAX_STEP } from '@/config'
 
 /**
  * 撤销/重做
@@ -21,6 +22,9 @@ class StepsManager {
 
   addAction(step: Action) {
     this.stackN.length = 0
+    if (this.stackM.length >= MAX_STEP) {
+      this.stackM.shift()
+    }
     this.stackM.push(step)
   }
 

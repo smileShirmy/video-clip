@@ -67,3 +67,8 @@ export const TEXT_LINE_HEIGHT_RATIO = 0.04
  * 默认文本内容
  */
 export const DEFAULT_TEXT = '默认文本'
+
+/**
+ * 最大前进回退次数
+ */
+export const MAX_STEP = 50
