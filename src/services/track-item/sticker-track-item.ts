@@ -66,11 +66,13 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
     }
   }
 
-  split(splitFrame: number) {
+  split(splitFrame: number): [StickerTrackItem, StickerTrackItem] {
     const newItem = StickerTrackItem.create(Object.assign({}, this.resource), this.attribute)
     this.parentTrack?.addTrackItemWithNoEffect(newItem)
 
-    return this.baseSplit(newItem, splitFrame)
+    this.baseSplit(newItem, splitFrame)
+
+    return [this, newItem]
   }
 
   toData(): StickerTrackItemData {

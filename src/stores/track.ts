@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useTimelineStore } from './timeline'
 import { watchThrottled } from '@vueuse/core'
 import { trackList } from '@/services/track-list/track-list'
 import { ADAPTIVE_RATIO, INIT_MAX_FRAME_COUNT } from '@/config'
 import { usePlayerStore } from './player'
+import { SplitTrackItemAction } from '@/services/steps-manager/split-track-item-action'
 
 export type TrackStore = Omit<
   ReturnType<typeof useTrackStore>,
@@ -164,7 +165,13 @@ export const useTrackStore = defineStore('track', () => {
 
   function split() {
     if (splitTrackItem.value) {
-      splitTrackItem.value.split(playerStore.currentFrame)
+      const splitTrackItemAction = new SplitTrackItemAction(splitTrackItem.value.toData())
+
+      const [before, newItem] = splitTrackItem.value.split(playerStore.currentFrame)
+
+      nextTick(() => {
+        splitTrackItemAction.end(before.toData(), newItem.toData())
+      })
     }
   }
 

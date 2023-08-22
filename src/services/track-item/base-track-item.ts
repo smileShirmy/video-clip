@@ -60,7 +60,7 @@ export abstract class BaseTrackItem<
     this.playerStore = usePlayerStore()
   }
 
-  abstract split(splitFrame: number): T
+  abstract split(splitFrame: number): [T, T]
 
   abstract toData(): TrackItemData
 
@@ -139,8 +139,8 @@ export abstract class BaseTrackItem<
     return {
       id: this.id,
       minFrame: this.minFrame,
-      startFrame: this.startFrame,
-      endFrame: this.endFrame,
+      startFrame: this._startFrame.value,
+      endFrame: this._endFrame.value,
       parentTrackId: this.parentTrack?.id
     }
   }

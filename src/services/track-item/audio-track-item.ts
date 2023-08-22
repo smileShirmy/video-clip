@@ -22,11 +22,13 @@ export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem,
     super(resource, base)
   }
 
-  split(splitFrame: number) {
+  split(splitFrame: number): [AudioTrackItem, AudioTrackItem] {
     const newItem = AudioTrackItem.create(Object.assign({}, this.resource))
     this.parentTrack?.addTrackItemWithNoEffect(newItem)
 
-    return this.baseSplit(newItem, splitFrame)
+    this.baseSplit(newItem, splitFrame)
+
+    return [this, newItem]
   }
 
   toData(): AudioTrackItemData {

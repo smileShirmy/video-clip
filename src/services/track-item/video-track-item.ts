@@ -71,11 +71,13 @@ export class VideoTrackItem extends BaseTrackItem<
     }
   }
 
-  split(splitFrame: number) {
+  split(splitFrame: number): [VideoTrackItem, VideoTrackItem] {
     const newItem = VideoTrackItem.create(Object.assign({}, this.resource), this.attribute)
     this.parentTrack?.addTrackItemWithNoEffect(newItem)
 
-    return this.baseSplit(newItem, splitFrame)
+    this.baseSplit(newItem, splitFrame)
+
+    return [this, newItem]
   }
 
   toData(): VideoTrackItemData {

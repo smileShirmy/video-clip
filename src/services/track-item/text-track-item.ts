@@ -95,11 +95,13 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     }
   }
 
-  split(splitFrame: number) {
+  split(splitFrame: number): [TextTrackItem, TextTrackItem] {
     const newItem = TextTrackItem.create(Object.assign({}, this.resource), this.attribute)
     this.parentTrack?.addTrackItemWithNoEffect(newItem)
 
-    return this.baseSplit(newItem, splitFrame)
+    this.baseSplit(newItem, splitFrame)
+
+    return [this, newItem]
   }
 
   toData(): TextTrackItemData {
