@@ -57,7 +57,6 @@ export class MoveTrackItemAction extends Action {
     const trackItem = trackList.getTrackItem(val.id)
 
     if (!trackItem) {
-      console.log('找不到？')
       return
     }
 

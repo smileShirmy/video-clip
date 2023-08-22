@@ -10,6 +10,7 @@ import { isString } from '@/services/helpers/general'
 import { draggable } from '@/services/draggable/draggable'
 import type { TrackItem } from '@/services/track-item'
 import { TrackItemName } from '@/types'
+import { ResizeTrackItemAction } from '@/services/steps-manager/resize-track-item.action'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
@@ -23,6 +24,8 @@ const props = withDefaults(
     loading: false
   }
 )
+
+let resizeTrackItemAction: ResizeTrackItemAction | null = null
 
 const HANDLER_WIDTH = 10
 
@@ -71,6 +74,8 @@ const dragSliderEnd = () => {
   if (trackStore.enablePreviewLine) {
     trackStore.showPreviewLine = true
   }
+
+  resizeTrackItemAction?.end(props.data)
 }
 
 const leftSlider = new Slider({
@@ -95,6 +100,10 @@ const rightSlider = new Slider({
   dragend: dragSliderEnd
 })
 
+function setStartResizeTrackItemAction() {
+  resizeTrackItemAction = new ResizeTrackItemAction(props.data)
+}
+
 function getMinWidthFrame() {
   const minFrameCount = timelineStore.pixelToFrame(HANDLER_WIDTH)
   const frameCount = props.data.endFrame - props.data.startFrame
@@ -115,6 +124,8 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
     sliderSize: timelineStore.timelineWidth,
     value: props.data.startFrame
   })
+
+  setStartResizeTrackItemAction()
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
@@ -131,6 +142,8 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
     sliderSize: timelineStore.timelineWidth,
     value: props.data.endFrame
   })
+
+  setStartResizeTrackItemAction()
 }
 
 function onDragStart(e: PointerEvent) {
