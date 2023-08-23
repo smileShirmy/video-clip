@@ -29,7 +29,7 @@ const props = defineProps({
 
 const emit = defineEmits({
   ['update:modelValue']: (val) => isNumber(val),
-  change: (val) => isNumber(val)
+  change: (val: number, oldVal: number) => isNumber(val) && isNumber(oldVal) && val !== oldVal
 })
 
 const slider = ref<HTMLDivElement>()
@@ -40,6 +40,7 @@ let currentX = 0
 let sliderSize = 1
 let dragging = false
 let isClick = false
+let startValue = 0
 
 const currentPosition = computed(() => {
   return `${((props.modelValue - props.min) / (props.max - props.min)) * 100}%`
@@ -53,9 +54,9 @@ const barStyle: ComputedRef<CSSProperties> = computed(() => ({
   width: currentPosition.value
 }))
 
-const emitChange = async () => {
+const emitChange = async (oldVal: number) => {
   await nextTick()
-  emit('change', props.modelValue)
+  emit('change', props.modelValue, oldVal)
 }
 
 function resetSize() {
@@ -78,6 +79,7 @@ function onDragStart(event: MouseEvent | TouchEvent) {
   startX = clientX
   startPosition = parseFloat(currentPosition.value)
   newPosition = startPosition
+  startValue = props.modelValue
 }
 
 function onDragging(event: MouseEvent | TouchEvent) {
@@ -103,7 +105,7 @@ function onDragEnd() {
     if (!isClick) {
       setPosition(newPosition)
     }
-    emitChange()
+    emitChange(startValue)
   }, 0)
   window.removeEventListener('mousemove', onDragging)
   window.removeEventListener('touchmove', onDragging)
@@ -143,10 +145,11 @@ function onButtonDown(event: MouseEvent | TouchEvent) {
 function onSliderClick(event: MouseEvent) {
   if (props.disabled || !slider.value || dragging) return
 
+  const oldVal = props.modelValue
   resetSize()
   const sliderOffsetLeft = slider.value.getBoundingClientRect().left
   setPosition(((event.clientX - sliderOffsetLeft) / sliderSize) * 100)
-  emitChange()
+  emitChange(oldVal)
 }
 </script>
 

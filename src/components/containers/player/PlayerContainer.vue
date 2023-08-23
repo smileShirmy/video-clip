@@ -13,12 +13,9 @@ import PlayerControls from './components/player-controls/PlayerControls.vue'
 import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
 import { trackList } from '@/services/track-list/track-list'
 import { storeToRefs } from 'pinia'
-import { useTrackStore } from '@/stores/track'
-import { isPlayerTrackItem } from '@/services/track-item/helper'
 import type { PlayerTrackItem } from '@/services/track-item'
 
 const playerStore = usePlayerStore()
-const trackStore = useTrackStore()
 
 const playerContainer = ref<HTMLElement>()
 const sceneContentRef = ref<HTMLDivElement | null>(null)
@@ -156,12 +153,11 @@ watchThrottled(
 )
 
 // 使用 deep: true 会不会监听太多属性了？
-const { selectedTrackItem } = storeToRefs(trackStore)
 watchThrottled(
-  selectedTrackItem,
-  (trackItem) => {
-    if (trackItem && isPlayerTrackItem(trackItem)) {
-      playerCanvasRef.value?.renderForAttributeChange()
+  playerStore.playerItems,
+  () => {
+    playerCanvasRef.value?.renderForAttributeChange()
+    if (playerStore.playerSelectedItem) {
       moveableControlRef.value?.updateMoveableControl()
     }
   },

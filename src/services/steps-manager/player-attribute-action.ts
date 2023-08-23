@@ -23,6 +23,8 @@ export class PlayerAttributeChangeAction extends Action {
   }
 
   public end(value: number) {
+    if (value === this.startVal) return
+
     this.endVal = value
     stepsManager.addAction(this)
   }

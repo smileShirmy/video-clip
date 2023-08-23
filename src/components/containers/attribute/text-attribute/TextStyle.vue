@@ -17,27 +17,28 @@ defineOptions({
 const playerStore = usePlayerStore()
 
 const trackStore = useTrackStore()
-const trackItem: TextTrackItem = trackStore.selectedTrackItem as TextTrackItem
+
+const trackItem = computed(() => trackStore.selectedTrackItem as TextTrackItem)
 
 const scale = computed({
   get() {
-    return trackItem.attribute.scale * 100
+    return trackItem.value.attribute.scale * 100
   },
   set(scale) {
-    trackItem.attribute.scale = scale / 100
+    trackItem.value.attribute.scale = scale / 100
   }
 })
 
 function onScaleChange(newVal: number, oldVal: number) {
-  PlayerAttributeChangeAction.create(trackItem.id, 'scale', oldVal / 100).end(newVal / 100)
+  PlayerAttributeChangeAction.create(trackItem.value.id, 'scale', oldVal / 100).end(newVal / 100)
 }
 
-const text = computed(() => trackItem.text)
+const text = computed(() => trackItem.value.text)
 
 const onTextInput = useThrottleFn(
   (event: Event) => {
     const { value } = event.target as HTMLTextAreaElement
-    trackItem.text.value = value === '' ? DEFAULT_TEXT : value
+    trackItem.value.text.value = value === '' ? DEFAULT_TEXT : value
 
     updateTextAttribute(value)
   },
@@ -55,7 +56,7 @@ function updateTextAttribute(text: string) {
   const { sceneHeight, sceneWidth } = playerStore
   const fontSize = TEXT_LINE_HEIGHT_RATIO * playerStore.sceneHeight
 
-  const { letterSpacingRatio, lineSpacingRatio } = trackItem.textAttribute
+  const { letterSpacingRatio, lineSpacingRatio } = trackItem.value.textAttribute
   const letterSpacing = letterSpacingRatio * sceneWidth
   const lineSpacing = lineSpacingRatio * sceneHeight
 
@@ -67,7 +68,7 @@ function updateTextAttribute(text: string) {
     topRatio: beforeTopRatio,
     heightRatio: beforeHeightRatio,
     widthRatio: beforeWidthRatio
-  } = trackItem.attribute
+  } = trackItem.value.attribute
 
   const beforeCenterXRatio = beforeLeftRatio + beforeWidthRatio / 2
   const beforeCenterYRatio = beforeTopRatio + beforeHeightRatio / 2
@@ -77,8 +78,8 @@ function updateTextAttribute(text: string) {
   const widthRatio = (width - letterSpacing) / sceneWidth
   const heightRatio = (height + lineSpacing * (lineCount - 1)) / sceneHeight
 
-  trackItem.attribute.widthRatio = widthRatio
-  trackItem.attribute.heightRatio = heightRatio
+  trackItem.value.attribute.widthRatio = widthRatio
+  trackItem.value.attribute.heightRatio = heightRatio
 
   const newCenterXRatio = beforeLeftRatio + widthRatio / 2
   const newCenterYRatio = beforeTopRatio + heightRatio / 2
@@ -87,65 +88,65 @@ function updateTextAttribute(text: string) {
   const yDiff = beforeCenterYRatio - newCenterYRatio
 
   // 根据中心点来缩放，因此需要调整位置
-  trackItem.attribute.leftRatio = beforeLeftRatio + xDiff
-  trackItem.attribute.topRatio = beforeTopRatio + yDiff
+  trackItem.value.attribute.leftRatio = beforeLeftRatio + xDiff
+  trackItem.value.attribute.topRatio = beforeTopRatio + yDiff
 }
 
 const opacity = computed({
   get() {
-    return trackItem.attribute.opacity * 100
+    return trackItem.value.attribute.opacity * 100
   },
   set(opacity) {
-    trackItem.attribute.opacity = opacity / 100
+    trackItem.value.attribute.opacity = opacity / 100
   }
 })
 
 const rotate = computed({
   get() {
-    return trackItem.attribute.rotate
+    return trackItem.value.attribute.rotate
   },
   set(rotate) {
-    trackItem.attribute.rotate = rotate
+    trackItem.value.attribute.rotate = rotate
   }
 })
 
 const translateX = computed({
   get() {
-    return trackItem.attribute.leftRatio * 100
+    return trackItem.value.attribute.leftRatio * 100
   },
   set(x) {
-    trackItem.attribute.leftRatio = x / 100
+    trackItem.value.attribute.leftRatio = x / 100
   }
 })
 
 const translateY = computed({
   get() {
-    return trackItem.attribute.topRatio * 100
+    return trackItem.value.attribute.topRatio * 100
   },
   set(y) {
-    trackItem.attribute.topRatio = y / 100
+    trackItem.value.attribute.topRatio = y / 100
   }
 })
 
 const letterSpacing = computed({
   get() {
-    return trackItem.textAttribute.letterSpacingRatio * 500
+    return trackItem.value.textAttribute.letterSpacingRatio * 500
   },
   set(letterSpacing) {
-    trackItem.textAttribute.letterSpacingRatio = letterSpacing / 500
+    trackItem.value.textAttribute.letterSpacingRatio = letterSpacing / 500
 
-    updateTextAttribute(trackItem.text.value)
+    updateTextAttribute(trackItem.value.text.value)
   }
 })
 
 const lineSpacing = computed({
   get() {
-    return trackItem.textAttribute.lineSpacingRatio * 500
+    return trackItem.value.textAttribute.lineSpacingRatio * 500
   },
   set(lineSpacing) {
-    trackItem.textAttribute.lineSpacingRatio = lineSpacing / 500
+    trackItem.value.textAttribute.lineSpacingRatio = lineSpacing / 500
 
-    updateTextAttribute(trackItem.text.value)
+    updateTextAttribute(trackItem.value.text.value)
   }
 })
 </script>
@@ -160,7 +161,7 @@ const lineSpacing = computed({
   <h5 class="s-attribute-title">基础样式</h5>
 
   <AttributeItem label="缩放">
-    <AttributeSlider :max="500" v-model="scale" />
+    <AttributeSlider :max="500" v-model="scale" @change="onScaleChange" />
     <template #other>
       <InputNumber :max="500" v-model="scale" unit="%" @change="onScaleChange" />
     </template>
