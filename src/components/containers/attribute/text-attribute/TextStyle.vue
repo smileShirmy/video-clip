@@ -35,16 +35,23 @@ function onScaleChange(newVal: number, oldVal: number) {
 
 const text = computed(() => trackItem.value.text)
 
-const onTextInput = useThrottleFn(
-  (event: Event) => {
-    const { value } = event.target as HTMLTextAreaElement
-    trackItem.value.text.value = value === '' ? DEFAULT_TEXT : value
+let isStartInputText = false
 
-    updateTextAttribute(value)
-  },
-  20,
-  true
-)
+const onTextInput = useThrottleFn((event: Event) => {
+  let { value } = event.target as HTMLTextAreaElement
+  value = value === '' ? DEFAULT_TEXT : value
+  trackItem.value.text.value = value
+
+  updateTextAttribute(value)
+
+  if (isStartInputText === false) {
+    isStartInputText = true
+  }
+}, 20)
+
+function onTextBlur() {
+  isStartInputText = false
+}
 
 const textAttributeRef = ref<HTMLDivElement | null>(null)
 
@@ -154,7 +161,13 @@ const lineSpacing = computed({
 <template>
   <div ref="textAttributeRef" class="text-attribute"></div>
 
-  <textarea class="textarea-input" rows="3" :value="text.value" @input="onTextInput"></textarea>
+  <textarea
+    class="textarea-input"
+    rows="3"
+    :value="text.value"
+    @input="onTextInput"
+    @blur="onTextBlur"
+  ></textarea>
 
   <div class="s-split-line"></div>
 
