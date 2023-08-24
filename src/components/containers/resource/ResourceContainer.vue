@@ -127,6 +127,7 @@ defineExpose({
   justify-content: flex-start;
   width: 25%;
   height: 100%;
+  user-select: none;
 
   .menu-list {
     flex-shrink: 0;

@@ -153,6 +153,7 @@ watchThrottled(
 )
 
 // 使用 deep: true 会不会监听太多属性了？
+// TODO: 这个需要进一步优化
 watchThrottled(
   playerStore.playerItems,
   () => {

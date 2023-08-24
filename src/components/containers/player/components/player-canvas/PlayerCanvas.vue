@@ -8,6 +8,7 @@ import { TrackItemName } from '@/types'
 import type { PlayerTrackItem } from '@/services/track-item'
 import type { TextTrackItem } from '@/services/track-item/text-track-item'
 import { TEXT_LINE_HEIGHT_RATIO } from '@/config'
+import { trackList } from '@/services/track-list/track-list'
 
 let ctx: CanvasRenderingContext2D | null = null
 let canvasWidth = 0
@@ -24,7 +25,7 @@ enum RenderType {
 
 interface ImageRenderData {
   type: RenderType.Image
-  playerItem: PlayerTrackItem
+  playerItemId: string
   imageBitmap: ImageBitmap
   sx: number
   sy: number
@@ -38,7 +39,7 @@ interface ImageRenderData {
 
 interface TextRenderData {
   type: RenderType.Text
-  playerItem: TextTrackItem
+  playerItemId: string
   w: number
   h: number
   centerX: number
@@ -70,7 +71,7 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
 
         resolve({
           type: RenderType.Text,
-          playerItem,
+          playerItemId: playerItem.id,
           w: dw,
           h: dh,
           centerX: dx + dw / 2,
@@ -95,7 +96,7 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dy,
             dw,
             dh,
-            playerItem
+            playerItemId: playerItem.id
           }
 
           resolve(data)
@@ -118,7 +119,7 @@ function getRenderData(currentFrame: number): Promise<RenderData>[] {
             dy,
             dw,
             dh,
-            playerItem
+            playerItemId: playerItem.id
           }
 
           resolve(data)
@@ -141,9 +142,13 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
   for (let i = 0; i < currentRenderData.length; i += 1) {
     const data = currentRenderData[i]
-    const { rotate, opacity } = data.playerItem.attribute
 
     if (data.type === RenderType.Image) {
+      const trackItem = trackList.getTrackItem(data.playerItemId) as PlayerTrackItem
+      if (!trackItem) continue
+
+      const { rotate, opacity } = trackItem.attribute
+
       const { imageBitmap, sx, sy, sw, sh, dx, dy, dw, dh } = data
       // 图片中心点位置
       const x = dx + dw / 2
@@ -159,15 +164,19 @@ async function render(currentFrame: number, renderData?: RenderData[]) {
       ctx.rotate(-radian)
       ctx.restore()
     } else if (data.type === RenderType.Text) {
+      const trackItem = trackList.getTrackItem(data.playerItemId) as TextTrackItem
+      if (!trackItem) continue
+
+      const { rotate, opacity } = trackItem.attribute
+
       // The x-axis coordinate of the point at which to begin drawing the text, in pixels.
       // The y-axis coordinate of the baseline on which to begin drawing the text, in pixels.
       const { w, h, centerX, centerY } = data
-      const text = data.playerItem.text.value
-      const scale = data.playerItem.attribute.scale
+      const text = trackItem.text.value
+      const scale = trackItem.attribute.scale
       const letterSpacing =
-        playerStore.sceneWidth * data.playerItem.textAttribute.letterSpacingRatio * scale
-      const lineSpacing =
-        playerStore.sceneHeight * data.playerItem.textAttribute.lineSpacingRatio * scale
+        playerStore.sceneWidth * trackItem.textAttribute.letterSpacingRatio * scale
+      const lineSpacing = playerStore.sceneHeight * trackItem.textAttribute.lineSpacingRatio * scale
 
       const x = -w / 2
       const y = -h / 2 + h
@@ -236,7 +245,10 @@ function renderForAttributeChange() {
   // 直接使用现成的数据，因此需要根据当前情况更新渲染数据
   if (currentRenderData) {
     const transformData = currentRenderData.map((v) => {
-      const { dx, dy, dw, dh } = getDestinationPosition(v.playerItem)
+      const trackItem = trackList.getTrackItem(v.playerItemId) as PlayerTrackItem
+      if (!trackItem) return v
+
+      const { dx, dy, dw, dh } = getDestinationPosition(trackItem)
 
       if (v.type === RenderType.Image) {
         return {

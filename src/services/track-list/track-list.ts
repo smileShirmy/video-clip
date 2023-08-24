@@ -149,7 +149,10 @@ class TrackList {
   getTrackItem(trackItem: TrackItem | string) {
     for (let i = 0; i < this.list.length; i += 1) {
       const track = this.list[i]
-      return track.getTrackItem(trackItem)
+      const exist = track.getTrackItem(trackItem)
+      if (exist) {
+        return exist
+      }
     }
     return null
   }
