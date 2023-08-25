@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { DEFAULT_TEXT, TEXT_LINE_HEIGHT_RATIO } from '@/config'
 import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
+import { InputTextAction } from '@/services/steps-manager/input-text-action'
 
 defineOptions({
   name: 'TextStyle'
@@ -35,22 +36,42 @@ function onScaleChange(newVal: number, oldVal: number) {
 
 const text = computed(() => trackItem.value.text)
 
-let isStartInputText = false
-
 const onTextInput = useThrottleFn((event: Event) => {
   let { value } = event.target as HTMLTextAreaElement
   value = value === '' ? DEFAULT_TEXT : value
   trackItem.value.text.value = value
 
   updateTextAttribute(value)
-
-  if (isStartInputText === false) {
-    isStartInputText = true
-  }
 }, 20)
 
+let inputTextAction: InputTextAction
+
+function onTextFocus() {
+  const { text, attribute } = trackItem.value
+  inputTextAction = new InputTextAction(trackItem.value.id, {
+    text: text.value,
+    attribute: {
+      topRatio: attribute.topRatio,
+      leftRatio: attribute.leftRatio,
+      widthRatio: attribute.widthRatio,
+      heightRatio: attribute.heightRatio
+    }
+  })
+}
+
 function onTextBlur() {
-  isStartInputText = false
+  if (inputTextAction) {
+    const { text, attribute } = trackItem.value
+    inputTextAction.end({
+      text: text.value,
+      attribute: {
+        topRatio: attribute.topRatio,
+        leftRatio: attribute.leftRatio,
+        widthRatio: attribute.widthRatio,
+        heightRatio: attribute.heightRatio
+      }
+    })
+  }
 }
 
 const textAttributeRef = ref<HTMLDivElement | null>(null)
@@ -166,6 +187,7 @@ const lineSpacing = computed({
     rows="3"
     :value="text.value"
     @input="onTextInput"
+    @focus="onTextFocus"
     @blur="onTextBlur"
   ></textarea>
 
