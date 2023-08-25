@@ -8,8 +8,10 @@ import type { TextTrackItem } from '@/services/track-item/text-track-item'
 import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { DEFAULT_TEXT, TEXT_LINE_HEIGHT_RATIO } from '@/config'
-import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
 import { InputTextAction } from '@/services/steps-manager/input-text-action'
+import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
+import { TextAttributeAction } from '@/services/steps-manager/text-attribute-action'
+import { nextTick } from 'vue'
 
 defineOptions({
   name: 'TextStyle'
@@ -31,7 +33,7 @@ const scale = computed({
 })
 
 function onScaleChange(newVal: number, oldVal: number) {
-  PlayerAttributeChangeAction.create(trackItem.value.id, 'scale', oldVal / 100).end(newVal / 100)
+  new PlayerAttributeChangeAction(trackItem.value.id, 'scale', oldVal / 100).end(newVal / 100)
 }
 
 const text = computed(() => trackItem.value.text)
@@ -129,6 +131,10 @@ const opacity = computed({
   }
 })
 
+function onOpacityChange(newVal: number, oldVal: number) {
+  new PlayerAttributeChangeAction(trackItem.value.id, 'opacity', oldVal / 100).end(newVal / 100)
+}
+
 const rotate = computed({
   get() {
     return trackItem.value.attribute.rotate
@@ -137,6 +143,10 @@ const rotate = computed({
     trackItem.value.attribute.rotate = rotate
   }
 })
+
+function onRotateChange(newVal: number, oldVal: number) {
+  new PlayerAttributeChangeAction(trackItem.value.id, 'rotate', oldVal).end(newVal)
+}
 
 const translateX = computed({
   get() {
@@ -147,6 +157,10 @@ const translateX = computed({
   }
 })
 
+function onTranslateXChange(newVal: number, oldVal: number) {
+  new PlayerAttributeChangeAction(trackItem.value.id, 'leftRatio', oldVal / 100).end(newVal / 100)
+}
+
 const translateY = computed({
   get() {
     return trackItem.value.attribute.topRatio * 100
@@ -156,14 +170,44 @@ const translateY = computed({
   }
 })
 
+function onTranslateYChange(newVal: number, oldVal: number) {
+  new PlayerAttributeChangeAction(trackItem.value.id, 'topRatio', oldVal / 100).end(newVal / 100)
+}
+
 const letterSpacing = computed({
   get() {
     return trackItem.value.textAttribute.letterSpacingRatio * 500
   },
-  set(letterSpacing) {
-    trackItem.value.textAttribute.letterSpacingRatio = letterSpacing / 500
+  set(val) {
+    const { attribute } = trackItem.value
+    const action = new TextAttributeAction(trackItem.value.id, 'letterSpacingRatio', {
+      value: letterSpacing.value,
+      attribute: {
+        topRatio: attribute.topRatio,
+        leftRatio: attribute.leftRatio,
+        widthRatio: attribute.widthRatio,
+        heightRatio: attribute.heightRatio
+      }
+    })
+
+    const value = val / 500
+    trackItem.value.textAttribute.letterSpacingRatio = value
 
     updateTextAttribute(trackItem.value.text.value)
+
+    nextTick(() => {
+      const { attribute } = trackItem.value
+
+      action.end({
+        value,
+        attribute: {
+          topRatio: attribute.topRatio,
+          leftRatio: attribute.leftRatio,
+          widthRatio: attribute.widthRatio,
+          heightRatio: attribute.heightRatio
+        }
+      })
+    })
   }
 })
 
@@ -172,9 +216,35 @@ const lineSpacing = computed({
     return trackItem.value.textAttribute.lineSpacingRatio * 500
   },
   set(lineSpacing) {
-    trackItem.value.textAttribute.lineSpacingRatio = lineSpacing / 500
+    const { attribute } = trackItem.value
+    const action = new TextAttributeAction(trackItem.value.id, 'lineSpacingRatio', {
+      value: letterSpacing.value,
+      attribute: {
+        topRatio: attribute.topRatio,
+        leftRatio: attribute.leftRatio,
+        widthRatio: attribute.widthRatio,
+        heightRatio: attribute.heightRatio
+      }
+    })
+
+    const value = lineSpacing / 500
+    trackItem.value.textAttribute.lineSpacingRatio = value
 
     updateTextAttribute(trackItem.value.text.value)
+
+    nextTick(() => {
+      const { attribute } = trackItem.value
+
+      action.end({
+        value,
+        attribute: {
+          topRatio: attribute.topRatio,
+          leftRatio: attribute.leftRatio,
+          widthRatio: attribute.widthRatio,
+          heightRatio: attribute.heightRatio
+        }
+      })
+    })
   }
 })
 </script>
@@ -202,9 +272,9 @@ const lineSpacing = computed({
     </template>
   </AttributeItem>
   <AttributeItem label="不透明度">
-    <AttributeSlider v-model="opacity" />
+    <AttributeSlider v-model="opacity" @change="onOpacityChange" />
     <template #other>
-      <InputNumber v-model="opacity" unit="%" />
+      <InputNumber v-model="opacity" unit="%" @change="onOpacityChange" />
     </template>
   </AttributeItem>
 
@@ -214,19 +284,29 @@ const lineSpacing = computed({
 
   <AttributeItem label="坐标">
     <div class="s-coordinate">
-      <InputNumber :min="-Infinity" :max="Infinity" v-model="translateX">
+      <InputNumber
+        :min="-Infinity"
+        :max="Infinity"
+        v-model="translateX"
+        @change="onTranslateXChange"
+      >
         <template #prefix>X</template>
       </InputNumber>
       <span class="s-attribute-item-line"></span>
-      <InputNumber :min="-Infinity" :max="Infinity" v-model="translateY">
+      <InputNumber
+        :min="-Infinity"
+        :max="Infinity"
+        v-model="translateY"
+        @change="onTranslateYChange"
+      >
         <template #prefix>Y</template>
       </InputNumber>
     </div>
   </AttributeItem>
   <AttributeItem label="旋转">
-    <AttributeSlider :max="360" v-model="rotate" />
+    <AttributeSlider :max="360" v-model="rotate" @change="onRotateChange" />
     <template #other>
-      <InputNumber :max="360" v-model="rotate" unit="°" />
+      <InputNumber :max="360" v-model="rotate" unit="°" @change="onRotateChange" />
     </template>
   </AttributeItem>
   <AttributeItem label="字间距">

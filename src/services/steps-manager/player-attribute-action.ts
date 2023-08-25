@@ -1,9 +1,9 @@
 import type { PlayerAttribute } from '@/types'
 import { stepsManager } from './steps-manager'
-import { warn } from '../helpers/warn'
 import { Action } from './action'
 import { trackList } from '../track-list/track-list'
-import { isPlayerTrackItem } from '../track-item/helper'
+import { isNumber } from '../helpers/general'
+import type { PlayerTrackItem } from '../track-item'
 
 export class PlayerAttributeChangeAction extends Action {
   private trackItemId: string
@@ -18,10 +18,6 @@ export class PlayerAttributeChangeAction extends Action {
     this.key = key
   }
 
-  static create(trackItemId: string, key: keyof PlayerAttribute, startVal: number) {
-    return new PlayerAttributeChangeAction(trackItemId, key, startVal)
-  }
-
   public end(value: number) {
     if (value === this.startVal) return
 
@@ -29,21 +25,18 @@ export class PlayerAttributeChangeAction extends Action {
     stepsManager.addAction(this)
   }
 
-  redo() {
-    if (!this.endVal) {
-      warn('请检查是否没有设置结束值？')
-      return
-    }
-    const trackItem = trackList.getTrackItem(this.trackItemId)
-    if (trackItem && isPlayerTrackItem(trackItem)) {
-      trackItem.attribute[this.key] = this.endVal
-    }
+  setData(val: number) {
+    const trackItem = trackList.getTrackItem(this.trackItemId) as PlayerTrackItem
+    trackItem.attribute[this.key] = val
   }
 
   undo() {
-    const trackItem = trackList.getTrackItem(this.trackItemId)
-    if (trackItem && isPlayerTrackItem(trackItem)) {
-      trackItem.attribute[this.key] = this.startVal
+    this.setData(this.startVal)
+  }
+
+  redo() {
+    if (isNumber(this.endVal)) {
+      this.setData(this.endVal)
     }
   }
 }
