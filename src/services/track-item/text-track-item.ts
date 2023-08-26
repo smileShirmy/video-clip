@@ -8,10 +8,11 @@ import {
   type BaseTrackItemData
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
-import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
+import { ref, shallowReactive, type ComputedRef, type ShallowReactive, computed, watch } from 'vue'
 import type { VideoTrack } from '../track/video-track'
 import { DEFAULT_TEXT } from '@/config'
 import { deepClone, isNumber, isString } from '../helpers/general'
+import { Events, emitter } from '../mitt/emitter'
 
 export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_TEXT
@@ -93,6 +94,16 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     if (isString(text)) {
       this.text.value = text
     }
+
+    watch(
+      [this.attribute, this.text, this.textAttribute],
+      () => {
+        emitter.emit(Events.UPDATE_PLAYER)
+      },
+      {
+        flush: 'post'
+      }
+    )
   }
 
   split(splitFrame: number): [TextTrackItem, TextTrackItem] {

@@ -9,8 +9,9 @@ import {
 import { BaseTrackItem } from './base-track-item'
 import type { MainTrack } from '../track/main-track'
 import type { VideoTrack } from '../track/video-track'
-import { computed, shallowReactive, type ComputedRef, type ShallowReactive } from 'vue'
+import { computed, shallowReactive, type ComputedRef, type ShallowReactive, watch } from 'vue'
 import { deepClone, isNumber } from '../helpers/general'
+import { Events, emitter } from '../mitt/emitter'
 
 export class VideoTrackItem extends BaseTrackItem<
   VideoResource,
@@ -69,6 +70,16 @@ export class VideoTrackItem extends BaseTrackItem<
       width: computed(() => this.playerStore.sceneWidth * this.attribute.widthRatio),
       height: computed(() => this.playerStore.sceneHeight * this.attribute.heightRatio)
     }
+
+    watch(
+      [this.attribute],
+      () => {
+        emitter.emit(Events.UPDATE_PLAYER)
+      },
+      {
+        flush: 'post'
+      }
+    )
   }
 
   split(splitFrame: number): [VideoTrackItem, VideoTrackItem] {

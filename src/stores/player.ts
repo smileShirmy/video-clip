@@ -1,4 +1,5 @@
 import { FPS } from '@/config'
+import { Events, emitter } from '@/services/mitt/emitter'
 import type { PlayerTrackItem } from '@/services/track-item'
 import { trackList } from '@/services/track-list/track-list'
 import { defineStore } from 'pinia'
@@ -33,14 +34,15 @@ export const usePlayerStore = defineStore('player', () => {
 
   let timer: number
 
-  watch(
-    [currentFrame],
-    () => {
-      const items = trackList.getCurrentFramePlayItems(currentFrame.value)
-      playerItems.splice(0, playerItems.length, ...items)
-    },
-    { immediate: true }
-  )
+  function updatePlayerItems() {
+    const items = trackList.getCurrentFramePlayItems(currentFrame.value)
+    playerItems.splice(0, playerItems.length, ...items)
+    emitter.emit(Events.UPDATE_PLAYER)
+  }
+
+  emitter.on(Events.UPDATE_PLAYER_ITEMS, updatePlayerItems)
+
+  watch([currentFrame], updatePlayerItems, { immediate: true })
 
   function pause() {
     playing.value = false

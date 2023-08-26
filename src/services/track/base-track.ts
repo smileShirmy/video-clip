@@ -1,10 +1,11 @@
-import { shallowReactive, warn } from 'vue'
+import { shallowReactive, warn, watch } from 'vue'
 import { isArray, isString, uuid } from '../helpers/general'
 import { trackList, type TrackListType } from '../track-list/track-list'
 import { useTrackStore } from '@/stores/track'
 import type { TrackItem } from '../track-item'
 import { TrackItemName, type BaseTrackData } from '@/types'
 import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
+import { Events, emitter } from '../mitt/emitter'
 
 export enum TrackType {
   MAIN = 'main',
@@ -36,6 +37,16 @@ export abstract class BaseTrack<T extends TrackItem> {
   constructor(options: Partial<BaseTrackData> = {}) {
     const { id = uuid() } = options
     this.id = id
+
+    watch(
+      this._trackItemList,
+      () => {
+        emitter.emit(Events.UPDATE_PLAYER_ITEMS)
+      },
+      {
+        immediate: true
+      }
+    )
   }
 
   abstract bindParentTrack(): void

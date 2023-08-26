@@ -8,8 +8,9 @@ import {
 } from '@/types'
 import { BaseTrackItem } from './base-track-item'
 import type { VideoTrack } from '../track/video-track'
-import { shallowReactive, type ComputedRef, type ShallowReactive, computed } from 'vue'
+import { shallowReactive, type ComputedRef, type ShallowReactive, computed, watch } from 'vue'
 import { deepClone, isNumber } from '../helpers/general'
+import { Events, emitter } from '../mitt/emitter'
 
 export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrackItem, VideoTrack> {
   readonly component = TrackItemName.TRACK_ITEM_STICKER
@@ -64,6 +65,16 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
       width: computed(() => this.playerStore.sceneWidth * this.attribute.widthRatio),
       height: computed(() => this.playerStore.sceneHeight * this.attribute.heightRatio)
     }
+
+    watch(
+      [this.attribute],
+      () => {
+        emitter.emit(Events.UPDATE_PLAYER)
+      },
+      {
+        flush: 'post'
+      }
+    )
   }
 
   split(splitFrame: number): [StickerTrackItem, StickerTrackItem] {

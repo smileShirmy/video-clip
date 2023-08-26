@@ -6,7 +6,7 @@ import { vOnClickOutside } from '@/services/directives/click-outside'
 import { isString } from '@/services/helpers/general'
 import { watch } from 'vue'
 import { onMounted } from 'vue'
-import { useResizeObserver, watchThrottled } from '@vueuse/core'
+import { useResizeObserver, useThrottleFn, watchThrottled } from '@vueuse/core'
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import PlayerControls from './components/player-controls/PlayerControls.vue'
@@ -14,6 +14,9 @@ import PlayerCanvas from './components/player-canvas/PlayerCanvas.vue'
 import { trackList } from '@/services/track-list/track-list'
 import { storeToRefs } from 'pinia'
 import type { PlayerTrackItem } from '@/services/track-item'
+import { emitter } from '@/services/mitt/emitter'
+import { Events } from '@/services/mitt/emitter'
+import { nextTick } from 'vue'
 
 const playerStore = usePlayerStore()
 
@@ -33,6 +36,7 @@ const sceneContentStyle: ComputedRef<CSSProperties> = computed(() => ({
   height: `${playerStore.sceneHeight}px`
 }))
 
+// 当选中了轨道中的某个资源，播放区域的选中也要回显
 watch(trackList.selectedId, (selectedId: string) => {
   if (!moveableControlRef.value || !(sceneContentRef.value instanceof HTMLElement)) return
 
@@ -46,6 +50,7 @@ watch(trackList.selectedId, (selectedId: string) => {
   }
 })
 
+// 判断当前帧是否存在选中的资源，如果存在则回显选中状态
 const { currentFrame } = storeToRefs(playerStore)
 watch(currentFrame, () => {
   if (moveableControlRef.value) {
@@ -95,7 +100,7 @@ function select(event: PointerEvent, item: PlayerTrackItem) {
   }
 }
 
-// 取消选中
+// 取消选中状态
 function onClickOutside(event: PointerEvent) {
   const target = event.target
 
@@ -152,27 +157,26 @@ watchThrottled(
   }
 )
 
-// 使用 deep: true 会不会监听太多属性了？
-// TODO: 这个需要进一步优化
-watchThrottled(
-  playerStore.playerItems,
+// 重新渲染画布，并且更新选中控制的属性
+const updatePlayer = useThrottleFn(
   () => {
-    playerCanvasRef.value?.renderForAttributeChange()
-    if (playerStore.playerSelectedItem) {
-      moveableControlRef.value?.updateMoveableControl()
-    }
+    nextTick(() => {
+      playerCanvasRef.value?.renderForAttributeChange()
+      if (playerStore.playerSelectedItem) {
+        moveableControlRef.value?.updateMoveableControl()
+      }
+    })
   },
-  {
-    deep: true,
-    throttle: 20,
-    trailing: true,
-    flush: 'post'
-  }
+  20,
+  true
 )
+
+emitter.on(Events.UPDATE_PLAYER, updatePlayer)
 
 const initScene = ref(false)
 
 onMounted(() => {
+  // 监听窗口大小以设置画布大小
   useResizeObserver(sceneWrapperRef.value, ([{ contentRect }]) => {
     const { width, height } = contentRect
     const ratio = playerStore.aspectRatio
