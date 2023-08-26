@@ -17,6 +17,7 @@ import type { PlayerTrackItem } from '@/services/track-item'
 import { emitter } from '@/services/mitt/emitter'
 import { Events } from '@/services/mitt/emitter'
 import { nextTick } from 'vue'
+import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
 
 const playerStore = usePlayerStore()
 
@@ -129,9 +130,31 @@ function onRotate(rotate: number) {
   }
 }
 
+function onRotateChange(newVal: number, oldVal: number) {
+  if (playerStore.playerSelectedItem) {
+    const { id } = playerStore.playerSelectedItem
+    new PlayerAttributeChangeAction(id, {
+      rotate: oldVal
+    }).end({
+      rotate: newVal
+    })
+  }
+}
+
 function onScale(scale: number) {
   if (playerStore.playerSelectedItem) {
     playerStore.playerSelectedItem.attribute.scale = scale
+  }
+}
+
+function onScaleChange(newVal: number, oldVal: number) {
+  if (playerStore.playerSelectedItem) {
+    const { id } = playerStore.playerSelectedItem
+    new PlayerAttributeChangeAction(id, {
+      scale: oldVal
+    }).end({
+      scale: newVal
+    })
   }
 }
 
@@ -140,6 +163,19 @@ function onTranslate(translate: { x: number; y: number }) {
     const { x, y } = translate
     playerStore.playerSelectedItem.attribute.topRatio = y / playerStore.sceneHeight
     playerStore.playerSelectedItem.attribute.leftRatio = x / playerStore.sceneWidth
+  }
+}
+
+function onTranslateChange(newVal: { x: number; y: number }, oldVal: { x: number; y: number }) {
+  if (playerStore.playerSelectedItem) {
+    const { id } = playerStore.playerSelectedItem
+    new PlayerAttributeChangeAction(id, {
+      topRatio: oldVal.y / playerStore.sceneHeight,
+      leftRatio: oldVal.x / playerStore.sceneWidth
+    }).end({
+      topRatio: newVal.y / playerStore.sceneHeight,
+      leftRatio: newVal.x / playerStore.sceneWidth
+    })
   }
 }
 
@@ -225,8 +261,11 @@ defineExpose({
         <MoveableControl
           ref="moveableControlRef"
           @rotate="onRotate"
+          @rotate-change="onRotateChange"
           @scale="onScale"
+          @scale-change="onScaleChange"
           @translate="onTranslate"
+          @translate-change="onTranslateChange"
         />
       </div>
     </div>

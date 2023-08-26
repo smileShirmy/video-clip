@@ -3,7 +3,10 @@ import type { Ref, ShallowReactive } from 'vue'
 export const useMoveable = (
   translate: ShallowReactive<{ x: number; y: number }>,
   moveTargetRect: ShallowReactive<{ top: number; left: number; width: number; height: number }>,
-  inOperation: Ref<boolean>
+  inOperation: Ref<boolean>,
+  events: {
+    change: (newVal: { x: number; y: number }, oldVal: { x: number; y: number }) => void
+  }
 ) => {
   let dragging = false
   let startX = 0
@@ -47,6 +50,16 @@ export const useMoveable = (
       dragging = false
       inOperation.value = false
       updatePosition(event)
+
+      if (translate.x !== startTranslateX || translate.y !== startTranslateY) {
+        events.change(
+          {
+            x: translate.x,
+            y: translate.y
+          },
+          { x: startTranslateX, y: startTranslateY }
+        )
+      }
     }, 0)
 
     window.removeEventListener('pointermove', onDragging)

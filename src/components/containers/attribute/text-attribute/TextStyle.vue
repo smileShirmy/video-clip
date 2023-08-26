@@ -33,7 +33,11 @@ const scale = computed({
 })
 
 function onScaleChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, 'scale', oldVal / 100).end(newVal / 100)
+  new PlayerAttributeChangeAction(trackItem.value.id, {
+    scale: oldVal / 100
+  }).end({
+    scale: newVal / 100
+  })
 }
 
 const text = computed(() => trackItem.value.text)
@@ -132,7 +136,11 @@ const opacity = computed({
 })
 
 function onOpacityChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, 'opacity', oldVal / 100).end(newVal / 100)
+  new PlayerAttributeChangeAction(trackItem.value.id, {
+    opacity: oldVal / 100
+  }).end({
+    opacity: newVal / 100
+  })
 }
 
 const rotate = computed({
@@ -145,7 +153,11 @@ const rotate = computed({
 })
 
 function onRotateChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, 'rotate', oldVal).end(newVal)
+  new PlayerAttributeChangeAction(trackItem.value.id, {
+    rotate: oldVal
+  }).end({
+    rotate: newVal
+  })
 }
 
 const translateX = computed({
@@ -158,7 +170,11 @@ const translateX = computed({
 })
 
 function onTranslateXChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, 'leftRatio', oldVal / 100).end(newVal / 100)
+  new PlayerAttributeChangeAction(trackItem.value.id, {
+    leftRatio: oldVal / 100
+  }).end({
+    leftRatio: newVal / 100
+  })
 }
 
 const translateY = computed({
@@ -171,7 +187,11 @@ const translateY = computed({
 })
 
 function onTranslateYChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, 'topRatio', oldVal / 100).end(newVal / 100)
+  new PlayerAttributeChangeAction(trackItem.value.id, {
+    topRatio: oldVal / 100
+  }).end({
+    topRatio: newVal / 100
+  })
 }
 
 const letterSpacing = computed({

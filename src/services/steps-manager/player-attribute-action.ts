@@ -2,32 +2,37 @@ import type { PlayerAttribute } from '@/types'
 import { stepsManager } from './steps-manager'
 import { Action } from './action'
 import { trackList } from '../track-list/track-list'
-import { isNumber } from '../helpers/general'
+import { isPlainObject } from '../helpers/general'
 import type { PlayerTrackItem } from '../track-item'
 
-export class PlayerAttributeChangeAction extends Action {
-  private trackItemId: string
-  private startVal: number
-  private endVal?: number
-  private key: keyof PlayerAttribute
+type Key = keyof PlayerAttribute
 
-  constructor(trackItemId: string, key: keyof PlayerAttribute, startVal: number) {
+// 确保初始值和结束值类型一致
+type StoreValue<K extends Key> = { [k in K]: PlayerAttribute[k] }
+
+export class PlayerAttributeChangeAction<K extends Key> extends Action {
+  private trackItemId: string
+  private startVal: StoreValue<K>
+  private endVal?: StoreValue<K>
+
+  constructor(trackItemId: string, startVal: StoreValue<K>) {
     super()
     this.trackItemId = trackItemId
     this.startVal = startVal
-    this.key = key
   }
 
-  public end(value: number) {
+  public end(value: StoreValue<K>) {
     if (value === this.startVal) return
 
     this.endVal = value
     stepsManager.addAction(this)
   }
 
-  setData(val: number) {
+  setData(val: StoreValue<K>) {
     const trackItem = trackList.getTrackItem(this.trackItemId) as PlayerTrackItem
-    trackItem.attribute[this.key] = val
+    for (const [k, v] of Object.entries<number>(val)) {
+      trackItem.attribute[k as keyof PlayerAttribute] = v
+    }
   }
 
   undo() {
@@ -35,7 +40,7 @@ export class PlayerAttributeChangeAction extends Action {
   }
 
   redo() {
-    if (isNumber(this.endVal)) {
+    if (isPlainObject(this.endVal)) {
       this.setData(this.endVal)
     }
   }

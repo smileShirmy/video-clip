@@ -11,8 +11,11 @@ import { warn } from '@/services/helpers/warn'
 
 const emit = defineEmits<{
   (e: 'rotate', rotate: number): void
+  (e: 'rotate-change', newVal: number, oldVal: number): void
   (e: 'scale', scale: number): void
+  (e: 'scale-change', newVal: number, oldVal: number): void
   (e: 'translate', translate: { x: number; y: number }): void
+  (e: 'translate-change', newVal: { x: number; y: number }, oldVal: { x: number; y: number }): void
 }>()
 
 const inOperation = ref(false)
@@ -231,7 +234,11 @@ function initTranslatePosition(moveTarget: HTMLDivElement) {
 
 const visible = ref(false)
 
-const { onMove } = useMoveable(translate, moveTargetRect, inOperation)
+const { onMove } = useMoveable(translate, moveTargetRect, inOperation, {
+  change(newVal, oldVal) {
+    emit('translate-change', newVal, oldVal)
+  }
+})
 
 function resizingMoveableControl() {
   if (visible.value) {
@@ -284,7 +291,11 @@ function hide() {
   sceneContent = null
 }
 
-const { onRotate } = useRotatable(centerViewportCoordinate, rotate, inOperation)
+const { onRotate } = useRotatable(centerViewportCoordinate, rotate, inOperation, {
+  change(newVal, oldVal) {
+    emit('rotate-change', newVal, oldVal)
+  }
+})
 
 const viewPortRotatedRotation = computed(() => ({
   x: rotatedRotation.value.x + sceneContentRect.left,
@@ -295,7 +306,12 @@ const { onScale } = useScalable(
   viewPortRotatedRotation,
   scale,
   notScalableDistance,
-  inOperation
+  inOperation,
+  {
+    change(newVal, oldVal) {
+      emit('scale-change', newVal, oldVal)
+    }
+  }
 )
 
 defineExpose({

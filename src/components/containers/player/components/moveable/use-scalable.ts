@@ -6,10 +6,14 @@ export const useScalable = (
   viewPortRotatedRotation: ComputedRef<{ x: number; y: number }>,
   scale: Ref<number>,
   notScalableDistance: Ref<number>,
-  inOperation: Ref<boolean>
+  inOperation: Ref<boolean>,
+  events: {
+    change: (newVal: number, oldVal: number) => void
+  }
 ) => {
   let dragging = false
   let sideTag = false
+  let startScale = scale.value
 
   function inOnSide(event: PointerEvent) {
     const { clientX: x, clientY: y } = event
@@ -42,6 +46,7 @@ export const useScalable = (
   }
 
   function onDragStart(event: PointerEvent) {
+    startScale = scale.value
     sideTag = inOnSide(event)
     dragging = true
     inOperation.value = true
@@ -58,6 +63,10 @@ export const useScalable = (
       dragging = false
       inOperation.value = false
       updateScale(event)
+
+      if (scale.value !== startScale) {
+        events.change(scale.value, startScale)
+      }
     }, 0)
 
     window.removeEventListener('pointermove', onDragging)

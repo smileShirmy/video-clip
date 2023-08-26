@@ -4,11 +4,16 @@ import { getDegree } from './helper'
 export const useRotatable = (
   centerViewportCoordinate: ComputedRef<{ x: number; y: number }>,
   rotate: Ref<number>,
-  inOperation: Ref<boolean>
+  inOperation: Ref<boolean>,
+  events: {
+    change: (newVal: number, oldVal: number) => void
+  }
 ) => {
   let dragging = false
+  let startRotate = rotate.value
 
   function onDragStart() {
+    startRotate = rotate.value
     dragging = true
     inOperation.value = true
   }
@@ -40,6 +45,10 @@ export const useRotatable = (
       dragging = false
       inOperation.value = false
       updateRotate(event)
+
+      if (rotate.value !== startRotate) {
+        events.change(rotate.value, startRotate)
+      }
     }, 0)
 
     window.removeEventListener('pointermove', onDragging)
