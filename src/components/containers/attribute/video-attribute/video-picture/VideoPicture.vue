@@ -5,7 +5,10 @@ import InputNumber from '../../components/base/InputNumber.vue'
 import AttributeItem from '../../components/layout/AttributeItem.vue'
 import { computed } from 'vue'
 import type { VideoTrackItem } from '@/services/track-item/video-track-item'
-import { PlayerAttributeChangeAction } from '@/services/steps-manager/player-attribute-action'
+import { useOpacity } from '../../hooks/use-opacity'
+import { useScale } from '../../hooks/use-scale'
+import { useRotate } from '../../hooks/use-rotate'
+import { useTranslate } from '../../hooks/use-translate'
 
 defineOptions({
   name: 'VideoPicture'
@@ -14,90 +17,10 @@ defineOptions({
 const trackStore = useTrackStore()
 const trackItem = computed(() => trackStore.selectedTrackItem as VideoTrackItem)
 
-const opacity = computed({
-  get() {
-    return trackItem.value.attribute.opacity * 100
-  },
-  set(opacity) {
-    trackItem.value.attribute.opacity = opacity / 100
-  }
-})
-
-function onOpacityChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, {
-    opacity: oldVal / 100
-  }).end({
-    opacity: newVal / 100
-  })
-}
-
-const scale = computed({
-  get() {
-    return trackItem.value.attribute.scale * 100
-  },
-  set(scale) {
-    trackItem.value.attribute.scale = scale / 100
-  }
-})
-
-function onScaleChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, {
-    scale: oldVal / 100
-  }).end({
-    scale: newVal / 100
-  })
-}
-
-const rotate = computed({
-  get() {
-    return trackItem.value.attribute.rotate
-  },
-  set(rotate) {
-    trackItem.value.attribute.rotate = rotate
-  }
-})
-
-function onRotateChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, {
-    rotate: oldVal
-  }).end({
-    rotate: newVal
-  })
-}
-
-const translateX = computed({
-  get() {
-    return trackItem.value.attribute.leftRatio * 100
-  },
-  set(x) {
-    trackItem.value.attribute.leftRatio = x / 100
-  }
-})
-
-function onTranslateXChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, {
-    leftRatio: oldVal / 100
-  }).end({
-    leftRatio: newVal / 100
-  })
-}
-
-const translateY = computed({
-  get() {
-    return trackItem.value.attribute.topRatio * 100
-  },
-  set(y) {
-    trackItem.value.attribute.topRatio = y / 100
-  }
-})
-
-function onTranslateYChange(newVal: number, oldVal: number) {
-  new PlayerAttributeChangeAction(trackItem.value.id, {
-    topRatio: oldVal / 100
-  }).end({
-    topRatio: newVal / 100
-  })
-}
+const { opacity, onOpacityChange } = useOpacity(trackItem)
+const { scale, onScaleChange } = useScale(trackItem)
+const { rotate, onRotateChange } = useRotate(trackItem)
+const { translateX, translateY, onTranslateXChange, onTranslateYChange } = useTranslate(trackItem)
 </script>
 
 <template>
