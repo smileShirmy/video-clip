@@ -61,6 +61,8 @@ async function initAudio() {
   )
 
   useResizeObserver(itemContentRef.value, onResize)
+
+  props.data.setLoading(false)
 }
 
 const waveImageStyle: ComputedRef<CSSProperties> = computed(() => {

@@ -20,6 +20,7 @@ export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem,
     const { base } = options
 
     super(resource, base)
+    this.setLoading(true)
   }
 
   split(splitFrame: number): [AudioTrackItem, AudioTrackItem] {

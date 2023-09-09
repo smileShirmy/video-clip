@@ -11,9 +11,12 @@ import { draggable } from '@/services/draggable/draggable'
 import type { TrackItem } from '@/services/track-item'
 import { TrackItemName } from '@/types'
 import { ResizeTrackItemAction } from '@/services/steps-manager/resize-track-item.action'
+import { usePlayerStore } from '@/stores/player'
+import { Events, emitter } from '@/services/mitt/emitter'
 
 const timelineStore = useTimelineStore()
 const trackStore = useTrackStore()
+const playerStore = usePlayerStore()
 
 const props = withDefaults(
   defineProps<{
@@ -31,6 +34,8 @@ const HANDLER_WIDTH = 10
 
 let allowMaxFrame = 0
 let allowMinFrame = 0
+
+let isOnCurrentFrame = false
 
 const trackItemRef = ref<HTMLDivElement | null>(null)
 
@@ -76,6 +81,11 @@ const dragSliderEnd = () => {
   }
 
   resizeTrackItemAction?.end(props.data)
+
+  // 从在预览帧上变成不在 / 从不在预览帧上变成在
+  if (judgeIsOnCurrentFrame() !== isOnCurrentFrame) {
+    emitter.emit(Events.UPDATE_PLAYER_ITEMS)
+  }
 }
 
 const leftSlider = new Slider({
@@ -104,6 +114,12 @@ function setStartResizeTrackItemAction() {
   resizeTrackItemAction = new ResizeTrackItemAction(props.data)
 }
 
+function judgeIsOnCurrentFrame() {
+  const { currentFrame } = playerStore
+  const { startFrame, endFrame } = props.data
+  return currentFrame > startFrame && currentFrame <= endFrame
+}
+
 function getMinWidthFrame() {
   const minFrameCount = timelineStore.pixelToFrame(HANDLER_WIDTH)
   const frameCount = props.data.endFrame - props.data.startFrame
@@ -126,6 +142,7 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
   })
 
   setStartResizeTrackItemAction()
+  isOnCurrentFrame = judgeIsOnCurrentFrame()
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
@@ -144,6 +161,7 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
   })
 
   setStartResizeTrackItemAction()
+  isOnCurrentFrame = judgeIsOnCurrentFrame()
 }
 
 function onDragStart(e: PointerEvent) {

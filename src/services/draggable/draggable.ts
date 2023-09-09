@@ -15,6 +15,7 @@ import { DragAudio } from './drag-audio'
 import { DragText } from './drag-text'
 import { isNumber } from '../helpers/general'
 import { trackList } from '../track-list/track-list'
+import { Events, emitter } from '../mitt/emitter'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -181,12 +182,16 @@ class Draggable {
     }
   }
 
-  onDragEnd = () => {
+  onDragEnd = (isUpdateItems: boolean) => {
     const trackStore = useTrackStore()
 
     trackStore.disableScroll = false
     trackStore.showPreviewLine = trackStore.enablePreviewLine
     trackList.updatePlayerMaxFrame()
+
+    if (isUpdateItems) {
+      emitter.emit(Events.UPDATE_PLAYER_ITEMS)
+    }
   }
 }
 

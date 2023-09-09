@@ -47,6 +47,7 @@ export class VideoTrackItem extends BaseTrackItem<
     const { base, attribute } = options
 
     super(resource, base)
+    this.setLoading(true)
 
     const { topRatio, leftRatio, widthRatio, heightRatio, scale, rotate, opacity } = attribute
     this.attribute.topRatio = topRatio
@@ -74,7 +75,7 @@ export class VideoTrackItem extends BaseTrackItem<
     watch(
       [this.attribute],
       () => {
-        emitter.emit(Events.UPDATE_PLAYER)
+        emitter.emit(Events.UPDATE_PLAYER_ATTRIBUTE)
       },
       {
         flush: 'post'

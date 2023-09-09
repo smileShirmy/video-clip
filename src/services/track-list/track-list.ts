@@ -136,7 +136,8 @@ class TrackList {
         if (
           isPlayerTrackItem(trackItem) &&
           currentFrame > trackItem.startFrame &&
-          currentFrame <= trackItem.endFrame
+          currentFrame <= trackItem.endFrame &&
+          trackItem.loading.value === false
         ) {
           trackItems.push(trackItem)
         }

@@ -4,6 +4,7 @@ import { TrackItemName, type BaseTrackItemData, type TrackItemData } from '@/typ
 import type { TrackItem } from '.'
 import type { Track } from '../track'
 import { usePlayerStore, type PlayerStore } from '@/stores/player'
+import { Events, emitter } from '../mitt/emitter'
 
 export abstract class BaseTrackItem<
   R extends { frameCount: number },
@@ -21,6 +22,8 @@ export abstract class BaseTrackItem<
   parentTrack: P | null = null
 
   minFrame = 0
+
+  loading = ref(false)
 
   private beforeDragFrame = 0
 
@@ -97,6 +100,12 @@ export abstract class BaseTrackItem<
 
   setEndFrame(endFrame: number) {
     this._endFrame.value = endFrame
+  }
+
+  setLoading(is: boolean) {
+    this.loading.value = is
+
+    emitter.emit(Events.UPDATE_PLAYER_ITEMS)
   }
 
   getAllowMaxFrame() {

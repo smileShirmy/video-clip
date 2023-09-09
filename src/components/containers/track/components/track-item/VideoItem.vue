@@ -34,8 +34,6 @@ const canvasCollection: HTMLCanvasElement[] = []
 
 const itemContentRef = ref<HTMLDivElement>()
 
-const loading = ref(false)
-
 const waveImageUrl = ref('')
 
 function renderCanvas(
@@ -250,8 +248,6 @@ function initResizeObserver(
 }
 
 async function initVideo() {
-  loading.value = true
-
   const { name, format, source, width, height } = props.data.resource
   const filename = `${name}.${format}`
   await ffManager.writeFile(FFDir.RESOURCE, filename, source)
@@ -264,7 +260,7 @@ async function initVideo() {
 
   initResizeObserver(width / height, filename, width, height, audioPath, name, format)
 
-  loading.value = false
+  props.data.setLoading(false)
 }
 
 const waveImageStyle: ComputedRef<CSSProperties> = computed(() => {
@@ -287,9 +283,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <TrackHandler :data="props.data" v-slot="{ showHandler }" :loading="loading">
-    <AppLoading v-if="loading" />
-    <div v-show="!loading" class="item-content" ref="itemContentRef" data-canvas-parent></div>
+  <TrackHandler :data="props.data" v-slot="{ showHandler }" :loading="props.data.loading.value">
+    <AppLoading v-if="props.data.loading.value" />
+    <div
+      v-show="!props.data.loading.value"
+      class="item-content"
+      ref="itemContentRef"
+      data-canvas-parent
+    ></div>
     <img :src="waveImageUrl" class="wave-image" :style="waveImageStyle" />
     <time v-show="showHandler" class="video-info">{{ duration }}</time>
   </TrackHandler>

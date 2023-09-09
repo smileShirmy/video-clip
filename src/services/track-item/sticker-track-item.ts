@@ -69,7 +69,7 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
     watch(
       [this.attribute],
       () => {
-        emitter.emit(Events.UPDATE_PLAYER)
+        emitter.emit(Events.UPDATE_PLAYER_ATTRIBUTE)
       },
       {
         flush: 'post'

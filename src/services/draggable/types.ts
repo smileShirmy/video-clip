@@ -106,5 +106,5 @@ export interface DragOptions<T> {
   timelineStore: TimelineStore
   trackStore: TrackStore
   onStateChange: (state: DraggingStateData | null) => void
-  onDragEnd: (movingId: string | null) => void
+  onDragEnd: (isUpdate: boolean) => void
 }

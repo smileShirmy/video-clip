@@ -98,7 +98,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     watch(
       [this.attribute, this.text, this.textAttribute],
       () => {
-        emitter.emit(Events.UPDATE_PLAYER)
+        emitter.emit(Events.UPDATE_PLAYER_ATTRIBUTE)
       },
       {
         flush: 'post'

@@ -38,7 +38,7 @@ export abstract class DragItem<T extends TrackItem> implements DragOptions<T> {
   readonly timelineStore: TimelineStore
   readonly trackStore: TrackStore
   readonly onStateChange: (state: DraggingStateData | null) => void
-  readonly onDragEnd: (movingId: string | null) => void
+  readonly onDragEnd: (isUpdate: boolean) => void
   readonly startPointerEvent: PointerEvent
 
   protected isFirstDrag = true

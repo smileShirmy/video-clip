@@ -231,7 +231,8 @@ export class DragAudio extends DragItem<AudioTrackItem> {
       }
     }
 
-    this.onDragEnd(this.movingId)
+    const isUpdateItems = !this.movingId || !this.isFirstDrag
+    this.onDragEnd(isUpdateItems)
     this.destroy()
 
     this.addDragEndAction()

@@ -238,6 +238,12 @@ function updateCanvasSize() {
   canvasRef.value.height = canvasHeight
 }
 
+// 资源发生本质上的改变
+function renderForItemsChange() {
+  if (!ctx) return
+  render(playerStore.currentFrame)
+}
+
 // 如果仅仅只是改变属性，直接取当前帧的渲染数据（为了避免重新生成图片这个异步行为造成渲染时会闪动）
 function renderForAttributeChange() {
   updateCanvasSize()
@@ -285,7 +291,8 @@ onMounted(() => {
 })
 
 defineExpose({
-  renderForAttributeChange
+  renderForAttributeChange,
+  renderForItemsChange
 })
 </script>
 

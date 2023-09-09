@@ -37,11 +37,10 @@ const sceneContentStyle: ComputedRef<CSSProperties> = computed(() => ({
   height: `${playerStore.sceneHeight}px`
 }))
 
-// 当选中了轨道中的某个资源，播放区域的选中也要回显
-watch(trackList.selectedId, (selectedId: string) => {
+function toggleControlTargetVisible(is: boolean, selectedId: string) {
   if (!moveableControlRef.value || !(sceneContentRef.value instanceof HTMLElement)) return
 
-  if (selectedId) {
+  if (is) {
     const targetItem = moveableItemRef.value.find((v) => v.dataset.id === selectedId)
     if (targetItem && !moveableControlRef.value.visible) {
       moveableControlRef.value.show(targetItem, sceneContentRef.value)
@@ -49,7 +48,20 @@ watch(trackList.selectedId, (selectedId: string) => {
   } else {
     moveableControlRef.value.hide()
   }
-})
+}
+
+// 当选中了轨道中的某个资源，播放区域的选中也要回显
+watch(
+  trackList.selectedId,
+  () => {
+    const selectedId = trackList.selectedId.value
+
+    toggleControlTargetVisible(!!selectedId, selectedId)
+  },
+  {
+    flush: 'post'
+  }
+)
 
 // 判断当前帧是否存在选中的资源，如果存在则回显选中状态
 const { currentFrame } = storeToRefs(playerStore)
@@ -194,8 +206,9 @@ watchThrottled(
 )
 
 // 重新渲染画布，并且更新选中控制的属性
-const updatePlayer = useThrottleFn(
+const updatePlayerAttribute = useThrottleFn(
   () => {
+    console.log('update player attribute')
     nextTick(() => {
       playerCanvasRef.value?.renderForAttributeChange()
       if (playerStore.playerSelectedItem) {
@@ -207,7 +220,27 @@ const updatePlayer = useThrottleFn(
   true
 )
 
-emitter.on(Events.UPDATE_PLAYER, updatePlayer)
+emitter.on(Events.UPDATE_PLAYER_ATTRIBUTE, updatePlayerAttribute)
+
+// 资源的位置或开始结束帧发生改变
+emitter.on(Events.UPDATE_PLAYER_ITEMS, () => {
+  console.log('update player items')
+  playerStore.updatePlayerItems()
+
+  nextTick(() => {
+    const { currentFrame } = playerStore
+    if (trackList.selectedTrackItem.value && moveableControlRef.value) {
+      const { startFrame, endFrame } = trackList.selectedTrackItem.value
+      const isShow = currentFrame > startFrame && currentFrame <= endFrame
+      toggleControlTargetVisible(isShow, trackList.selectedId.value)
+    }
+
+    playerCanvasRef.value?.renderForItemsChange()
+    if (playerStore.playerSelectedItem) {
+      moveableControlRef.value?.updateMoveableControl()
+    }
+  })
+})
 
 const initScene = ref(false)
 
