@@ -3,6 +3,7 @@ import './assets/scss/index.scss'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './services/ffmpeg/manager'
+import './services/audio-controls/audio-controls'
 
 import App from './App.vue'
 import router from './router'

@@ -15,6 +15,10 @@ class AudioControls {
   }
 
   private initAudio = async () => {
+    if (!this.audio.paused) {
+      this.audio.pause()
+      this.audio.src = ''
+    }
     const audioAndVideoTrackItems = trackList.list.reduce(
       (pre: Array<AudioTrackItem | VideoTrackItem>, track) => {
         const arr = track.trackItemList.filter(
@@ -31,7 +35,7 @@ class AudioControls {
       []
     )
 
-    const audioInfo = audioAndVideoTrackItems.reduce((pre: AudioInfo, item) => {
+    const audioInfo = audioAndVideoTrackItems.reduce((pre: AudioInfo[], item) => {
       const { name, format } = item.resource
       const filename = `${name}.${format}`
       const { startFrame, endFrame, minFrame, maxFrame } = item
@@ -40,7 +44,8 @@ class AudioControls {
       // 结束偏移值
       const offsetEnd = maxFrame - endFrame
 
-      pre[filename] = {
+      const info: AudioInfo = {
+        filename,
         delayMilliseconds: frameToMillisecond(startFrame),
         trim:
           offsetStart > 0 || offsetEnd > 0
@@ -50,8 +55,9 @@ class AudioControls {
               }
             : undefined
       }
-      return pre
-    }, {})
+
+      return pre.concat(info)
+    }, [])
 
     const { outputPath } = await ffManager.mergeAudio(audioInfo)
     const url = ffManager.readFileUrl(outputPath, 'audio/mp3')

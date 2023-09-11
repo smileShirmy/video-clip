@@ -171,12 +171,11 @@ export interface MainTrackData {
 }
 
 export interface AudioInfo {
-  [filename: string]: {
-    delayMilliseconds: number
-    trim?: {
-      startSeconds: number
-      endSeconds: number
-    }
+  filename: string
+  delayMilliseconds: number
+  trim?: {
+    startSeconds: number
+    endSeconds: number
   }
 }
 

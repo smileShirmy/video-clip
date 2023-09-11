@@ -24,8 +24,10 @@ export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem,
     super(resource, base)
     this.setLoading(true)
 
-    watch([this.loading, this._startFrame, this._endFrame], () => {
-      emitter.emit(Events.INIT_AUDIO)
+    watch([this.loading, this._startFrame, this._endFrame], ([loading]) => {
+      if (!loading) {
+        emitter.emit(Events.INIT_AUDIO)
+      }
     })
   }
 

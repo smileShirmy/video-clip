@@ -263,13 +263,13 @@ class FFManger {
     return new Blob([fileBuffer], { type: 'image/png' })
   }
 
-  public async mergeAudio(audioInfo: AudioInfo) {
+  public async mergeAudio(audioInfo: AudioInfo[]) {
     const outputPath = `${FFDir.AUDIO}audio.mp3`
     const inputs: string[] = []
     const filters: string[] = []
     const filterTags: string[] = []
 
-    Object.entries(audioInfo).forEach(([filename, { delayMilliseconds, trim }], tag) => {
+    audioInfo.forEach(({ filename, delayMilliseconds, trim }, tag) => {
       inputs.push('-i', `${FFDir.RESOURCE}${filename}`)
       filterTags.push(`[s${tag}]`)
 
@@ -288,6 +288,8 @@ class FFManger {
     }:duration=longest:dropout_transition=0`
 
     const commands = [...inputs, '-filter_complex', filterComplex, '-f', 'mp3', `${outputPath}`]
+
+    console.log(commands)
 
     await this.run(commands)
 

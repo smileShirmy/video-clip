@@ -33,12 +33,13 @@ async function renderWaveform(audioPath: string, name: string) {
   const { frameCount } = props.data.resource
   const width = timelineStore.frameToPixelWidth(frameCount)
 
-  await ffManager.generateWaveform(audioPath, name, {
+  const filename = `${name}_${props.data.id}`
+  await ffManager.generateWaveform(audioPath, filename, {
     width: Math.round(width),
     height: OTHER_TRACK_HEIGHT * 2,
     color: '#3B5174'
   })
-  const waveImageBlob = ffManager.getWaveImageBlob(name)
+  const waveImageBlob = ffManager.getWaveImageBlob(filename)
   waveImageUrl.value = window.URL.createObjectURL(waveImageBlob)
 
   renderingWaveform = false
@@ -48,7 +49,6 @@ async function initAudio() {
   const { name, format, source } = props.data.resource
   const filename = `${name}.${format}`
   const { path } = await ffManager.writeFile(FFDir.RESOURCE, filename, source)
-  renderWaveform(path, name)
 
   const onResize = useThrottleFn<ResizeObserverCallback>(
     () => {
@@ -85,7 +85,7 @@ onMounted(() => {
 
 <template>
   <TrackHandler :data="props.data" v-slot="{ showHandler }">
-    <div class="item-content">
+    <div ref="itemContentRef" class="item-content">
       <img :src="waveImageUrl" class="wave-image" :style="waveImageStyle" />
       <span class="audio-info">{{ showHandler ? duration : props.data.resource.name }}</span>
     </div>
