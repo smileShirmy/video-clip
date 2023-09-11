@@ -16,6 +16,7 @@ import { DragText } from './drag-text'
 import { isNumber } from '../helpers/general'
 import { trackList } from '../track-list/track-list'
 import { Events, emitter } from '../mitt/emitter'
+import { usePlayerStore } from '@/stores/player'
 
 class Draggable {
   trackListRef: HTMLDivElement[] | null = null
@@ -184,6 +185,7 @@ class Draggable {
 
   onDragEnd = (isUpdateItems: boolean) => {
     const trackStore = useTrackStore()
+    const playerStore = usePlayerStore()
 
     trackStore.disableScroll = false
     trackStore.showPreviewLine = trackStore.enablePreviewLine
@@ -192,6 +194,8 @@ class Draggable {
     if (isUpdateItems) {
       emitter.emit(Events.UPDATE_PLAYER_ITEMS)
     }
+
+    playerStore.pause()
   }
 }
 

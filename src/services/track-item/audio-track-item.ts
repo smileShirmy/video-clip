@@ -7,6 +7,8 @@ import {
 import { BaseTrackItem } from './base-track-item'
 import type { AudioTrack } from '../track/audio-track'
 import { deepClone } from '../helpers/general'
+import { watch } from 'vue'
+import { Events, emitter } from '../mitt/emitter'
 
 export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem, AudioTrack> {
   readonly component = TrackItemName.TRACK_ITEM_AUDIO
@@ -21,6 +23,10 @@ export class AudioTrackItem extends BaseTrackItem<AudioResource, AudioTrackItem,
 
     super(resource, base)
     this.setLoading(true)
+
+    watch([this.loading, this._startFrame, this._endFrame], () => {
+      emitter.emit(Events.INIT_AUDIO)
+    })
   }
 
   split(splitFrame: number): [AudioTrackItem, AudioTrackItem] {

@@ -27,9 +27,9 @@ export abstract class BaseTrackItem<
 
   private beforeDragFrame = 0
 
-  private _startFrame = ref<number>(0)
+  protected _startFrame = ref<number>(0)
 
-  private _endFrame = ref<number>(0)
+  protected _endFrame = ref<number>(0)
 
   get startFrame(): number {
     return this._startFrame.value

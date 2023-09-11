@@ -3,6 +3,7 @@ import { ref, shallowReactive, watch } from 'vue'
 import { warn } from '../helpers/warn'
 import { FPS } from '@/config'
 import { isString } from '../helpers/general'
+import type { AudioInfo } from '@/types'
 
 interface TaskItem {
   commands: string[]
@@ -19,7 +20,8 @@ interface TaskItem {
 export enum FFDir {
   RESOURCE = '/resource/',
   FRAME = '/frame/',
-  WAVE = '/wave/'
+  WAVE = '/wave/',
+  AUDIO = '/audio/'
 }
 
 /**
@@ -82,11 +84,7 @@ class FFManger {
    * 初始化文件系统
    */
   private async initFileSystem() {
-    await Promise.all([
-      this.ffmpeg.FS('mkdir', FFDir.RESOURCE),
-      this.ffmpeg.FS('mkdir', FFDir.FRAME),
-      this.ffmpeg.FS('mkdir', FFDir.WAVE)
-    ])
+    await Promise.all(Object.values(FFDir).map((dir) => this.ffmpeg.FS('mkdir', dir)))
   }
 
   private progress({ ratio }: { ratio: number }) {
@@ -180,6 +178,12 @@ class FFManger {
     await this.run(commands)
   }
 
+  public readFileUrl(filePath: string, type: string) {
+    const fileBuffer = this.ffmpeg.FS('readFile', filePath)
+    const fileBlob = new Blob([fileBuffer], { type })
+    return window.URL.createObjectURL(fileBlob)
+  }
+
   public getFrame(filename: string, index: number, format: string) {
     const imageExtension = isString(format) && format === 'gif' ? 'png' : 'jpg'
     const type = isString(format) && format === 'gif' ? 'image/png' : 'image/jpeg'
@@ -257,6 +261,39 @@ class FFManger {
   public getWaveImageBlob(waveName: string) {
     const fileBuffer = this.ffmpeg.FS('readFile', `${FFDir.WAVE}${waveName}.png`)
     return new Blob([fileBuffer], { type: 'image/png' })
+  }
+
+  public async mergeAudio(audioInfo: AudioInfo) {
+    const outputPath = `${FFDir.AUDIO}audio.mp3`
+    const inputs: string[] = []
+    const filters: string[] = []
+    const filterTags: string[] = []
+
+    Object.entries(audioInfo).forEach(([filename, { delayMilliseconds, trim }], tag) => {
+      inputs.push('-i', `${FFDir.RESOURCE}${filename}`)
+      filterTags.push(`[s${tag}]`)
+
+      let str = ''
+      let filterTag = tag.toString()
+      if (trim) {
+        const { startSeconds, endSeconds } = trim
+        str += `[${filterTag}]atrim=${startSeconds}:${endSeconds}[a${filterTag}];`
+        filterTag = `a${tag}`
+      }
+      str += `[${filterTag}]adelay=${delayMilliseconds}|${delayMilliseconds}[s${tag}];`
+      filters.push(str)
+    })
+    const filterComplex = `${filters.join('')}${filterTags.join('')}amix=inputs=${
+      filterTags.length
+    }:duration=longest:dropout_transition=0`
+
+    const commands = [...inputs, '-filter_complex', filterComplex, '-f', 'mp3', `${outputPath}`]
+
+    await this.run(commands)
+
+    return {
+      outputPath
+    }
   }
 
   /**

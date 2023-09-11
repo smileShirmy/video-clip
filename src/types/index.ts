@@ -170,4 +170,14 @@ export interface MainTrackData {
   type: TrackType.MAIN
 }
 
+export interface AudioInfo {
+  [filename: string]: {
+    delayMilliseconds: number
+    trim?: {
+      startSeconds: number
+      endSeconds: number
+    }
+  }
+}
+
 export type TrackData = VideoTrackData | AudioTrackData | MainTrackData

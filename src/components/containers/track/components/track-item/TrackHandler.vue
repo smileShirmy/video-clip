@@ -143,6 +143,8 @@ function onLeftHandlerDown(event: MouseEvent | TouchEvent) {
 
   setStartResizeTrackItemAction()
   isOnCurrentFrame = judgeIsOnCurrentFrame()
+
+  playerStore.pause()
 }
 
 function onRightHandlerDown(event: MouseEvent | TouchEvent) {
@@ -162,6 +164,8 @@ function onRightHandlerDown(event: MouseEvent | TouchEvent) {
 
   setStartResizeTrackItemAction()
   isOnCurrentFrame = judgeIsOnCurrentFrame()
+
+  playerStore.pause()
 }
 
 function onDragStart(e: PointerEvent) {
@@ -178,6 +182,8 @@ function onDragStart(e: PointerEvent) {
     offsetX: e.offsetX,
     offsetY: e.offsetY
   })
+
+  playerStore.pause()
 }
 
 onClickOutside(trackItemRef, (e: PointerEvent) => {

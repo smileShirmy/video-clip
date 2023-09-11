@@ -69,3 +69,24 @@ export function frameToTime(frame: number) {
 export function durationToFrameCount(duration: number): number {
   return Math.ceil(duration / 1000) * FPS
 }
+
+/**
+ * 帧转换为毫秒
+ */
+export function frameToMillisecond(frame: number) {
+  return Math.floor((frame / FPS) * 1000)
+}
+
+/**
+ * 帧转换为秒
+ */
+export function frameToSeconds(frame: number) {
+  return Math.floor(frame / FPS)
+}
+
+/**
+ * 帧转换为秒
+ */
+export function frameToFixedSeconds(frame: number, fractionDigits = 2) {
+  return Number(frameToSeconds(frame).toFixed(fractionDigits))
+}

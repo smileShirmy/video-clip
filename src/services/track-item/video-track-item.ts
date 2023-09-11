@@ -81,6 +81,10 @@ export class VideoTrackItem extends BaseTrackItem<
         flush: 'post'
       }
     )
+
+    watch([this.loading, this._startFrame, this._endFrame], () => {
+      emitter.emit(Events.INIT_AUDIO)
+    })
   }
 
   split(splitFrame: number): [VideoTrackItem, VideoTrackItem] {

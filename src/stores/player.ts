@@ -1,4 +1,5 @@
 import { FPS } from '@/config'
+import { audioControls } from '@/services/audio-controls/audio-controls'
 import type { PlayerTrackItem } from '@/services/track-item'
 import { trackList } from '@/services/track-list/track-list'
 import { defineStore } from 'pinia'
@@ -61,6 +62,14 @@ export const usePlayerStore = defineStore('player', () => {
       play()
     }, SPEED)
   }
+
+  watch(playing, (is) => {
+    if (is) {
+      audioControls.play(currentFrame.value)
+    } else {
+      audioControls.pause()
+    }
+  })
 
   return {
     playerItems,
