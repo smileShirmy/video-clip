@@ -32,7 +32,7 @@ class FFManger {
 
   private taskList = shallowReactive<TaskItem[]>([])
 
-  private running = ref(false)
+  public running = ref(false)
 
   public isLoaded = ref(false)
 

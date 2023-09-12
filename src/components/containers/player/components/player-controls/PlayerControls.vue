@@ -9,12 +9,22 @@ import IconPlayArrow from '@/components/icons/IconPlayArrow.vue'
 import IconPause from '@/components/icons/IconPause.vue'
 import IconFullscreen from '@/components/icons/IconFullscreen.vue'
 import { computed } from 'vue'
+import { ffManager } from '@/services/ffmpeg/manager'
+import { watch } from 'vue'
 
 const playerStore = usePlayerStore()
 const timelineStore = useTimelineStore()
 
 const currentTime = computed(() => {
   return frameToTime(playerStore.currentFrame)
+})
+
+const running = computed(() => ffManager.running.value)
+
+watch(running, (is) => {
+  if (is && playerStore.playing) {
+    playerStore.pause()
+  }
 })
 
 const totalTime = computed(() => {
@@ -36,9 +46,12 @@ function nextFrame() {
 function togglePlay() {
   if (playerStore.playing) {
     playerStore.pause()
-  } else {
-    playerStore.play()
+    return
   }
+  if (running.value) {
+    return
+  }
+  playerStore.play()
 }
 </script>
 
@@ -55,14 +68,32 @@ function togglePlay() {
     </div>
 
     <div class="controls">
-      <div class="controls-btn" @click="prevFrame">
+      <div
+        class="controls-btn"
+        :class="{
+          disabled: running
+        }"
+        @click="prevFrame"
+      >
         <IconSkipPrevious class="controls-icon" />
       </div>
-      <div class="controls-btn" @click="togglePlay">
+      <div
+        class="controls-btn"
+        :class="{
+          disabled: running
+        }"
+        @click="togglePlay"
+      >
         <IconPause class="controls-icon" v-show="playerStore.playing" />
         <IconPlayArrow class="controls-icon" v-show="!playerStore.playing" />
       </div>
-      <div class="controls-btn" @click="nextFrame">
+      <div
+        class="controls-btn"
+        :class="{
+          disabled: running
+        }"
+        @click="nextFrame"
+      >
         <IconSkipNext class="controls-icon" />
       </div>
     </div>
@@ -129,6 +160,11 @@ function togglePlay() {
 
       + .controls-btn {
         margin-left: 20px;
+      }
+
+      &.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
     }
 
