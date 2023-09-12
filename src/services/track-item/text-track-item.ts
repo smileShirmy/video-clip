@@ -61,6 +61,7 @@ export class TextTrackItem extends BaseTrackItem<TextResource, TextTrackItem, Vi
     } = options
 
     super(resource, base)
+    this.setLoading(true)
 
     const { topRatio, leftRatio, widthRatio, heightRatio, scale, rotate, opacity } = attribute
     this.attribute.topRatio = topRatio

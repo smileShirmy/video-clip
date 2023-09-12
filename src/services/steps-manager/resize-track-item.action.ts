@@ -49,6 +49,8 @@ export class ResizeTrackItemAction extends Action {
 
     trackItem.setStartFrame(val.startFrame)
     trackItem.setEndFrame(val.endFrame)
+
+    trackList.updatePlayerMaxFrame()
   }
 
   undo() {

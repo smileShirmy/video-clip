@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { deepClone, isNumber, uuid } from '../helpers/general'
 import { TrackItemName, type BaseTrackItemData, type TrackItemData } from '@/types'
 import type { TrackItem } from '.'
@@ -68,6 +68,16 @@ export abstract class BaseTrackItem<
     }
 
     this.playerStore = usePlayerStore()
+
+    watch(
+      this.loading,
+      (loading) => {
+        if (!loading) {
+          emitter.emit(Events.UPDATE_PLAYER_ITEMS)
+        }
+      },
+      { flush: 'post' }
+    )
   }
 
   abstract split(splitFrame: number): [T, T]
@@ -111,8 +121,6 @@ export abstract class BaseTrackItem<
 
   setLoading(is: boolean) {
     this.loading.value = is
-
-    emitter.emit(Events.UPDATE_PLAYER_ITEMS)
   }
 
   getAllowMaxFrame() {

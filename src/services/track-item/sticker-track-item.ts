@@ -42,6 +42,7 @@ export class StickerTrackItem extends BaseTrackItem<StickerResource, StickerTrac
     const { base, attribute } = options
 
     super(resource, base)
+    this.setLoading(true)
 
     const { topRatio, leftRatio, widthRatio, heightRatio, scale, rotate, opacity } = attribute
     this.attribute.topRatio = topRatio

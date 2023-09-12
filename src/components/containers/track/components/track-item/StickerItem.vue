@@ -22,6 +22,8 @@ async function initSticker() {
     height,
     format
   })
+
+  props.data.setLoading(false)
 }
 
 onMounted(() => {

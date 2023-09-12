@@ -15,10 +15,8 @@ class AudioControls {
   }
 
   private initAudio = async () => {
-    if (!this.audio.paused) {
-      this.audio.pause()
-      this.audio.src = ''
-    }
+    this.clear()
+
     const audioAndVideoTrackItems = trackList.list.reduce(
       (pre: Array<AudioTrackItem | VideoTrackItem>, track) => {
         const arr = track.trackItemList.filter(
@@ -34,6 +32,10 @@ class AudioControls {
       },
       []
     )
+
+    if (!audioAndVideoTrackItems.length) {
+      return
+    }
 
     const audioInfo = audioAndVideoTrackItems.reduce((pre: AudioInfo[], item) => {
       const { name, format } = item.resource
@@ -73,6 +75,13 @@ class AudioControls {
 
   pause() {
     this.audio.pause()
+  }
+
+  clear() {
+    if (!this.audio.paused) {
+      this.audio.pause()
+      this.audio.src = ''
+    }
   }
 }
 

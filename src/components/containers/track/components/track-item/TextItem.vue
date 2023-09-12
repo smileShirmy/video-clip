@@ -2,6 +2,7 @@
 import { TrackItemName } from '@/types'
 import TrackHandler from './TrackHandler.vue'
 import type { TextTrackItem } from '@/services/track-item/text-track-item'
+import { onMounted } from 'vue'
 
 defineOptions({
   name: TrackItemName.TRACK_ITEM_TEXT
@@ -10,6 +11,10 @@ defineOptions({
 const props = defineProps<{
   data: TextTrackItem
 }>()
+
+onMounted(() => {
+  props.data.setLoading(false)
+})
 </script>
 
 <template>

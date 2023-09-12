@@ -289,8 +289,6 @@ class FFManger {
 
     const commands = [...inputs, '-filter_complex', filterComplex, '-f', 'mp3', `${outputPath}`]
 
-    console.log(commands)
-
     await this.run(commands)
 
     return {

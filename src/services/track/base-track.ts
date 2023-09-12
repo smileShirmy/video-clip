@@ -5,6 +5,7 @@ import { useTrackStore } from '@/stores/track'
 import type { TrackItem } from '../track-item'
 import { TrackItemName, type BaseTrackData } from '@/types'
 import { OTHER_TRACK_HEIGHT, VIDEO_TRACK_HEIGHT } from '@/config'
+import { Events, emitter } from '../mitt/emitter'
 
 export enum TrackType {
   MAIN = 'main',
@@ -69,6 +70,8 @@ export abstract class BaseTrack<T extends TrackItem> {
     }
 
     this.updateTrackHeight()
+
+    emitter.emit(Events.UPDATE_PLAYER_ITEMS)
 
     return removed
   }
