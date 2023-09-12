@@ -43,6 +43,13 @@ export abstract class BaseTrackItem<
     return this.minFrame + this.resource.frameCount
   }
 
+  get isNoLimit() {
+    return (
+      [TrackItemName.TRACK_ITEM_VIDEO, TrackItemName.TRACK_ITEM_AUDIO].includes(this.component) ===
+      false
+    )
+  }
+
   constructor(resource: R, options: Partial<BaseTrackItemData> = {}) {
     this.resource = deepClone(resource)
 
@@ -109,7 +116,7 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMaxFrame() {
-    if (this.component !== TrackItemName.TRACK_ITEM_VIDEO) {
+    if (this.isNoLimit) {
       return Infinity
     }
     if (!this.parentTrack) return this.maxFrame
@@ -129,7 +136,7 @@ export abstract class BaseTrackItem<
   }
 
   getAllowMinFrame() {
-    if (this.component !== TrackItemName.TRACK_ITEM_VIDEO) {
+    if (this.isNoLimit) {
       return 0
     }
     if (!this.parentTrack) return this.maxFrame
