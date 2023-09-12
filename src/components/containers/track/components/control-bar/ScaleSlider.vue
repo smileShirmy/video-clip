@@ -175,14 +175,16 @@ function onSliderClick(event: MouseEvent) {
 
 <template>
   <div class="scale-slider">
-    <div
-      class="slider-controls zoom-out"
-      :class="{ disabled: props.disabled || props.modelValue === props.min }"
-      title="轨道缩小"
-      @click="zoomOut"
-    >
-      <IconZoomOut class="zoom-icon" />
-    </div>
+    <AppPopper hover content="轨道缩小">
+      <div
+        class="slider-controls zoom-out"
+        :class="{ disabled: props.disabled || props.modelValue === props.min }"
+        title="轨道缩小"
+        @click="zoomOut"
+      >
+        <IconZoomOut class="zoom-icon" />
+      </div>
+    </AppPopper>
     <div class="slider-runway" ref="slider" @click="onSliderClick">
       <div class="slider-bar" :style="barStyle"></div>
       <div
@@ -193,14 +195,15 @@ function onSliderClick(event: MouseEvent) {
         @touchstart="onButtonDown"
       ></div>
     </div>
-    <div
-      class="slider-controls zoom-in"
-      :class="{ disabled: props.disabled || props.modelValue === props.max }"
-      title="轨道放大"
-      @click="zoomIn"
-    >
-      <IconZoomIn class="zoom-icon" />
-    </div>
+    <AppPopper hover content="轨道放大">
+      <div
+        class="slider-controls zoom-in"
+        :class="{ disabled: props.disabled || props.modelValue === props.max }"
+        @click="zoomIn"
+      >
+        <IconZoomIn class="zoom-icon" />
+      </div>
+    </AppPopper>
   </div>
 </template>
 
@@ -228,14 +231,6 @@ function onSliderClick(event: MouseEvent) {
       cursor: not-allowed;
     }
 
-    &.zoom-out {
-      margin-right: 12px;
-    }
-
-    &.zoom-in {
-      margin-left: 12px;
-    }
-
     .zoom-icon {
       width: 16px;
       height: 16px;
@@ -248,6 +243,7 @@ function onSliderClick(event: MouseEvent) {
     flex: 1;
     cursor: pointer;
     width: 150px;
+    margin: 0 12px;
     height: 2px;
     background-color: var(--app-bg-color-lighter);
 

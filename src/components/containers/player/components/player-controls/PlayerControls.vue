@@ -58,13 +58,19 @@ function togglePlay() {
 <template>
   <div class="player-controls">
     <div class="time-wrapper">
-      <time class="current-time"
-        >{{ currentTime.time }}<span class="second-frame">.{{ currentTime.frame }}</span></time
-      >
+      <AppPopper content="当前时间点" hover>
+        <time class="current-time"
+          >{{ currentTime.time }}<span class="second-frame">.{{ currentTime.frame }}</span></time
+        >
+      </AppPopper>
+
       <div class="split-line"></div>
-      <time class="total-time"
-        >{{ totalTime.time }}<span class="second-frame">.{{ totalTime.frame }}</span></time
-      >
+
+      <AppPopper content="轨道总时长" hover>
+        <time class="total-time"
+          >{{ totalTime.time }}<span class="second-frame">.{{ totalTime.frame }}</span></time
+        >
+      </AppPopper>
     </div>
 
     <div class="controls">

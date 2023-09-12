@@ -57,71 +57,76 @@ function redo() {
 <template>
   <div class="control-bar">
     <section class="control-bar-child">
-      <div
-        class="control-item"
-        :class="{ disabled: !stepsManager.allowUndo.value }"
-        @click="undo"
-        title="撤销"
-      >
-        <IconUndo class="icon" />
-      </div>
-      <div
-        class="control-item"
-        :class="{
-          disabled: !stepsManager.allowRedo.value
-        }"
-        @click="redo"
-        title="重做"
-      >
-        <IconRedo class="icon" />
-      </div>
-      <div
-        class="control-item"
-        :class="{ disabled: disableDelete }"
-        title="删除"
-        @click="removeSelected"
-      >
-        <IconDelete class="icon" />
-      </div>
-      <div class="control-item" :class="{ disabled: disableSplit }" title="分割" @click="split">
-        <IconCut class="icon" />
-      </div>
+      <AppPopper content="撤销" hover>
+        <div
+          class="control-item"
+          :class="{ disabled: !stepsManager.allowUndo.value }"
+          @click="undo"
+        >
+          <IconUndo class="icon" />
+        </div>
+      </AppPopper>
+      <AppPopper content="重做" hover>
+        <div
+          class="control-item"
+          :class="{
+            disabled: !stepsManager.allowRedo.value
+          }"
+          @click="redo"
+        >
+          <IconRedo class="icon" />
+        </div>
+      </AppPopper>
+      <AppPopper content="删除" hover>
+        <div class="control-item" :class="{ disabled: disableDelete }" @click="removeSelected">
+          <IconDelete class="icon" />
+        </div>
+      </AppPopper>
+      <AppPopper content="分割" hover>
+        <div class="control-item" :class="{ disabled: disableSplit }" @click="split">
+          <IconCut class="icon" />
+        </div>
+      </AppPopper>
     </section>
 
     <section class="control-bar-child">
-      <div
-        class="track-control-item"
-        :class="{ enable: trackStore.enableMagnetic }"
-        :title="trackStore.enableMagnetic ? '关闭自动磁吸' : '打开自动磁吸'"
-        @click="trackStore.switchMagnetic"
-      >
-        <IconExpand class="track-icon" />
-      </div>
-      <div
-        class="track-control-item"
-        :class="{ enable: trackStore.enableSticky }"
-        :title="trackStore.enableSticky ? '关闭自动吸附' : '打开自动吸附'"
-        @click="trackStore.switchSticky"
-      >
-        <IconFirstPage class="track-icon" />
-      </div>
-      <div
-        class="track-control-item"
-        :class="{ enable: trackStore.enablePreviewLine }"
-        :title="trackStore.enablePreviewLine ? '关闭预览线' : '打开预览线'"
-        @click="trackStore.switchPreviewLine"
-      >
-        <IconArrow class="track-icon" />
-      </div>
+      <AppPopper hover :content="trackStore.enableMagnetic ? '关闭自动磁吸' : '打开自动磁吸'">
+        <div
+          class="track-control-item"
+          :class="{ enable: trackStore.enableMagnetic }"
+          @click="trackStore.switchMagnetic"
+        >
+          <IconExpand class="track-icon" />
+        </div>
+      </AppPopper>
+      <AppPopper hover :content="trackStore.enableSticky ? '关闭自动吸附' : '打开自动吸附'">
+        <div
+          class="track-control-item"
+          :class="{ enable: trackStore.enableSticky }"
+          @click="trackStore.switchSticky"
+        >
+          <IconFirstPage class="track-icon" />
+        </div>
+      </AppPopper>
+      <AppPopper hover :content="trackStore.enablePreviewLine ? '关闭预览线' : '打开预览线'">
+        <div
+          class="track-control-item"
+          :class="{ enable: trackStore.enablePreviewLine }"
+          @click="trackStore.switchPreviewLine"
+        >
+          <IconArrow class="track-icon" />
+        </div>
+      </AppPopper>
       <div class="split-line"></div>
-      <div
-        class="control-item adaptive-item"
-        :class="{ disabled: trackList.isEmpty.value }"
-        title="自适应轨道"
-        @click="trackStore.adaptiveTrack"
-      >
-        <IconCompress class="icon" />
-      </div>
+      <AppPopper hover content="自适应轨道">
+        <div
+          class="control-item adaptive-item"
+          :class="{ disabled: trackList.isEmpty.value }"
+          @click="trackStore.adaptiveTrack"
+        >
+          <IconCompress class="icon" />
+        </div>
+      </AppPopper>
       <ScaleSlider v-model="trackStore.scale" :disabled="trackList.isEmpty.value" />
     </section>
   </div>
