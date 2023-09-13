@@ -99,6 +99,7 @@ watch(resizing, (is, old) => {
   // 完成缩放
   if (!is && old) {
     updateMoveableSize()
+    playerCanvasRef.value?.renderForAttributeChange()
   }
 })
 
